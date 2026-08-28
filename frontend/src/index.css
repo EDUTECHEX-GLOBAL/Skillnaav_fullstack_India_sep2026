@@ -1,0 +1,66 @@
+/* ── Font imports MUST come before @tailwind directives ─────────────────────── */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+/* Poppins is loaded via Google Fonts in public/index.html — see instructions below */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Global input / textarea defaults ───────────────────────────────────────── */
+input,
+textarea {
+  height: 40px;
+  border: 1px solid gray;
+  width: 100%;
+  padding-left: 20px;
+  margin-top: 20px;
+}
+
+input:focus {
+  outline: none;
+  border: 2px solid rgb(86, 65, 65);
+}
+
+textarea {
+  height: 100px;
+  padding: 10px;
+}
+
+/* ── Scrollbar utilities ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent;
+  }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+/*Add this style for the export csv in the internship payments details modal - 04-08-2026 */
+.export-btn-internship {
+  height: 40px;
+}
+
+@media (min-width: 640px) {
+  .export-btn-internship {
+    height: 100px;
+  }
+}
+
+/* ── Toast z-index ───────────────────────────────────────────────────────────── */
+.Toastify__toast-container {
+  z-index: 99999 !important;
+}

@@ -1,0 +1,114 @@
+import React from "react";
+import skillnaavlogo from "../assets/skillnaav_logo-250w.png";
+
+const TryforFree = () => {
+  const handleOptionClick = (path) => {
+    window.open(path, "_blank");
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        textAlign: "center",
+        padding: "20px",
+        fontFamily: "'Poppins', sans-serif",
+        color: "#333",
+      }}
+    >
+      <img
+        src={skillnaavlogo}
+        style={{ width: "210px", height: "auto" }}
+        alt="SkillNaav Logo"
+      />
+
+      <h1
+        style={{
+          marginBottom: "20px",
+          fontWeight: "700",
+          color: "#004d40",
+          fontSize: "2.5rem",
+        }}
+      >
+        Try for Free
+      </h1>
+      <h2
+        style={{
+          marginBottom: "30px",
+          color: "#00796b",
+          fontSize: "1.25rem",
+        }}
+      >
+        Choose how you'd like to continue:
+      </h2>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px",
+          maxWidth: "450px",
+          width: "100%",
+          margin: "0 auto",
+        }}
+      >
+        <button
+          style={buttonStyle("#7F56D9")}
+          onClick={() => handleOptionClick("/user")}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          Continue as Student
+        </button>
+
+        <button
+          style={buttonStyle("#009688")}
+          onClick={() => handleOptionClick("/partner")}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          Continue as Partner
+        </button>
+
+        <button
+          style={buttonStyle("#81d4fa")}
+          onClick={() => handleOptionClick("/admin/login")}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          Continue as Admin
+        </button>
+
+        {/* ✅ New School Admin Button */}
+        <button
+          style={buttonStyle("#FF7043")} // Orange tone for School Admin
+          onClick={() => handleOptionClick("/schooladmin/login")}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          Continue as School Admin
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Common button style generator
+const buttonStyle = (bgColor) => ({
+  backgroundColor: bgColor,
+  color: "#fff",
+  border: "none",
+  padding: "15px 25px",
+  fontWeight: "600",
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontSize: "1rem",
+  transition: "background-color 0.3s, transform 0.2s",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  outline: "none",
+});
+
+export default TryforFree;

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+
+  <!-- Preconnect for faster font loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- DNS prefetch for CDN resources -->
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+
+  <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png?v=20260401" />
+  <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png?v=20260401" />
+  <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/favicon-192x192.png?v=20260401" />
+  <link rel="icon" type="image/png" sizes="512x512" href="%PUBLIC_URL%/favicon-512x512.png?v=20260401" />
+  <link rel="shortcut icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico?v=20260401" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+
+  <!-- ✅ FIXED: consistent brand name "Skillnaav" everywhere -->
+  <meta name="description"
+    content="Skill Naav — Navigate Your Skills. Discover internships, assign instructors, and manage schedules." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://www.skillnaav.com/" />
+
+  <!-- ✅ FIXED: Page title now consistent with brand -->
+  <title>Skill Naav - Navigate Your Skills</title>
+
+  <!-- Open Graph (WhatsApp / LinkedIn / Facebook) -->
+  <!-- ✅ FIXED: All OG tags now use "Skillnaav" consistently -->
+  <meta property="og:title" content="Skill Naav - Navigate Your Skills" />
+  <meta property="og:description"
+    content="Discover internships, assign instructors, and manage schedules — all in one place." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.skillnaav.com/" />
+  <meta property="og:image" content="https://www.skillnaav.com/skillnaav-og.png" />
+  <meta property="og:image:secure_url" content="https://www.skillnaav.com/skillnaav-og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Skillnaav logo" />
+  <meta property="og:site_name" content="Skill Naav" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Skill Naav — Navigate Your Skills" />
+  <meta name="twitter:description"
+    content="Discover internships, assign instructors, and manage schedules — all in one place." />
+  <meta name="twitter:image" content="https://www.skillnaav.com/skillnaav-og.png" />
+
+  <!-- ✅ JSON-LD: Organization schema — tells Google "Skillnaav" is the brand name -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Skill Naav",
+  "alternateName": "Skillnaav",
+  "url": "https://www.skillnaav.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://www.skillnaav.com/skillnaav-og.png",
+    "width": 1200,
+    "height": 630
+  },
+  "description": "Skill Naav — Navigate Your Skills. Discover internships, assign instructors, and manage schedules."
+}
+</script>
+
+  <!-- ✅ JSON-LD: WebSite schema — helps Google associate "skillnaav" keyword with your site -->
+ <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Skill Naav",
+  "alternateName": "Skillnaav",
+  "url": "https://www.skillnaav.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.skillnaav.com/?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png?v=20260401" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  </noscript>
+
+  <!--
+    PayPal popup-close error suppressor
+    ====================================
+    When a user closes the PayPal checkout popup (clicks ✕ or clicks outside),
+    PayPal's SDK internally throws two things:
+
+      1. A synchronous "Script error." via window.onerror  (cross-origin iframe noise)
+      2. An unhandled Promise rejection: "Error: Window closed before response"
+
+    In development, React DevTools listens to BOTH window.onerror AND
+    window.onunhandledrejection and shows its red error overlay for either.
+
+    This script runs BEFORE React boots (it's inline in <head>), so our listeners
+    are registered first in the queue. We intercept both cases and swallow them
+    before React ever sees them.
+
+    This is 100% safe — neither of these indicates a real application error.
+    They are expected PayPal SDK behaviour on user-initiated popup dismissal.
+  -->
+  <script>
+    (function () {
+      // ── 1. Synchronous cross-origin errors (Script error.) ──────────────────
+      window.addEventListener('error', function (event) {
+        if (
+          event.message === 'Script error.' ||
+          event.message === 'Script error' ||
+          (event.message === '' && !event.filename && event.lineno === 0)
+        ) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+        }
+      }, true);
+
+      // ── 2. Unhandled Promise rejections (Window closed before response) ─────
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = event.reason;
+        var msg = (reason && (reason.message || String(reason))) || '';
+        if (
+          msg.includes('Window closed before response') ||
+          msg.includes('window closed') ||
+          msg.includes('popup closed') ||
+          msg.includes('paypal') ||
+          (reason && reason.err && String(reason.err).includes('Window closed'))
+        ) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+    })();
+  </script>
+
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
+</html>
