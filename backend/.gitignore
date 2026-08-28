@@ -1,0 +1,5 @@
+.env
+node_modules/
+/firebaseServiceAccountKey.json
+.codex-temp/
+.cache/
