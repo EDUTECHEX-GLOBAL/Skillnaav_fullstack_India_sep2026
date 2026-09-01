@@ -1,300 +1,295 @@
-import { useState, useRef, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import React, { useState, useRef, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
+import { LiveAvatarSession, SessionEvent } from "@heygen/liveavatar-web-sdk";
+import { FaMicrophone, FaPhoneSlash } from "react-icons/fa";
+import aiAssistantBg from "../assets/Aiassistant.png";
 
-/* ─── Typing indicator dots ─── */
-function TypingDots() {
-  return (
-    <div className="flex items-center gap-1 px-4 py-3">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"
-          style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.9s" }}
-        />
-      ))}
-    </div>
-  );
-}
+export default function Chatbot({ onClose }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [debugText, setDebugText] = useState("");
+  const [dialogPosition, setDialogPosition] = useState(null);
 
-/* ─── Avatar ─── */
-function Avatar({ type }) {
-  if (type === "bot") {
-    return (
-      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-        </svg>
-      </div>
-    );
-  }
-  return (
-    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center shadow-sm">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    </div>
-  );
-}
-
-/* ─── Message bubble ─── */
-function MessageBubble({ msg, isNew }) {
-  const isBot = msg.type === "bot";
-  return (
-    <div
-      className={`flex gap-2 items-end ${isBot ? "justify-start" : "justify-end"} ${isNew ? "animate-slideUp" : ""}`}
-    >
-      {isBot && <Avatar type="bot" />}
-
-      <div
-        className={`
-          max-w-[78%] rounded-2xl text-sm leading-relaxed shadow-sm
-          ${isBot
-            ? "bg-white border border-gray-100 text-gray-800 rounded-bl-sm px-4 py-3"
-            : "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm px-4 py-3"
-          }
-        `}
-      >
-        {isBot ? (
-          <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
-          </div>
-        ) : (
-          <span className="break-words whitespace-pre-wrap">{msg.text}</span>
-        )}
-      </div>
-
-      {!isBot && <Avatar type="user" />}
-    </div>
-  );
-}
-
-/* ─── Suggested prompts ─── */
-const SUGGESTIONS = [
-  "What is SkillNaav?",
-  "How do I apply for jobs?",
-  "How does premium work?",
-];
-
-export default function Chatbot() {
-  const user = JSON.parse(localStorage.getItem("userInfo") || "{}") ?? {};
+  const videoRef = useRef(null);
+  const dialogRef = useRef(null);
+  const sessionRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const dragRef = useRef(null);
+  
   const token = localStorage.getItem("userToken") || "";
 
-  const [chatHistory, setChatHistory] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem("careerChatHistory");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        setDebugText("Heard: " + transcript);
+        await handleSendToBackend(transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
     }
-  });
-
-  const [userInput, setUserInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [newMsgIdx, setNewMsgIdx] = useState(null);
-
-  const [, setReplyCount] = useState(user?.careerChatUsage ?? 0);
-  const [, setIsPremium] = useState(
-    user?.isPremium && new Date(user.premiumExpiration) > new Date()
-  );
-
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
-  const messagesRef = useRef(null);
-
-  /* sync user profile */
-  useEffect(() => {
-    if (!token) return;
-    const fetchUsage = async () => {
-      try {
-        const res = await fetch("/api/users/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.status === 401) return;
-        const data = await res.json();
-        setReplyCount(data.careerChatUsage ?? 0);
-        setIsPremium(data.isPremium && new Date(data.premiumExpiration) > new Date());
-      } catch (err) {
-        console.error("Failed to fetch user info:", err);
-      }
-    };
-    fetchUsage();
-  }, [token]);
-
-  /* auto scroll to bottom */
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory, loading]);
-
-  /* persist */
-  useEffect(() => {
-    try {
-      sessionStorage.setItem("careerChatHistory", JSON.stringify(chatHistory));
-    } catch {}
-  }, [chatHistory]);
-
-  /* clear on page refresh */
-  useEffect(() => {
-    const clear = () => sessionStorage.removeItem("careerChatHistory");
-    window.addEventListener("beforeunload", clear);
-    return () => window.removeEventListener("beforeunload", clear);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sendMessage = async (text) => {
-    const msg = (text || userInput).trim();
-    if (!msg) return;
+  // The assistant window can be repositioned by dragging its header.
+  useEffect(() => {
+    const moveDialog = (event) => {
+      if (!dragRef.current || !dialogRef.current) return;
 
-    const userMsg = { type: "user", text: msg };
-    setChatHistory((prev) => [...prev, userMsg]);
-    setNewMsgIdx((prev) => (prev === null ? 0 : prev + 1));
-    setUserInput("");
-    setLoading(true);
-    setError("");
+      const { offsetX, offsetY } = dragRef.current;
+      const rect = dialogRef.current.getBoundingClientRect();
+      const nextX = Math.min(Math.max(12, event.clientX - offsetX), window.innerWidth - rect.width - 12);
+      const nextY = Math.min(Math.max(12, event.clientY - offsetY), window.innerHeight - rect.height - 12);
+      setDialogPosition({ x: nextX, y: nextY });
+    };
 
+    const stopDragging = () => {
+      dragRef.current = null;
+    };
+
+    window.addEventListener("pointermove", moveDialog);
+    window.addEventListener("pointerup", stopDragging);
+    return () => {
+      window.removeEventListener("pointermove", moveDialog);
+      window.removeEventListener("pointerup", stopDragging);
+    };
+  }, []);
+
+  const startDragging = (event) => {
+    if (event.button !== 0 || !dialogRef.current) return;
+    const rect = dialogRef.current.getBoundingClientRect();
+    dragRef.current = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+    setDialogPosition({ x: rect.left, y: rect.top });
+  };
+
+  const dialogStyle = dialogPosition
+    ? { left: dialogPosition.x, top: dialogPosition.y, transform: "none" }
+    : { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+
+  const AssistantWindow = ({ children }) => (
+    <div className="fixed inset-0 z-50 bg-slate-950/70" role="dialog" aria-modal="true" aria-label="AI video assistant">
+      <div
+        ref={dialogRef}
+        style={dialogStyle}
+        className="fixed w-[calc(100vw-2rem)] max-w-4xl h-[min(80vh,720px)] overflow-hidden rounded-3xl bg-white shadow-2xl"
+      >
+        <div
+          onPointerDown={startDragging}
+          className="absolute top-0 left-0 right-0 z-40 flex h-12 cursor-grab touch-none items-center justify-between bg-slate-950/65 px-5 text-white backdrop-blur-md active:cursor-grabbing"
+        >
+          <span className="text-sm font-semibold">SkillNaav AI Video Assistant</span>
+          <button
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={endSession}
+            aria-label="Close AI assistant"
+            className="rounded-full p-1.5 text-white transition hover:bg-white/20"
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="m5 5 10 10M15 5 5 15" /></svg>
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+
+  const handleSendToBackend = async (text) => {
+    if (!text.trim()) return;
+    
+    setDebugText("Thinking...");
     try {
       const res = await axiosInstance.post(
         "/api/career-chat",
-        { message: msg },
+        { message: text },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const { reply } = res.data;
-      const botMsg = { type: "bot", text: reply };
-      setChatHistory((prev) => [...prev, botMsg]);
+      
+      setDebugText("Speaking...");
+      if (sessionRef.current) {
+        sessionRef.current.repeat(reply);
+      }
+      setDebugText("Click the microphone to speak.");
     } catch (err) {
       console.error("Chat error:", err);
-      setError("Could not connect. Please try again.");
+      setDebugText("Sorry, I could not process that request.");
+    }
+  };
+
+  const startSession = async () => {
+    setIsLoading(true);
+    setDebugText("Initializing Avatar...");
+    try {
+      // 1. Fetch token from backend
+      const res = await axiosInstance.post(
+        "/api/heygen-token",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const avatarToken = res.data.token;
+
+      // 2. Initialize Avatar Session
+      const session = new LiveAvatarSession(avatarToken, {
+        voiceChat: false, // We use custom Web Speech API
+      });
+      sessionRef.current = session;
+
+      session.on(SessionEvent.SESSION_STREAM_READY, () => {
+        if (videoRef.current) {
+          session.attach(videoRef.current);
+        }
+      });
+      
+      session.on(SessionEvent.SESSION_DISCONNECTED, () => {
+        endSession();
+      });
+
+      // 3. Start Session
+      await session.start();
+
+      setIsOpen(true);
+      setDebugText("Connected. Click the microphone to speak.");
+      
+      // Optional: Have avatar greet the user immediately
+      session.repeat("Hello! I am your Skill Naav assistant. How can I help you today?");
+
+    } catch (error) {
+      console.error("Failed to start avatar session:", error);
+      setDebugText("Failed to connect. Please try again.");
     } finally {
-      setLoading(false);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setIsLoading(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+  const endSession = async () => {
+    if (sessionRef.current) {
+      try {
+        await sessionRef.current.stop();
+      } catch (e) {
+        console.error("Error stopping avatar", e);
+      }
+    }
+    sessionRef.current = null;
+    setIsOpen(false);
+    setIsRecording(false);
+    setDebugText("");
+    if (onClose) onClose();
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+    } else {
+      if (!recognitionRef.current) {
+        alert("Microphone access is not supported in this browser. Try Safari/Chrome on a secure (HTTPS) connection.");
+        setDebugText("Mic not supported.");
+        return;
+      }
+      try {
+        recognitionRef.current.start();
+        setIsRecording(true);
+        setDebugText("Listening...");
+      } catch (e) {
+        console.error(e);
+        alert("Failed to start microphone. This usually happens if you are not using HTTPS, or permissions were denied.");
+        setDebugText("Error starting microphone.");
+      }
     }
   };
 
-  const isEmpty = chatHistory.length === 0;
+  if (!isOpen) {
+    return (
+      <AssistantWindow>
+        <div className="relative h-full w-full pt-12 flex items-center justify-center">
+          {/* Background mimicking SkillNaav office */}
+          <img 
+            src={aiAssistantBg} 
+            alt="AI Assistant Background"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Optional overlay to make button stand out */}
+          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+          
+          <button
+            onClick={startSession}
+            disabled={isLoading}
+            className="relative z-10 px-8 py-4 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Connecting..." : "Start Assistant"}
+          </button>
+          
+        </div>
+      </AssistantWindow>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* ── Message area ── */}
-      <div
-        ref={messagesRef}
-        className="flex-1 overflow-y-auto px-3 py-3 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
-        style={{ minHeight: 0 }}
-      >
-        {isEmpty && !loading && (
-          <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4 py-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-800 text-sm">SkillNaav Assistant</p>
-              <p className="text-xs text-gray-400 mt-1">Ask me anything about SkillNaav</p>
-            </div>
-            <div className="flex flex-col gap-2 w-full mt-1">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => sendMessage(s)}
-                  className="text-xs text-left px-3 py-2 rounded-xl border border-blue-100 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-150"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+    <AssistantWindow>
+      <div className="relative h-full w-full bg-gray-100 pt-12 flex flex-col">
+        
+        {/* Video Area */}
+        <div className="flex-1 relative bg-gradient-to-br from-blue-50 to-blue-100">
+           {/* Fallback background if video is transparent or fails to load */}
+           <img 
+             src={aiAssistantBg} 
+             alt="AI Assistant Background"
+             className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
+           />
 
-        {chatHistory.map((msg, idx) => (
-          <MessageBubble
-            key={idx}
-            msg={msg}
-            isNew={idx === newMsgIdx || idx === newMsgIdx + 1}
-          />
-        ))}
+           <video
+             ref={videoRef}
+             autoPlay
+             playsInline
+             className="absolute inset-0 w-full h-full object-cover z-10"
+           >
+             <track kind="captions" />
+           </video>
 
-        {/* Typing indicator */}
-        {loading && (
-          <div className="flex gap-2 items-end justify-start animate-slideUp">
-            <Avatar type="bot" />
-            <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm shadow-sm">
-              <TypingDots />
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* ── Error ── */}
-      {error && (
-        <div className="mx-3 mb-1 px-3 py-2 rounded-lg bg-red-50 border border-red-100 text-red-500 text-xs flex items-center gap-1.5">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {error}
+           {/* Debug / Status text */}
+           <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white text-xs px-3 py-1 rounded-full z-20">
+             {debugText}
+           </div>
         </div>
-      )}
 
-      {/* ── Input area ── */}
-      <div className="px-3 pb-3 pt-2">
-        <div className={`flex items-center gap-2 bg-gray-50 border rounded-2xl px-3 py-2 transition-all duration-200 ${userInput ? "border-blue-400 ring-1 ring-blue-200" : "border-gray-200"}`}>
-          <textarea
-            ref={inputRef}
-            rows={1}
-            className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 resize-none outline-none leading-5 max-h-24 overflow-y-auto"
-            placeholder="Ask something…"
-            value={userInput}
-            onChange={(e) => {
-              setUserInput(e.target.value);
-              // auto-grow
-              e.target.style.height = "auto";
-              e.target.style.height = Math.min(e.target.scrollHeight, 96) + "px";
-            }}
-            onKeyDown={handleKeyDown}
-            disabled={loading}
-          />
+        {/* Control Bar (Bottom overlay) */}
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex items-center gap-6 bg-black/40 backdrop-blur-md px-8 py-4 rounded-[40px] border border-white/10 shadow-2xl z-30">
+          
           <button
-            onClick={() => sendMessage()}
-            disabled={loading || !userInput.trim()}
-            className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200
-              ${userInput.trim() && !loading
-                ? "bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-blue-200 hover:shadow-md scale-100 active:scale-95"
-                : "bg-gray-200 cursor-not-allowed opacity-60"
-              }`}
-            aria-label="Send"
+            onClick={toggleRecording}
+            className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+              isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-red-500/80 text-white/80 hover:bg-red-500 hover:text-white'
+            }`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            <FaMicrophone size={26} />
           </button>
+
+          <div className="w-[2px] h-10 bg-white/30 rounded-full mx-1"></div>
+
+          <button
+            onClick={endSession}
+            className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+          >
+            <FaPhoneSlash size={28} />
+          </button>
+          
         </div>
-        <p className="text-center text-gray-300 text-[10px] mt-1.5">Press Enter to send · Shift+Enter for new line</p>
+
       </div>
-
-      {/* ── CSS for animations ── */}
-      <style>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slideUp { animation: slideUp 0.25s ease-out; }
-
-        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
-      `}</style>
-    </div>
+    </AssistantWindow>
   );
 }

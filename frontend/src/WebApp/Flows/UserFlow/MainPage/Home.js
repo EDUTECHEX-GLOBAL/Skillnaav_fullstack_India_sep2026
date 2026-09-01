@@ -36,6 +36,14 @@ const getSavedLimitByPlan = (planType) => {
 };
 
 const Home = () => {
+  const [assistantPreviewVisible, setAssistantPreviewVisible] = useState(
+    () => window.__skillnaavAssistantPreviewVisible ?? true
+  );
+  useEffect(() => {
+    const updateAssistantPreview = (event) => setAssistantPreviewVisible(event.detail.visible);
+    window.addEventListener("skillnaav-assistant-preview", updateAssistantPreview);
+    return () => window.removeEventListener("skillnaav-assistant-preview", updateAssistantPreview);
+  }, []);
   const { savedJobs, saveJob, removeJob, handleSelectTab } = useTabContext();
 
   // ─── selectedJob controls which view is shown ───────────────────────────
@@ -465,7 +473,7 @@ const Home = () => {
       )}
 
       {/* Skillnaav analysis FAB */}
-      <div className="fixed bottom-28 right-6 z-50">
+      <div className={`fixed right-6 z-50 transition-all duration-300 ${assistantPreviewVisible ? "bottom-[20rem]" : "bottom-28"}`}>
         <button
           onClick={() => navigate("/skillnaav-analysis")}
           className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"

@@ -34,4 +34,32 @@ async function listModes() {
   });
 }
 
-module.exports = { listCompanies, listTypes, listModes };
+/* --- Search Internships by keyword ------------------------------------ */
+async function searchInternships(query, limit = 3) {
+  // Extract potential keywords from the query (ignore common words)
+  const words = query.split(/\s+/).filter(w => w.length > 2 && !/^(what|which|tell|about|like|can|you|the|for|and|with)$/i.test(w));
+  
+  if (words.length === 0) return [];
+
+  // Escape special regex characters
+  const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const safeWords = words.map(escapeRegExp);
+
+  // Create a regex for any of the keywords
+  const regex = new RegExp(safeWords.join("|"), "i");
+
+  const rows = await Internship.find({
+    adminApproved: true,
+    deleted: false,
+    $or: [
+      { jobTitle: regex },
+      { companyName: regex },
+      { sector: regex },
+      { jobDescription: regex }
+    ]
+  }).sort({ createdAt: -1 }).limit(limit);
+
+  return rows;
+}
+
+module.exports = { listCompanies, listTypes, listModes, searchInternships };

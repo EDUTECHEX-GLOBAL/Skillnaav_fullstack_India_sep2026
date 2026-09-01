@@ -8,11 +8,13 @@ import { TabProvider, useTabContext } from "./UserHomePageContext/HomePageContex
 import axios from "../../../../api/axiosInstance";
 
 import Chatbot from "../../../../components/Chatbot";
+import UserTextChatbot from "../../../../components/UserTextChatbot";
 import UserAgeGateConsent from "../SignUpLogin/UserProfileBuilding/UserAgeGateConsent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import PendingApprovalCard from './PendingApprovalCard';
 import chatbotIcon from "../../../../assets-webapp/chat-bot.png";
+import videoAssistantPreview from "../../../../assets/Aiassistant.png";
 
 const UserMainPageContent = () => {
   const { handleSelectTab, selectedTab } = useTabContext();
@@ -25,8 +27,12 @@ const UserMainPageContent = () => {
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); // desktop
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
-  // Chatbot widget state (open/closed)
-  const [chatOpen, setChatOpen] = useState(false);
+  // Chatbot widget state
+  const [activeChat, setActiveChat] = useState(null); // 'text' | 'video' | null
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [assistantBubblePosition, setAssistantBubblePosition] = useState(null);
+  const [assistantBubbleHidden, setAssistantBubbleHidden] = useState(false);
+  const assistantBubbleDragRef = useRef(null);
   const [showReverifyModal, setShowReverifyModal] = useState(false);
   const [reverifySaving, setReverifySaving] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
@@ -44,6 +50,39 @@ const UserMainPageContent = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Let other floating controls move out of the assistant preview's space.
+  useEffect(() => {
+    const previewVisible = !assistantBubbleHidden;
+    window.__skillnaavAssistantPreviewVisible = previewVisible;
+    window.dispatchEvent(new CustomEvent("skillnaav-assistant-preview", { detail: { visible: previewVisible } }));
+  }, [assistantBubbleHidden]);
+
+  const startAssistantBubbleDrag = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    assistantBubbleDragRef.current = {
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveAssistantBubble = (event) => {
+    if (!assistantBubbleDragRef.current) return;
+    const drag = assistantBubbleDragRef.current;
+    drag.moved = true;
+    setAssistantBubblePosition({
+      x: Math.min(Math.max(12, event.clientX - drag.offsetX), window.innerWidth - 255),
+      y: Math.min(Math.max(12, event.clientY - drag.offsetY), window.innerHeight - 205),
+    });
+  };
+
+  const openVideoAssistant = () => {
+    const wasDragged = assistantBubbleDragRef.current?.moved;
+    assistantBubbleDragRef.current = null;
+    if (!wasDragged) setActiveChat('video');
+  };
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -234,39 +273,103 @@ const UserMainPageContent = () => {
 
       {/* Chatbot widget (fixed floating toggle + panel) */}
       {selectedTab !== "assessment" && (
-      <div className="fixed bottom-6 right-6 z-50">
-        {!chatOpen && (
-          <button
-            onClick={() => setChatOpen(true)}
-            className="rounded-full shadow-lg transition-transform duration-200 hover:scale-105"
-            aria-label="Open chat"
-          >
-            <img
-              src={chatbotIcon}
-              alt="Chatbot"
-              className="h-16 w-16 rounded-full"
-            />
-          </button>
-        )}
+      <div className={`fixed right-6 z-50 transition-all duration-300 ${assistantBubbleHidden ? "bottom-6" : "bottom-[14rem]"}`}>
+        {!activeChat && (
+          <div className="relative flex flex-col items-end">
+            {/* The Menu */}
+            {menuOpen && (
+              <div className="mb-4 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-in origin-bottom-right transition-all">
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Choose Assistant</p>
+                </div>
+                <button 
+                  onClick={() => { setActiveChat('text'); setMenuOpen(false); }}
+                  className="w-full px-4 py-4 text-left hover:bg-blue-50 flex items-center gap-3 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <span className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm text-lg">
+                    💬
+                  </span>
+                  <div>
+                    <p className="font-semibold text-gray-800">Text Chat</p>
+                    <p className="text-xs text-gray-400 mt-0.5 font-normal">Quick answers & help</p>
+                  </div>
+                </button>
+                <div className="h-px bg-gray-100 mx-2"></div>
+                <button 
+                  onClick={() => { setActiveChat('video'); setMenuOpen(false); }}
+                  className="w-full px-4 py-4 text-left hover:bg-purple-50 flex items-center gap-3 text-sm font-medium text-gray-700 transition-colors"
+                >
+                  <span className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shadow-sm text-lg">
+                    📹
+                  </span>
+                  <div>
+                    <p className="font-semibold text-gray-800">Video Assistant</p>
+                    <p className="text-xs text-gray-400 mt-0.5 font-normal">Interactive AI avatar</p>
+                  </div>
+                </button>
+              </div>
+            )}
 
-        {chatOpen && (
-          <div className="w-80 h-[450px] bg-white shadow-xl rounded-lg flex flex-col border overflow-hidden">
-            <div className="flex justify-between items-center p-3 bg-blue-600 text-white">
-              <span className="font-semibold">Chat Assistant</span>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="text-white text-xl font-bold leading-none"
-                aria-label="Close chat"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-3 flex-1 overflow-y-auto">
-              <Chatbot />
-            </div>
+            {/* The FAB */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-full shadow-lg transition-transform duration-200 hover:scale-105 relative z-50"
+              aria-label="Open chat menu"
+            >
+              <img
+                src={chatbotIcon}
+                alt="Chatbot"
+                className="h-16 w-16 rounded-full"
+              />
+            </button>
           </div>
         )}
+
+        {activeChat === 'video' && (
+          <Chatbot onClose={() => setActiveChat(null)} />
+        )}
+
+        {activeChat === 'text' && (
+          <UserTextChatbot onClose={() => setActiveChat(null)} />
+        )}
       </div>
+      )}
+
+      {/* Draggable AI video assistant preview — click to open the large assistant window */}
+      {selectedTab !== "assessment" && !activeChat && !assistantBubbleHidden && (
+        <button
+          type="button"
+          onPointerDown={startAssistantBubbleDrag}
+          onPointerMove={moveAssistantBubble}
+          onPointerUp={openVideoAssistant}
+          onPointerCancel={() => { assistantBubbleDragRef.current = null; }}
+          style={assistantBubblePosition
+            ? { left: assistantBubblePosition.x, top: assistantBubblePosition.y }
+            : { right: "1.5rem", bottom: "1.5rem" }}
+          className="fixed z-40 h-[180px] w-[230px] touch-none overflow-visible rounded-[28px] border-4 border-white shadow-2xl transition-shadow hover:shadow-purple-300 focus:outline-none focus:ring-4 focus:ring-purple-300"
+          aria-label="Open AI video assistant. Drag to move."
+          title="AI video assistant — drag to move"
+        >
+          <img src={videoAssistantPreview} alt="AI video assistant" className="h-full w-full rounded-[24px] object-cover object-center" />
+          <span
+            role="button"
+            tabIndex={0}
+            onPointerDown={(event) => event.stopPropagation()}
+            onPointerMove={(event) => event.stopPropagation()}
+            onPointerUp={(event) => {
+              event.stopPropagation();
+              setAssistantBubbleHidden(true);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") setAssistantBubbleHidden(true);
+            }}
+            className="absolute right-2 top-2 flex h-8 w-8 cursor-pointer items-center justify-center text-2xl leading-none text-slate-900 transition hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            aria-label="Hide AI video assistant"
+            title="Hide assistant"
+          >
+            ×
+          </span>
+        </button>
       )}
     </>
   );
