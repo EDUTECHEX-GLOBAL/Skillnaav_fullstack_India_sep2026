@@ -28,6 +28,7 @@ import {
 import InstructureDetailsView from "./InstructureDetailsView";
 import InstructorManagementedit from "./InstructorManagementedit";
 import { IN_STATES } from "../../../../constants/locations";
+import { StateDropdown } from "../../../../components/StateDropdown";
 
 /* ─── Shared UI tokens (same format as edit modal) ─── */
 const inputCls =
@@ -86,9 +87,7 @@ const defaultSectionTheme = {
 const dayOpts = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const INSTRUCTORS_PER_PAGE = 10;
 
-const TIMEZONES_IN = [
-  "Asia/Kolkata",
-];
+const TIMEZONES_IN = ["Asia/Kolkata"];
 
 const getPartnerToken = () => {
   const direct =
@@ -247,7 +246,8 @@ const InstructureManagement = () => {
 
   useEffect(() => {
     const inMethods = ["NEFT/RTGS", "UPI", "IMPS", "Bank Transfer"];
-    if (country === "India" && !inMethods.includes(payoutMethod)) setPayoutMethod("NEFT/RTGS");
+    if (country === "India" && !inMethods.includes(payoutMethod))
+      setPayoutMethod("NEFT/RTGS");
   }, [country, payoutMethod]);
 
   useEffect(() => {
@@ -311,8 +311,10 @@ const InstructureManagement = () => {
   const stateList = country === "India" ? IN_STATES : [];
   const stateLabel = country === "India" ? "State / Union Territory" : "State";
   const postalLabel = "PIN Code";
-  const phonePlaceholder = country === "India" ? "+91 98765 43210" : "+1 (555) 555-1234";
-  const cityPlaceholder = country === "India" ? "e.g., Hyderabad" : "e.g., Mumbai";
+  const phonePlaceholder =
+    country === "India" ? "+91 98765 43210" : "+1 (555) 555-1234";
+  const cityPlaceholder =
+    country === "India" ? "e.g., Hyderabad" : "e.g., Mumbai";
   const address1Placeholder = "Street address, suite, unit";
 
   const payIdPlaceholder =
@@ -338,47 +340,55 @@ const InstructureManagement = () => {
     formData.append("resume", file);
 
     try {
-      const res = await axios.post('/api/resume/parse', formData);
+      const res = await axios.post("/api/resume/parse", formData);
       const data = res.data;
-      
+
       const form = formRef.current;
       if (!form) return;
 
       if (data.name) {
         const parts = data.name.trim().split(/\s+/);
-        if (form.elements['firstName']) form.elements['firstName'].value = parts[0] || '';
-        if (form.elements['lastName']) form.elements['lastName'].value = parts.slice(1).join(' ') || '';
+        if (form.elements["firstName"])
+          form.elements["firstName"].value = parts[0] || "";
+        if (form.elements["lastName"])
+          form.elements["lastName"].value = parts.slice(1).join(" ") || "";
       }
-      if (data.email && form.elements['email']) form.elements['email'].value = data.email;
-      if (data.phone && form.elements['phone']) form.elements['phone'].value = data.phone;
-      if (data.linkedin && form.elements['linkedIn']) form.elements['linkedIn'].value = data.linkedin;
-      if (data.portfolio && form.elements['portfolio']) form.elements['portfolio'].value = data.portfolio;
-      if (data.summary && form.elements['bio']) form.elements['bio'].value = data.summary;
-      
+      if (data.email && form.elements["email"])
+        form.elements["email"].value = data.email;
+      if (data.phone && form.elements["phone"])
+        form.elements["phone"].value = data.phone;
+      if (data.linkedin && form.elements["linkedIn"])
+        form.elements["linkedIn"].value = data.linkedin;
+      if (data.portfolio && form.elements["portfolio"])
+        form.elements["portfolio"].value = data.portfolio;
+      if (data.summary && form.elements["bio"])
+        form.elements["bio"].value = data.summary;
+
       if (data.education && data.education.length > 0) {
         const edu = data.education[0];
-        if (form.elements['major'] && edu.degree) form.elements['major'].value = edu.degree;
+        if (form.elements["major"] && edu.degree)
+          form.elements["major"].value = edu.degree;
       }
-      
+
       if (data.skills && Array.isArray(data.skills)) {
-        const skillsStr = data.skills.join(', ');
-        if (form.elements['skills']) form.elements['skills'].value = skillsStr;
+        const skillsStr = data.skills.join(", ");
+        if (form.elements["skills"]) form.elements["skills"].value = skillsStr;
       }
-      
+
       if (data.languages && Array.isArray(data.languages)) {
         const spokenLangs = data.languages
-          .map((l) => (typeof l === 'object' ? l.language : l))
+          .map((l) => (typeof l === "object" ? l.language : l))
           .filter(Boolean);
-        if (form.elements['languages'] && spokenLangs.length > 0) {
-          form.elements['languages'].value = spokenLangs.join(', ');
+        if (form.elements["languages"] && spokenLangs.length > 0) {
+          form.elements["languages"].value = spokenLangs.join(", ");
         }
       }
-      
+
       // Auto-attach the uploaded file to the required Resume/CV file input field
-      if (form.elements['resume']) {
+      if (form.elements["resume"]) {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
-        form.elements['resume'].files = dataTransfer.files;
+        form.elements["resume"].files = dataTransfer.files;
       }
     } catch (err) {
       console.error(err);
@@ -830,52 +840,80 @@ const InstructureManagement = () => {
                 <div className="px-4 sm:px-7 py-4 border-b border-slate-100 bg-slate-50/50">
                   <div className="flex items-start justify-between max-w-2xl mx-auto overflow-x-auto no-scrollbar pb-1">
                     {[
-                      { step: 1, label: 'Personal' },
-                      { step: 2, label: 'Professional' },
-                      { step: 3, label: 'Availability' },
-                      { step: 4, label: 'Compensation' },
-                      { step: 5, label: 'Compliance' }
+                      { step: 1, label: "Personal" },
+                      { step: 2, label: "Professional" },
+                      { step: 3, label: "Availability" },
+                      { step: 4, label: "Compensation" },
+                      { step: 5, label: "Compliance" },
                     ].map((s, idx) => (
-                      <div key={s.step} className={`flex items-start ${idx < 4 ? 'flex-1' : ''}`}>
+                      <div
+                        key={s.step}
+                        className={`flex items-start ${idx < 4 ? "flex-1" : ""}`}
+                      >
                         <div className="flex flex-col items-center gap-1.5 shrink-0 w-[4.5rem]">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                            currentStep === s.step
-                              ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
-                              : currentStep > s.step
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-white border-2 border-slate-200 text-slate-400'
-                          }`}>
-                            {currentStep > s.step ? '✓' : s.step}
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                              currentStep === s.step
+                                ? "bg-violet-600 text-white shadow-md shadow-violet-200"
+                                : currentStep > s.step
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-white border-2 border-slate-200 text-slate-400"
+                            }`}
+                          >
+                            {currentStep > s.step ? "✓" : s.step}
                           </div>
-                          <span className={`text-[10px] uppercase tracking-wider font-semibold text-center ${currentStep === s.step ? 'text-violet-700' : 'text-slate-400'}`}>
+                          <span
+                            className={`text-[10px] uppercase tracking-wider font-semibold text-center ${currentStep === s.step ? "text-violet-700" : "text-slate-400"}`}
+                          >
                             {s.label}
                           </span>
                         </div>
                         {idx < 4 && (
-                          <div className={`flex-1 h-0.5 mt-[15px] mx-1 sm:mx-2 rounded-full ${currentStep > s.step ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                          <div
+                            className={`flex-1 h-0.5 mt-[15px] mx-1 sm:mx-2 rounded-full ${currentStep > s.step ? "bg-emerald-400" : "bg-slate-200"}`}
+                          />
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
-                
-                <div className="p-4 sm:p-7 overflow-y-auto flex-1 min-h-0 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/60" id="wizard-scroll-container">
-                  <form onSubmit={handleSubmit} className="space-y-7" ref={formRef}>
+
+                <div
+                  className="p-4 sm:p-7 overflow-y-auto flex-1 min-h-0 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/60"
+                  id="wizard-scroll-container"
+                >
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-7"
+                    ref={formRef}
+                  >
                     {/* ── Personal & Contact ── */}
-                    <div className={currentStep === 1 ? 'block animate-fade-in' : 'hidden'}>
+                    <div
+                      className={
+                        currentStep === 1 ? "block animate-fade-in" : "hidden"
+                      }
+                    >
                       <FormSection title="Personal & Contact" icon={faEnvelope}>
                         {/* Autofill from Resume */}
                         <div className="col-span-1 md:col-span-3 mb-4 bg-violet-50/50 rounded-2xl border border-violet-100 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                           <div>
                             <h4 className="text-sm font-bold text-violet-900 flex items-center gap-2">
-                              <FontAwesomeIcon icon={faCloudUploadAlt} className="text-violet-500" />
+                              <FontAwesomeIcon
+                                icon={faCloudUploadAlt}
+                                className="text-violet-500"
+                              />
                               Autofill from Resume
                             </h4>
-                            <p className="text-xs text-violet-600/80 mt-1">Upload a PDF or DOCX file to automatically populate these fields.</p>
+                            <p className="text-xs text-violet-600/80 mt-1">
+                              Upload a PDF or DOCX file to automatically
+                              populate these fields.
+                            </p>
                           </div>
-                          <label className={`relative inline-block ${isExtracting ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
-                            <input 
-                              type="file" 
+                          <label
+                            className={`relative inline-block ${isExtracting ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                          >
+                            <input
+                              type="file"
                               accept=".pdf,.doc,.docx"
                               onChange={handleResumeAutofill}
                               disabled={isExtracting}
@@ -887,81 +925,84 @@ const InstructureManagement = () => {
                                   <FontAwesomeIcon icon={faSpinner} spin />
                                   Parsing...
                                 </>
-                              ) : "Choose File"}
+                              ) : (
+                                "Choose File"
+                              )}
                             </div>
                           </label>
                         </div>
 
-                      <Field label="First Name" required>
-                        <input
-                          name="firstName"
-                          required
-                          className={inputCls}
-                          placeholder="e.g., Priya"
-                        />
-                      </Field>
+                        <Field label="First Name" required>
+                          <input
+                            name="firstName"
+                            required
+                            className={inputCls}
+                            placeholder="e.g., Priya"
+                          />
+                        </Field>
 
-                      <Field label="Last Name" required>
-                        <input
-                          name="lastName"
-                          required
-                          className={inputCls}
-                          placeholder="e.g., Sharma"
-                        />
-                      </Field>
+                        <Field label="Last Name" required>
+                          <input
+                            name="lastName"
+                            required
+                            className={inputCls}
+                            placeholder="e.g., Sharma"
+                          />
+                        </Field>
 
-                      <Field label="Email" required>
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          className={inputCls}
-                          placeholder="name@example.com"
-                        />
-                      </Field>
+                        <Field label="Email" required>
+                          <input
+                            type="email"
+                            name="email"
+                            required
+                            className={inputCls}
+                            placeholder="name@example.com"
+                          />
+                        </Field>
 
-                      <Field label="Mobile" required>
-                        <input
-                          name="phone"
-                          required
-                          className={inputCls}
-                          placeholder={phonePlaceholder}
-                        />
-                      </Field>
+                        <Field label="Mobile" required>
+                          <input
+                            name="phone"
+                            required
+                            className={inputCls}
+                            placeholder={phonePlaceholder}
+                          />
+                        </Field>
 
-                      <Field label="Alternate Phone">
-                        <input
-                          name="altPhone"
-                          className={inputCls}
-                          placeholder={phonePlaceholder}
-                        />
-                      </Field>
+                        <Field label="Alternate Phone">
+                          <input
+                            name="altPhone"
+                            className={inputCls}
+                            placeholder={phonePlaceholder}
+                          />
+                        </Field>
 
-                      <Field label="Country" required>
-                        <select
-                          name="country"
-                          required
-                          className={inputCls}
-                          value={country}
-                          onChange={(e) => {
-                            setCountry(e.target.value);
-                            setStateProv("");
-                            if (cityRef.current) cityRef.current.value = "";
-                            if (postalRef.current) postalRef.current.value = "";
-                            if (address1Ref.current)
-                              address1Ref.current.value = "";
-                            if (address2Ref.current)
-                              address2Ref.current.value = "";
-                          }}
-                        >
-                          <option value="" disabled={country !== ""}>
-                            Select
-                          </option>
-                          <option value="India">India</option>
-                        </select>
-                      </Field>
+                        <Field label="Country" required>
+                          <select
+                            name="country"
+                            required
+                            className={inputCls}
+                            value={country}
+                            onChange={(e) => {
+                              setCountry(e.target.value);
+                              setStateProv("");
+                              if (cityRef.current) cityRef.current.value = "";
+                              if (postalRef.current)
+                                postalRef.current.value = "";
+                              if (address1Ref.current)
+                                address1Ref.current.value = "";
+                              if (address2Ref.current)
+                                address2Ref.current.value = "";
+                            }}
+                          >
+                            <option value="" disabled={country !== ""}>
+                              Select
+                            </option>
+                            <option value="India">India</option>
+                          </select>
+                        </Field>
 
-                      <Field label={stateLabel} required>
+                        {/* <Field label={stateLabel} required>
                         <select
                           name="state"
                           required
@@ -979,547 +1020,585 @@ const InstructureManagement = () => {
                             </option>
                           ))}
                         </select>
-                      </Field>
+                      </Field> */}
+                        <Field label={stateLabel} required>
+                          <StateDropdown
+                            label={stateLabel}
+                            value={stateProv}
+                            onChange={setStateProv}
+                            options={stateList}
+                            className={inputCls}
+                            disabled={!country}
+                          />
+                        </Field>
 
-                      <Field label="City" required>
-                        <input
-                          name="city"
-                          required
-                          ref={cityRef}
-                          className={inputCls}
-                          placeholder={cityPlaceholder}
-                        />
-                      </Field>
+                        <Field label="City" required>
+                          <input
+                            name="city"
+                            required
+                            ref={cityRef}
+                            className={inputCls}
+                            placeholder={cityPlaceholder}
+                          />
+                        </Field>
 
-                      <Field label={postalLabel} required>
-                        <input
-                          name="postalCode"
-                          required
-                          ref={postalRef}
-                          className={inputCls}
-                          placeholder={
-                            country === "India" ? "500001" : "95113"
-                          }
-                        />
-                      </Field>
+                        <Field label={postalLabel} required>
+                          <input
+                            name="postalCode"
+                            required
+                            ref={postalRef}
+                            className={inputCls}
+                            placeholder={
+                              country === "India" ? "500001" : "95113"
+                            }
+                          />
+                        </Field>
 
-                      <Field label="Address Line 1" required span={2}>
-                        <input
-                          name="address1"
-                          required
-                          ref={address1Ref}
-                          className={inputCls}
-                          placeholder={address1Placeholder}
-                        />
-                      </Field>
+                        <Field label="Address Line 1" required span={2}>
+                          <input
+                            name="address1"
+                            required
+                            ref={address1Ref}
+                            className={inputCls}
+                            placeholder={address1Placeholder}
+                          />
+                        </Field>
 
-                      <Field label="Address Line 2">
-                        <input
-                          name="address2"
-                          ref={address2Ref}
-                          className={inputCls}
-                          placeholder="Optional"
-                        />
-                      </Field>
-                    </FormSection>
+                        <Field label="Address Line 2">
+                          <input
+                            name="address2"
+                            ref={address2Ref}
+                            className={inputCls}
+                            placeholder="Optional"
+                          />
+                        </Field>
+                      </FormSection>
                     </div>
 
                     {/* ── Professional & Teaching ── */}
-                    <div className={currentStep === 2 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Professional & Teaching" icon={faStar}>
-                      <Field label="Highest Qualification">
-                        <select
-                          name="qualification"
-                          className={inputCls}
-                          value={qualification}
-                          onChange={(e) => setQualification(e.target.value)}
-                        >
-                          <option value="" disabled={qualification !== ""}>
-                            Select
-                          </option>
-                          <option value="Diploma">Diploma</option>
-                          <option value="Bachelor">Bachelor</option>
-                          <option value="Master">Master</option>
-                          <option value="PhD">PhD</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </Field>
+                    <div
+                      className={
+                        currentStep === 2 ? "block animate-fade-in" : "hidden"
+                      }
+                    >
+                      <FormSection
+                        title="Professional & Teaching"
+                        icon={faStar}
+                      >
+                        <Field label="Highest Qualification">
+                          <select
+                            name="qualification"
+                            className={inputCls}
+                            value={qualification}
+                            onChange={(e) => setQualification(e.target.value)}
+                          >
+                            <option value="" disabled={qualification !== ""}>
+                              Select
+                            </option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="Bachelor">Bachelor</option>
+                            <option value="Master">Master</option>
+                            <option value="PhD">PhD</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </Field>
 
-                      <Field label="Years of Experience">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          name="experienceYears"
-                          className={inputCls}
-                          placeholder="e.g., 3"
-                        />
-                                            </Field>
+                        <Field label="Years of Experience">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            name="experienceYears"
+                            className={inputCls}
+                            placeholder="e.g., 3"
+                          />
+                        </Field>
 
-                      <Field label="Current / Recent Organization">
-                        <input
-                          name="organization"
-                          className={inputCls}
-                          placeholder="Company / Institute"
-                        />
-                      </Field>
+                        <Field label="Current / Recent Organization">
+                          <input
+                            name="organization"
+                            className={inputCls}
+                            placeholder="Company / Institute"
+                          />
+                        </Field>
 
+                        <Field label="Skills / Technologies" required>
+                          <input
+                            name="skills"
+                            required
+                            className={inputCls}
+                            placeholder="e.g., MongoDB, Node.js"
+                          />
+                        </Field>
 
+                        <Field label="Spoken Languages" required>
+                          <input
+                            name="languages"
+                            required
+                            className={inputCls}
+                            placeholder="e.g., English, Spanish (comma-separated)"
+                          />
+                        </Field>
 
-                      <Field label="Skills / Technologies" required>
-                        <input
-                          name="skills"
-                          required
-                          className={inputCls}
-                          placeholder="e.g., MongoDB, Node.js"
-                        />
-                      </Field>
+                        <Field label="Teaching Mode" required>
+                          <select
+                            name="teachingMode"
+                            required
+                            className={inputCls}
+                            value={teachingMode}
+                            onChange={(e) => setTeachingMode(e.target.value)}
+                          >
+                            <option value="" disabled={teachingMode !== ""}>
+                              Select
+                            </option>
+                            <option value="Online">Online</option>
+                            <option value="Offline">Offline</option>
+                            <option value="Hybrid">Hybrid</option>
+                          </select>
+                        </Field>
 
-                      <Field label="Spoken Languages" required>
-                        <input
-                          name="languages"
-                          required
-                          className={inputCls}
-                          placeholder="e.g., English, Spanish (comma-separated)"
-                        />
-                      </Field>
-
-                      <Field label="Teaching Mode" required>
-                        <select
-                          name="teachingMode"
-                          required
-                          className={inputCls}
-                          value={teachingMode}
-                          onChange={(e) => setTeachingMode(e.target.value)}
-                        >
-                          <option value="" disabled={teachingMode !== ""}>
-                            Select
-                          </option>
-                          <option value="Online">Online</option>
-                          <option value="Offline">Offline</option>
-                          <option value="Hybrid">Hybrid</option>
-                        </select>
-                      </Field>
-
-                      <Field label="Short Bio / Summary" span={3}>
-                        <textarea
-                          name="bio"
-                          rows={3}
-                          className={textareaCls}
-                          placeholder="Brief profile to show on your site"
-                        />
-                      </Field>
-                    </FormSection>
+                        <Field label="Short Bio / Summary" span={3}>
+                          <textarea
+                            name="bio"
+                            rows={3}
+                            className={textareaCls}
+                            placeholder="Brief profile to show on your site"
+                          />
+                        </Field>
+                      </FormSection>
                     </div>
 
                     {/* ── Availability ── */}
-                    <div className={currentStep === 3 ? 'block animate-fade-in' : 'hidden'}>
+                    <div
+                      className={
+                        currentStep === 3 ? "block animate-fade-in" : "hidden"
+                      }
+                    >
                       <FormSection title="Availability" icon={faClock}>
-                      <div className="md:col-span-3">
-                        <label className={labelCls}>
-                          Weekdays <span className="text-rose-500">*</span>
-                        </label>
+                        <div className="md:col-span-3">
+                          <label className={labelCls}>
+                            Weekdays <span className="text-rose-500">*</span>
+                          </label>
 
-                        <div
-                          role="group"
-                          aria-label="Weekdays"
-                          className="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-2"
-                        >
-                          {dayOpts.map((d) => (
-                            <label
-                              key={d}
-                              className="relative block cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                name="availableDays"
-                                value={d}
-                                className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                                onChange={(e) => {
-                                  const formEl = e.currentTarget.form;
-                                  if (!formEl) return;
-                                  const boxes = formEl.querySelectorAll(
-                                    'input[name="availableDays"]',
-                                  );
-                                  const anyChecked = Array.from(boxes).some(
-                                    (b) => b.checked,
-                                  );
-                                  boxes.forEach((b) => b.setCustomValidity(""));
-                                  if (!anyChecked)
-                                    e.currentTarget.setCustomValidity(
-                                      "Select at least one weekday.",
-                                    );
-                                }}
-                              />
-                              <span className="flex h-11 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold text-slate-600 shadow-sm transition-all duration-150 peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-blue-600 peer-checked:text-white peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-cyan-200/70 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-400 hover:border-cyan-300">
-                                {d}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Field label="Start Time (24h)" required>
-                        <input
-                          type="time"
-                          name="availableStart"
-                          className={inputCls}
-                          ref={startRef}
-                          step="60"
-                          required
-                          value={availStart}
-                          onChange={(e) => {
-                            setAvailStart(e.target.value);
-                            startRef.current?.setCustomValidity("");
-                            (prefStartRefs.current || []).forEach((el) =>
-                              el?.setCustomValidity(""),
-                            );
-                            (prefEndRefs.current || []).forEach((el) =>
-                              el?.setCustomValidity(""),
-                            );
-                          }}
-                        />
-                      </Field>
-
-                      <Field label="End Time (24h)" required>
-                        <input
-                          type="time"
-                          name="availableEnd"
-                          className={inputCls}
-                          ref={endRef}
-                          step="60"
-                          required
-                          value={availEnd}
-                          onChange={(e) => {
-                            setAvailEnd(e.target.value);
-                            endRef.current?.setCustomValidity("");
-                            (prefStartRefs.current || []).forEach((el) =>
-                              el?.setCustomValidity(""),
-                            );
-                            (prefEndRefs.current || []).forEach((el) =>
-                              el?.setCustomValidity(""),
-                            );
-                          }}
-                        />
-                      </Field>
-
-                      <Field label="Timezone">
-                        <select
-                          name="timezone"
-                          className={inputCls}
-                          value={tz}
-                          onChange={(e) => setTz(e.target.value)}
-                        >
-                          <option value="" disabled={tz !== ""}>
-                            Select
-                          </option>
-                          {TIMEZONES_IN.map((z) => (
-                            <option key={z} value={z}>
-                              {z}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-
-                      <div className="md:col-span-3 mt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                            Preferable Time Slots{" "}
-                            <span className="text-slate-400 font-normal normal-case">
-                              (optional)
-                            </span>
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={addPrefSlot}
-                            disabled={!availStart || !availEnd}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 text-blue-700 text-xs font-semibold border border-cyan-100 hover:from-cyan-100 hover:to-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          <div
+                            role="group"
+                            aria-label="Weekdays"
+                            className="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-2"
                           >
-                            <FontAwesomeIcon
-                              icon={faPlus}
-                              className="text-[10px]"
-                            />{" "}
-                            Add Slot
-                          </button>
-                        </div>
-
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          Must fall within your overall start &amp; end times.
-                        </p>
-
-                        <div className="mt-3 space-y-3">
-                          {prefSlots.length === 0 ? (
-                            <div className="text-xs text-slate-500 italic py-3 text-center border border-dashed border-cyan-200 bg-white/70 rounded-xl">
-                              No preferable slots added. Set times above, then
-                              click "Add Slot."
-                            </div>
-                          ) : (
-                            prefSlots.map((s, idx) => (
-                              <div
-                                key={idx}
-                                className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-gradient-to-r from-white to-cyan-50/50 rounded-2xl p-3 border border-cyan-100 shadow-sm"
+                            {dayOpts.map((d) => (
+                              <label
+                                key={d}
+                                className="relative block cursor-pointer"
                               >
-                                <div className="md:col-span-3">
-                                  <label className={labelCls}>
-                                    Slot {idx + 1}: Start
-                                  </label>
-                                  <input
-                                    type="time"
-                                    value={s.start}
-                                    onChange={(e) => {
-                                      prefStartRefs.current[
-                                        idx
-                                      ]?.setCustomValidity("");
-                                      prefEndRefs.current[
-                                        idx
-                                      ]?.setCustomValidity("");
-                                      updatePrefSlot(
-                                        idx,
-                                        "start",
-                                        e.target.value,
+                                <input
+                                  type="checkbox"
+                                  name="availableDays"
+                                  value={d}
+                                  className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                  onChange={(e) => {
+                                    const formEl = e.currentTarget.form;
+                                    if (!formEl) return;
+                                    const boxes = formEl.querySelectorAll(
+                                      'input[name="availableDays"]',
+                                    );
+                                    const anyChecked = Array.from(boxes).some(
+                                      (b) => b.checked,
+                                    );
+                                    boxes.forEach((b) =>
+                                      b.setCustomValidity(""),
+                                    );
+                                    if (!anyChecked)
+                                      e.currentTarget.setCustomValidity(
+                                        "Select at least one weekday.",
                                       );
-                                    }}
-                                    className={inputCls}
-                                    ref={(el) =>
-                                      (prefStartRefs.current[idx] = el)
-                                    }
-                                    step="60"
-                                  />
-                                </div>
-
-                                <div className="md:col-span-3">
-                                  <label className={labelCls}>
-                                    Slot {idx + 1}: End
-                                  </label>
-                                  <input
-                                    type="time"
-                                    value={s.end}
-                                    onChange={(e) => {
-                                      prefEndRefs.current[
-                                        idx
-                                      ]?.setCustomValidity("");
-                                      prefStartRefs.current[
-                                        idx
-                                      ]?.setCustomValidity("");
-                                      updatePrefSlot(
-                                        idx,
-                                        "end",
-                                        e.target.value,
-                                      );
-                                    }}
-                                    className={inputCls}
-                                    ref={(el) =>
-                                      (prefEndRefs.current[idx] = el)
-                                    }
-                                    step="60"
-                                  />
-                                </div>
-
-                                <div className="md:col-span-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => removePrefSlot(idx)}
-                                    className="w-full h-11 rounded-xl border border-rose-200 text-rose-600 bg-white text-sm font-medium hover:bg-rose-50 transition-colors"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          )}
+                                  }}
+                                />
+                                <span className="flex h-11 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold text-slate-600 shadow-sm transition-all duration-150 peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-blue-600 peer-checked:text-white peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-cyan-200/70 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-400 hover:border-cyan-300">
+                                  {d}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </FormSection>
+
+                        <Field label="Start Time (24h)" required>
+                          <input
+                            type="time"
+                            name="availableStart"
+                            className={inputCls}
+                            ref={startRef}
+                            step="60"
+                            required
+                            value={availStart}
+                            onChange={(e) => {
+                              setAvailStart(e.target.value);
+                              startRef.current?.setCustomValidity("");
+                              (prefStartRefs.current || []).forEach((el) =>
+                                el?.setCustomValidity(""),
+                              );
+                              (prefEndRefs.current || []).forEach((el) =>
+                                el?.setCustomValidity(""),
+                              );
+                            }}
+                          />
+                        </Field>
+
+                        <Field label="End Time (24h)" required>
+                          <input
+                            type="time"
+                            name="availableEnd"
+                            className={inputCls}
+                            ref={endRef}
+                            step="60"
+                            required
+                            value={availEnd}
+                            onChange={(e) => {
+                              setAvailEnd(e.target.value);
+                              endRef.current?.setCustomValidity("");
+                              (prefStartRefs.current || []).forEach((el) =>
+                                el?.setCustomValidity(""),
+                              );
+                              (prefEndRefs.current || []).forEach((el) =>
+                                el?.setCustomValidity(""),
+                              );
+                            }}
+                          />
+                        </Field>
+
+                        <Field label="Timezone">
+                          <select
+                            name="timezone"
+                            className={inputCls}
+                            value={tz}
+                            onChange={(e) => setTz(e.target.value)}
+                          >
+                            <option value="" disabled={tz !== ""}>
+                              Select
+                            </option>
+                            {TIMEZONES_IN.map((z) => (
+                              <option key={z} value={z}>
+                                {z}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+
+                        <div className="md:col-span-3 mt-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                              Preferable Time Slots{" "}
+                              <span className="text-slate-400 font-normal normal-case">
+                                (optional)
+                              </span>
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={addPrefSlot}
+                              disabled={!availStart || !availEnd}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 text-blue-700 text-xs font-semibold border border-cyan-100 hover:from-cyan-100 hover:to-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <FontAwesomeIcon
+                                icon={faPlus}
+                                className="text-[10px]"
+                              />{" "}
+                              Add Slot
+                            </button>
+                          </div>
+
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            Must fall within your overall start &amp; end times.
+                          </p>
+
+                          <div className="mt-3 space-y-3">
+                            {prefSlots.length === 0 ? (
+                              <div className="text-xs text-slate-500 italic py-3 text-center border border-dashed border-cyan-200 bg-white/70 rounded-xl">
+                                No preferable slots added. Set times above, then
+                                click "Add Slot."
+                              </div>
+                            ) : (
+                              prefSlots.map((s, idx) => (
+                                <div
+                                  key={idx}
+                                  className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-gradient-to-r from-white to-cyan-50/50 rounded-2xl p-3 border border-cyan-100 shadow-sm"
+                                >
+                                  <div className="md:col-span-3">
+                                    <label className={labelCls}>
+                                      Slot {idx + 1}: Start
+                                    </label>
+                                    <input
+                                      type="time"
+                                      value={s.start}
+                                      onChange={(e) => {
+                                        prefStartRefs.current[
+                                          idx
+                                        ]?.setCustomValidity("");
+                                        prefEndRefs.current[
+                                          idx
+                                        ]?.setCustomValidity("");
+                                        updatePrefSlot(
+                                          idx,
+                                          "start",
+                                          e.target.value,
+                                        );
+                                      }}
+                                      className={inputCls}
+                                      ref={(el) =>
+                                        (prefStartRefs.current[idx] = el)
+                                      }
+                                      step="60"
+                                    />
+                                  </div>
+
+                                  <div className="md:col-span-3">
+                                    <label className={labelCls}>
+                                      Slot {idx + 1}: End
+                                    </label>
+                                    <input
+                                      type="time"
+                                      value={s.end}
+                                      onChange={(e) => {
+                                        prefEndRefs.current[
+                                          idx
+                                        ]?.setCustomValidity("");
+                                        prefStartRefs.current[
+                                          idx
+                                        ]?.setCustomValidity("");
+                                        updatePrefSlot(
+                                          idx,
+                                          "end",
+                                          e.target.value,
+                                        );
+                                      }}
+                                      className={inputCls}
+                                      ref={(el) =>
+                                        (prefEndRefs.current[idx] = el)
+                                      }
+                                      step="60"
+                                    />
+                                  </div>
+
+                                  <div className="md:col-span-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => removePrefSlot(idx)}
+                                      className="w-full h-11 rounded-xl border border-rose-200 text-rose-600 bg-white text-sm font-medium hover:bg-rose-50 transition-colors"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </FormSection>
                     </div>
 
                     {/* ── Compensation / Payout ── */}
-                    <div className={currentStep === 4 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Compensation / Payout" icon={faDollarSign}>
-                      <Field label="Rate Type">
-                        <select
-                          name="rateType"
-                          className={inputCls}
-                          value={rateType}
-                          onChange={(e) => setRateType(e.target.value)}
-                        >
-                          <option value="" disabled={rateType !== ""}>
-                            Select
-                          </option>
-                          <option value="Hourly">Hourly</option>
-                          <option value="Per Session">Per Session</option>
-                          <option value="Fixed">Fixed</option>
-                        </select>
-                      </Field>
+                    <div
+                      className={
+                        currentStep === 4 ? "block animate-fade-in" : "hidden"
+                      }
+                    >
+                      <FormSection
+                        title="Compensation / Payout"
+                        icon={faDollarSign}
+                      >
+                        <Field label="Rate Type">
+                          <select
+                            name="rateType"
+                            className={inputCls}
+                            value={rateType}
+                            onChange={(e) => setRateType(e.target.value)}
+                          >
+                            <option value="" disabled={rateType !== ""}>
+                              Select
+                            </option>
+                            <option value="Hourly">Hourly</option>
+                            <option value="Per Session">Per Session</option>
+                            <option value="Fixed">Fixed</option>
+                          </select>
+                        </Field>
 
-                      <Field label="Expected Rate">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          name="expectedRate"
-                          className={inputCls}
-                          placeholder="e.g., 1500"
-                        />
-                      </Field>
+                        <Field label="Expected Rate">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            name="expectedRate"
+                            className={inputCls}
+                            placeholder="e.g., 1500"
+                          />
+                        </Field>
 
-                      <Field label="Currency">
-                        <select
-                          name="currency"
-                          className={inputCls}
-                          value={currency}
-                          onChange={(e) => setCurrency(e.target.value)}
-                        >
-                          <option value="" disabled={currency !== ""}>
-                            Select
-                          </option>
-                          <option value="INR">INR</option>
-                        </select>
-                      </Field>
+                        <Field label="Currency">
+                          <select
+                            name="currency"
+                            className={inputCls}
+                            value={currency}
+                            onChange={(e) => setCurrency(e.target.value)}
+                          >
+                            <option value="" disabled={currency !== ""}>
+                              Select
+                            </option>
+                            <option value="INR">INR</option>
+                          </select>
+                        </Field>
 
-                      <Field label="Preferred Payout Method">
-                        <select
-                          name="payoutMethod"
-                          className={inputCls}
-                          value={payoutMethod}
-                          onChange={(e) => setPayoutMethod(e.target.value)}
-                          disabled={
-                            country !== "India"
-                          }
-                        >
-                          <option value="" disabled hidden>
-                            {country ? "Select" : "Select country first"}
-                          </option>
-                          {country === "India" && (
-                            <>
-                              <option>NEFT/RTGS</option>
-                              <option>UPI</option>
-                              <option>IMPS</option>
-                              <option>Bank Transfer</option>
-                            </>
-                          )}
-                        </select>
-                      </Field>
+                        <Field label="Preferred Payout Method">
+                          <select
+                            name="payoutMethod"
+                            className={inputCls}
+                            value={payoutMethod}
+                            onChange={(e) => setPayoutMethod(e.target.value)}
+                            disabled={country !== "India"}
+                          >
+                            <option value="" disabled hidden>
+                              {country ? "Select" : "Select country first"}
+                            </option>
+                            {country === "India" && (
+                              <>
+                                <option>NEFT/RTGS</option>
+                                <option>UPI</option>
+                                <option>IMPS</option>
+                                <option>Bank Transfer</option>
+                              </>
+                            )}
+                          </select>
+                        </Field>
 
-                      <Field label="Payout Identifier" span={2}>
-                        <input
-                          name="payoutIdentifier"
-                          className={inputCls}
-                          placeholder={payIdPlaceholder}
-                        />
-                      </Field>
-                    </FormSection>
+                        <Field label="Payout Identifier" span={2}>
+                          <input
+                            name="payoutIdentifier"
+                            className={inputCls}
+                            placeholder={payIdPlaceholder}
+                          />
+                        </Field>
+                      </FormSection>
                     </div>
 
                     {/* ── Compliance & Documents ── */}
-                    <div className={currentStep === 5 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Compliance & Documents" icon={faShieldAlt}>
-                      <Field label="Resume / CV" required>
-                        <input
-                          type="file"
-                          name="resume"
-                          required
-                          className={inputCls}
-                          accept=".pdf,.doc,.docx"
-                        />
-                      </Field>
-
-                      <Field label="Profile Photo">
-                        <input
-                          type="file"
-                          name="photo"
-                          className={inputCls}
-                          accept="image/*"
-                        />
-                      </Field>
-
-                      <Field label="Certificates">
-                        <input
-                          type="file"
-                          name="certificates"
-                          className={inputCls}
-                          accept=".pdf,.png,.jpg,.jpeg"
-                          multiple
-                        />
-                      </Field>
-
-                      <Field label="Background Check">
-                        <select
-                          name="backgroundCheck"
-                          className={inputCls}
-                          value={backgroundCheck}
-                          onChange={(e) => setBackgroundCheck(e.target.value)}
-                        >
-                          <option value="" disabled={backgroundCheck !== ""}>
-                            Select
-                          </option>
-                          <option value="Pending">Pending</option>
-                          <option value="Cleared">Cleared</option>
-                          <option value="Not Required">Not Required</option>
-                        </select>
-                      </Field>
-
-                      <div className="md:col-span-2 flex items-center gap-6">
-                        <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                    <div
+                      className={
+                        currentStep === 5 ? "block animate-fade-in" : "hidden"
+                      }
+                    >
+                      <FormSection
+                        title="Compliance & Documents"
+                        icon={faShieldAlt}
+                      >
+                        <Field label="Resume / CV" required>
                           <input
-                            type="checkbox"
-                            name="ndaSigned"
-                            className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
-                          />
-                          <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                            NDA signed
-                          </span>
-                        </label>
-
-                        <label className="inline-flex items-center gap-2.5 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            name="agreeToTerms"
+                            type="file"
+                            name="resume"
                             required
-                            className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                            className={inputCls}
+                            accept=".pdf,.doc,.docx"
                           />
-                          <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                            I confirm all details are accurate{" "}
-                            <span className="text-rose-500">*</span>
-                          </span>
-                        </label>
-                      </div>
-                    </FormSection>
+                        </Field>
+
+                        <Field label="Profile Photo">
+                          <input
+                            type="file"
+                            name="photo"
+                            className={inputCls}
+                            accept="image/*"
+                          />
+                        </Field>
+
+                        <Field label="Certificates">
+                          <input
+                            type="file"
+                            name="certificates"
+                            className={inputCls}
+                            accept=".pdf,.png,.jpg,.jpeg"
+                            multiple
+                          />
+                        </Field>
+
+                        <Field label="Background Check">
+                          <select
+                            name="backgroundCheck"
+                            className={inputCls}
+                            value={backgroundCheck}
+                            onChange={(e) => setBackgroundCheck(e.target.value)}
+                          >
+                            <option value="" disabled={backgroundCheck !== ""}>
+                              Select
+                            </option>
+                            <option value="Pending">Pending</option>
+                            <option value="Cleared">Cleared</option>
+                            <option value="Not Required">Not Required</option>
+                          </select>
+                        </Field>
+
+                        <div className="md:col-span-2 flex items-center gap-6">
+                          <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              name="ndaSigned"
+                              className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                              NDA signed
+                            </span>
+                          </label>
+
+                          <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              name="agreeToTerms"
+                              required
+                              className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                              I confirm all details are accurate{" "}
+                              <span className="text-rose-500">*</span>
+                            </span>
+                          </label>
+                        </div>
+                      </FormSection>
                     </div>
 
                     {/* ── Assignment ── */}
-                    <div className={currentStep === 5 ? 'block animate-fade-in' : 'hidden'}>
+                    <div
+                      className={
+                        currentStep === 5 ? "block animate-fade-in" : "hidden"
+                      }
+                    >
                       <FormSection title="Assignment" icon={faClipboardList}>
-                      <Field label="Assign to Internship (title or ID)">
-                        <input
-                          name="assignInternship"
-                          className={inputCls}
-                          placeholder="e.g., MERN Bootcamp – 2025 Summer"
-                        />
-                      </Field>
+                        <Field label="Assign to Internship (title or ID)">
+                          <input
+                            name="assignInternship"
+                            className={inputCls}
+                            placeholder="e.g., MERN Bootcamp – 2025 Summer"
+                          />
+                        </Field>
 
-                      <Field label="Notes" span={3}>
-                        <textarea
-                          name="notes"
-                          rows={3}
-                          className={textareaCls}
-                          placeholder="Internal notes"
-                        />
-                      </Field>
-                    </FormSection>
+                        <Field label="Notes" span={3}>
+                          <textarea
+                            name="notes"
+                            rows={3}
+                            className={textareaCls}
+                            placeholder="Internal notes"
+                          />
+                        </Field>
+                      </FormSection>
                     </div>
 
-                    
                     {/* Wizard Footer */}
                     <div className="flex items-center justify-between pt-5 border-t border-slate-100 mt-8">
                       <button
                         type="button"
                         onClick={() => {
-                           setCurrentStep(s => Math.max(1, s - 1));
-                           document.getElementById('wizard-scroll-container')?.scrollTo(0,0);
+                          setCurrentStep((s) => Math.max(1, s - 1));
+                          document
+                            .getElementById("wizard-scroll-container")
+                            ?.scrollTo(0, 0);
                         }}
                         disabled={currentStep === 1}
-                        className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all ${currentStep === 1 ? 'opacity-50 cursor-not-allowed bg-slate-50 text-slate-400 border border-slate-200' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'}`}
+                        className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all ${currentStep === 1 ? "opacity-50 cursor-not-allowed bg-slate-50 text-slate-400 border border-slate-200" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"}`}
                       >
                         Back
                       </button>
@@ -1529,26 +1608,32 @@ const InstructureManagement = () => {
                           <button
                             type="button"
                             onClick={() => {
-                                const container = document.getElementById('wizard-scroll-container');
-                                if (!container) return;
-                                
-                                const visibleStep = container.querySelector('.block.animate-fade-in');
-                                if (!visibleStep) return;
+                              const container = document.getElementById(
+                                "wizard-scroll-container",
+                              );
+                              if (!container) return;
 
-                                const inputs = visibleStep.querySelectorAll('input, select, textarea');
-                                let isValid = true;
-                                for (const input of inputs) {
-                                    if (!input.checkValidity()) {
-                                        input.reportValidity();
-                                        isValid = false;
-                                        break;
-                                    }
-                                }
+                              const visibleStep = container.querySelector(
+                                ".block.animate-fade-in",
+                              );
+                              if (!visibleStep) return;
 
-                                if (isValid) {
-                                    setCurrentStep(s => Math.min(5, s + 1));
-                                    container.scrollTo(0,0);
+                              const inputs = visibleStep.querySelectorAll(
+                                "input, select, textarea",
+                              );
+                              let isValid = true;
+                              for (const input of inputs) {
+                                if (!input.checkValidity()) {
+                                  input.reportValidity();
+                                  isValid = false;
+                                  break;
                                 }
+                              }
+
+                              if (isValid) {
+                                setCurrentStep((s) => Math.min(5, s + 1));
+                                container.scrollTo(0, 0);
+                              }
                             }}
                             className="px-7 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm shadow-md hover:bg-slate-800 active:scale-95 transition-all"
                           >
@@ -1566,7 +1651,6 @@ const InstructureManagement = () => {
                         )}
                       </div>
                     </div>
-    
                   </form>
                 </div>
               </div>
