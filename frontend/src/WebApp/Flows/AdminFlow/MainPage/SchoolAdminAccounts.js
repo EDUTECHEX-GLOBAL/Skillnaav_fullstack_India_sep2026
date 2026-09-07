@@ -288,7 +288,7 @@ const SchoolAdminAccounts = () => {
                 <p>{selectedAdmin.state}</p>
               </div>
               <div>
-                <label className="font-semibold block">Postal Code</label>
+                <label className="font-semibold block">PIN Code</label>
                 <p>{selectedAdmin.postalCode}</p>
               </div>
               <div>

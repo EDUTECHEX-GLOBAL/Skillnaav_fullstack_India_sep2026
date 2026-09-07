@@ -1,27 +1,9 @@
 // routes/partnerWebhookRoutes.js
-// PayPal webhook receiver for partner payments.
-// Handles PAYMENT.CAPTURE.COMPLETED when the partner's browser closes before onApprove fires.
-//
-// SETUP:
-//   1. PayPal Developer Dashboard → Your App → Webhooks
-//   2. Add endpoint: https://yourdomain.com/api/webhooks/partner/paypal
-//   3. Subscribe to: PAYMENT.CAPTURE.COMPLETED
-//   4. Set PAYPAL_WEBHOOK_ID in .env (or PAYPAL_PARTNER_WEBHOOK_ID if you registered separately)
-//
-// In server.js, register BEFORE express.json() using express.raw():
-//   const partnerWebhook = require("./routes/partnerWebhookRoutes");
-//   app.use(
-//     "/api/webhooks/partner",
-//     express.raw({ type: "application/json" }),
-//     partnerWebhook
-//   );
-//   app.use(express.json()); // for all other routes
+// Razorpay webhook receiver for partner payments.
 
 const express  = require("express");
 const router   = express.Router();
-const axios    = require("axios");
-
-const { getAccessToken }                  = require("../../utils/paypal");
+const crypto   = require("crypto");
 const { getIO }                           = require("../../utils/socket");
 const PartnerPayment                      = require("../../models/webapp-models/PartnerPaymentModel");
 const Partner                             = require("../../models/webapp-models/partnerModel");
@@ -51,62 +33,46 @@ function parseBody(req) {
 }
 
 // ─────────────────────────────────────────────
-// Verify PayPal webhook signature
+// Verify Razorpay webhook signature
 // ─────────────────────────────────────────────
-async function verifyWebhookSignature(req) {
-  const accessToken = await getAccessToken();
+function verifyWebhookSignature(req) {
+  const signature = req.headers["x-razorpay-signature"];
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-  // ✅ FIX 1: Parse body once here and reuse the object — no double JSON.parse
-  const event = parseBody(req);
+  if (!signature || !secret) return false;
 
-  const body = {
-    auth_algo:         req.headers["paypal-auth-algo"],
-    cert_url:          req.headers["paypal-cert-url"],
-    transmission_id:   req.headers["paypal-transmission-id"],
-    transmission_sig:  req.headers["paypal-transmission-sig"],
-    transmission_time: req.headers["paypal-transmission-time"],
-    webhook_id:        process.env.PAYPAL_PARTNER_WEBHOOK_ID || process.env.PAYPAL_WEBHOOK_ID,
-    webhook_event:     event, // ✅ pass the already-parsed object, not a re-stringified string
-  };
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(req.body.toString())
+    .digest("hex");
 
-  const response = await axios.post(
-    `${process.env.PAYPAL_API}/v1/notifications/verify-webhook-signature`,
-    body,
-    {
-      headers: {
-        Authorization:  `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    },
-  );
-
-  return response.data?.verification_status === "SUCCESS";
+  return expectedSignature === signature;
 }
 
 // ─────────────────────────────────────────────
-// POST /api/webhooks/partner/paypal
+// POST /api/webhooks/partner/razorpay
 // ─────────────────────────────────────────────
-router.post("/paypal", async (req, res) => {
-  // Respond 200 immediately so PayPal does not retry
+router.post("/razorpay", async (req, res) => {
+  // Respond 200 immediately so Razorpay does not retry
   res.sendStatus(200);
 
   try {
-    const isValid = await verifyWebhookSignature(req);
+    const isValid = verifyWebhookSignature(req);
     if (!isValid) {
       console.warn("⚠️ Partner webhook: signature verification failed — ignoring");
       return;
     }
 
-    // ✅ FIX 2: Parse body once — verifyWebhookSignature already parsed it above,
-    // but since that function is a separate scope we parse again here safely via helper.
     const event = parseBody(req);
 
-    if (event.event_type !== "PAYMENT.CAPTURE.COMPLETED") return;
+    if (event.event !== "order.paid") return;
 
-    const capture        = event.resource;
-    const captureId      = capture?.id;
-    const orderId        = capture?.supplementary_data?.related_ids?.order_id;
-    const capturedAmount = parseFloat(capture?.amount?.value || "0");
+    const paymentEntity = event.payload?.payment?.entity;
+    const orderEntity = event.payload?.order?.entity;
+
+    const captureId = paymentEntity?.id;
+    const orderId = orderEntity?.id;
+    const capturedAmount = (paymentEntity?.amount || 0) / 100;
 
     if (!captureId || !orderId) {
       console.error("❌ Partner webhook: missing captureId or orderId", event);

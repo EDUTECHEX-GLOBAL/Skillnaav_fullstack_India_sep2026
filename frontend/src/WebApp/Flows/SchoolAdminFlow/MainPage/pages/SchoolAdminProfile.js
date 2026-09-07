@@ -15,7 +15,7 @@ const SchoolAdminProfile = () => {
     city: "",
     province: "",
     postalCode: "",
-    country: "",
+    country: "India",
     website: "",
     contactPerson: "",
     contactEmail: "",
@@ -34,7 +34,10 @@ const SchoolAdminProfile = () => {
       const res = await axios.get("/api/school-admin/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setFormData(res.data);
+      setFormData({
+        ...res.data,
+        country: res.data.country || "India",
+      });
     } catch (err) {
       console.error("Error fetching profile:", err);
     }
@@ -132,8 +135,8 @@ const SchoolAdminProfile = () => {
 
           <InfoSection title="Location Details">
             <IconInput icon={<FaCity />} label="City" name="city" value={formData.city} editable={isEditing} onChange={handleChange} />
-            <IconInput icon={<FaMapMarkerAlt />} label="Province" name="province" value={formData.province} editable={isEditing} onChange={handleChange} />
-            <IconInput icon={<FaAddressCard />} label="Postal Code" name="postalCode" value={formData.postalCode} editable={isEditing} onChange={handleChange} />
+            <IconInput icon={<FaMapMarkerAlt />} label="State" name="province" value={formData.province} editable={isEditing} onChange={handleChange} />
+            <IconInput icon={<FaAddressCard />} label="PIN Code" name="postalCode" value={formData.postalCode} editable={isEditing} onChange={handleChange} />
             <IconInput icon={<FaGlobe />} label="Country" name="country" value={formData.country} editable={isEditing} onChange={handleChange} />
           </InfoSection>
 

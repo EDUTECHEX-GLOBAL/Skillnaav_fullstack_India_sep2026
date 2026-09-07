@@ -18,8 +18,8 @@ dotenv.config();
 const app = express();
 
 // Webhook raw body handlers must be registered before express.json().
-app.use("/api/webhooks/paypal", express.raw({ type: "application/json" }));
-app.use("/api/webhooks/partner/paypal", express.raw({ type: "application/json" }));
+app.use("/api/webhooks/razorpay", express.raw({ type: "application/json" }));
+app.use("/api/webhooks/partner/razorpay", express.raw({ type: "application/json" }));
 
 app.use(compression());
 app.use(express.json({ limit: "15mb" }));

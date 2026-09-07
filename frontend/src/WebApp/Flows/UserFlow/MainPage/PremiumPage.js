@@ -5,8 +5,8 @@ import axios from "../../../../api/axiosInstance";
 // The server derives the real price from planType — this is only for UI rendering.
 const PLAN_PRICES = {
   "Free": 0,
-  "Premium Basic": 2.99,
-  "Premium Plus": 6.99,
+  "Premium Basic": 249,
+  "Premium Plus": 599,
 };
 
 function PremiumPage() {
@@ -68,125 +68,26 @@ function PremiumPage() {
     fetchPremiumStatus();
   }, []);
 
-  // ─── Load PayPal SDK ───
+  // ─── Load Razorpay SDK ───
   useEffect(() => {
-    if (!process.env.REACT_APP_PAYPAL_CLIENT_ID) {
-      setAlert({ show: true, message: "PayPal Client ID not set. Please check your .env file.", type: "error" });
+    if (!process.env.REACT_APP_RAZORPAY_KEY_ID) {
+      setAlert({ show: true, message: "Razorpay Key ID not set. Please check your .env file.", type: "error" });
       return;
     }
-    if (window.paypal) { setSdkReady(true); return; }
+    if (window.Razorpay) { setSdkReady(true); return; }
 
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.REACT_APP_PAYPAL_CLIENT_ID}&currency=USD`;
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     script.onload = () => setSdkReady(true);
     script.onerror = () => {
-      setAlert({ show: true, message: "Failed to load PayPal SDK. Check your Client ID.", type: "error" });
+      setAlert({ show: true, message: "Failed to load Razorpay SDK.", type: "error" });
     };
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, []);
 
-  // ─── Render PayPal Buttons ───
-  useEffect(() => {
-    if (selectedPlanIndex === null || !selectedPlanType || !sdkReady) return;
-
-    const containerId = `paypal-button-container-${selectedPlanIndex}`;
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = "";
-
-    window.paypal
-      .Buttons({
-        createOrder: async () => {
-          try {
-            const token = localStorage.getItem("userToken");
-            // FIX 5: Only send planType — server derives amount and duration
-            const orderRes = await axios.post(
-              "/api/payments/paypal/order",
-              { planType: selectedPlanType },
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            return orderRes.data.id;
-          } catch (err) {
-            console.error("Create order failed:", err);
-            showAlert("Unable to create PayPal order.", "error");
-            throw err;
-          }
-        },
-
-        onApprove: async (data, actions) => {
-          setIsProcessing(true);
-          try {
-            const token = localStorage.getItem("userToken");
-            // FIX 5: Only send orderID and planType — server derives everything else
-            const verifyRes = await axios.post(
-              "/api/payments/paypal/verify",
-              {
-                orderID: data.orderID,
-                planType: selectedPlanType,
-              },
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            if (verifyRes.data.success) {
-              showAlert("Payment verified successfully! Check your email for a receipt.", "success");
-
-              // Clear stale billing history so UI will refetch on next open
-              setPaymentHistory([]);
-              setShowHistory(false);
-
-              const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo"))) || {};
-              const updatedUser = {
-                ...userInfo,
-                isPremium: true,
-                planType: verifyRes.data.user.planType,
-                premiumExpiration: verifyRes.data.user.premiumExpiration,
-              };
-              localStorage.setItem("studentInfo", JSON.stringify(updatedUser));
-
-              setIsPremium(true);
-              setPlanType(updatedUser.planType);
-              setPremiumExpiration(updatedUser.premiumExpiration);
-              setSelectedPlanIndex(null);
-              setSelectedPlanType(null);
-              setExpiryWarning(false);
-              window.dispatchEvent(new Event("userInfoUpdated"));
-            } else {
-              showAlert("Payment verification failed. Please contact support.", "error");
-            }
-          } catch (err) {
-            const issue =
-              err.response?.data?.details?.details?.[0]?.issue ||
-              err.response?.data?.details?.[0]?.issue;
-
-            if (issue === "INSTRUMENT_DECLINED") {
-              setIsProcessing(false);
-              showAlert("Your card was declined. Please try a different payment method.", "error");
-              return actions.restart();
-            }
-
-            console.error("Verify failed:", err);
-            showAlert("Payment failed. Please try again or contact support.", "error");
-          } finally {
-            setIsProcessing(false);
-          }
-        },
-
-        onError: (err) => {
-          console.error("PayPal button error:", err);
-          showAlert("PayPal encountered an error. Please try again.", "error");
-          setIsProcessing(false);
-        },
-
-        onCancel: () => {
-          showAlert("Payment cancelled.", "error");
-          setSelectedPlanIndex(null);
-          setSelectedPlanType(null);
-        },
-      })
-      .render(`#${containerId}`);
-  }, [selectedPlanIndex, selectedPlanType, sdkReady]);
+  // (Removed PayPal Buttons Effect - replaced by direct Razorpay handler in handlePayment)
 
   const showAlert = (message, type) => {
     setAlert({ show: true, message, type });
@@ -198,12 +99,12 @@ function PremiumPage() {
     showAlert("You are on the Free plan. No payment needed!", "success");
   };
 
-  const handlePayment = (planTypeStr, index) => {
-    // FIX 6: Free plan bypasses PayPal entirely
+  const handlePayment = async (planTypeStr, index) => {
+    // FIX 6: Free plan bypasses Razorpay entirely
     if (planTypeStr === "Free") { handleFreePlan(); return; }
 
     if (!sdkReady) {
-      showAlert("PayPal is still loading. Try again shortly.", "error");
+      showAlert("Razorpay is still loading. Try again shortly.", "error");
       return;
     }
     const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo")));
@@ -211,9 +112,87 @@ function PremiumPage() {
       showAlert("User session not found. Please log in again.", "error");
       return;
     }
-    // FIX 5: Store only planType — no amount passed to server from here
-    setSelectedPlanIndex(index);
-    setSelectedPlanType(planTypeStr);
+    
+    setIsProcessing(true);
+    try {
+      const token = localStorage.getItem("userToken");
+      const orderRes = await axios.post(
+        "/api/payments/razorpay/order",
+        { planType: planTypeStr },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: orderRes.data.amount,
+        currency: orderRes.data.currency,
+        name: "Skillnaav",
+        description: `Upgrade to ${planTypeStr}`,
+        order_id: orderRes.data.id,
+        handler: async function (response) {
+          setIsProcessing(true);
+          try {
+            const verifyRes = await axios.post(
+              "/api/payments/razorpay/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                planType: planTypeStr,
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (verifyRes.data.success) {
+              showAlert("Payment verified successfully! Check your email for a receipt.", "success");
+              setPaymentHistory([]);
+              setShowHistory(false);
+
+              const updatedUser = {
+                ...userInfo,
+                isPremium: true,
+                planType: verifyRes.data.user.planType,
+                premiumExpiration: verifyRes.data.user.premiumExpiration,
+              };
+              localStorage.setItem("studentInfo", JSON.stringify(updatedUser));
+
+              setIsPremium(true);
+              setPlanType(updatedUser.planType);
+              setPremiumExpiration(updatedUser.premiumExpiration);
+              setExpiryWarning(false);
+              window.dispatchEvent(new Event("userInfoUpdated"));
+            } else {
+              showAlert("Payment verification failed. Please contact support.", "error");
+            }
+          } catch (err) {
+            console.error("Verify failed:", err);
+            showAlert("Payment failed. Please try again or contact support.", "error");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: userInfo.name || "",
+          email: userInfo.email || "",
+          contact: userInfo.phone || "",
+        },
+        theme: {
+          color: "#4f46e5", // Indigo-600 to match Skillnaav theme
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response) {
+        console.error("Razorpay payment failed:", response.error);
+        showAlert("Payment failed: " + response.error.description, "error");
+      });
+      rzp1.open();
+    } catch (err) {
+      console.error("Create order failed:", err);
+      showAlert("Unable to create Razorpay order.", "error");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // FIX 3: Fetch payment history
@@ -242,7 +221,7 @@ function PremiumPage() {
     {
       plantype: "Free",
       plantypesubhead: "Basic access to explore internships",
-      price: "$0",
+      price: "₹0",
       duration: "30",
       durationLabel: "30 days",
       pricebtn: "Start Free",
@@ -253,7 +232,7 @@ function PremiumPage() {
     {
       plantype: "Premium Basic",
       plantypesubhead: "Tools for active internship seekers",
-      price: "$2.99",
+      price: "₹249",
       duration: "2",
       durationLabel: "2 days",
       pricebtn: "Subscribe",
@@ -264,7 +243,7 @@ function PremiumPage() {
     {
       plantype: "Premium Plus",
       plantypesubhead: "Everything you need to succeed",
-      price: "$6.99",
+      price: "₹599",
       duration: "7",
       durationLabel: "7 days",
       pricebtn: "Subscribe",
@@ -438,18 +417,25 @@ function PremiumPage() {
               <button
                 onClick={() => handlePayment(card.plantype, index)}
                 disabled={(isCurrentActivePlan && card.plantype === "Free") || isProcessing}
-                className={`mt-8 py-3 rounded-lg font-semibold transition-all ${theme.btn} ${
-                  (isCurrentActivePlan && card.plantype === "Free") ? "opacity-60 cursor-not-allowed" : ""
+                className={`mt-8 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+                  (isCurrentActivePlan && card.plantype === "Free") || card.plantype === "Free"
+                    ? `opacity-60 cursor-not-allowed ${theme.btn}`
+                    : "bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md"
                 }`}
               >
                 {isCurrentActivePlan 
                   ? (card.plantype === "Free" ? "✓ Subscribed" : "Subscribe Again") 
-                  : card.pricebtn}
+                  : (card.plantype === "Free" ? card.pricebtn : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+                      </svg>
+                      Pay with Razorpay
+                    </>
+                  ))}
               </button>
 
-              {selectedPlanIndex === index && (
-                <div id={`paypal-button-container-${index}`} className="mt-4"></div>
-              )}
+              {/* Removed PayPal button container */}
             </div>
           );
         })}
@@ -495,7 +481,7 @@ function PremiumPage() {
                       <tr key={p._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-3 text-gray-700">{formatDate(p.createdAt)}</td>
                         <td className="px-5 py-3 text-gray-900 font-medium">{p.planType}</td>
-                        <td className="px-5 py-3 text-gray-700">${Number(p.amount).toFixed(2)}</td>
+                        <td className="px-5 py-3 text-gray-700">₹{Number(p.amount).toFixed(2)}</td>
                         <td className="px-5 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(p.status)}`}>
                             {p.status}

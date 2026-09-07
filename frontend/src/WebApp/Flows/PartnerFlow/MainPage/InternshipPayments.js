@@ -59,7 +59,7 @@ const fmtDateRange = (start, end) => {
   return s ? `${s}${e ? ` – ${e}` : ""}` : "—";
 };
 
-const fmtAmount = (amount, currency = "USD") =>
+const fmtAmount = (amount, currency = "INR") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
     amount || 0,
   );
@@ -399,7 +399,7 @@ const InternshipPayments = () => {
     0,
   );
   const currency =
-    completedPayments[0]?.currency || payments[0]?.currency || "USD";
+    completedPayments[0]?.currency || payments[0]?.currency || "INR";
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (

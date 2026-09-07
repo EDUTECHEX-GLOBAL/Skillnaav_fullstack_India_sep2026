@@ -1,6 +1,6 @@
 // File: AdminForgotPassword.js
 
-import React from "react";
+import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
@@ -14,25 +14,47 @@ const validationSchema = Yup.object({
 
 const AdminForgotPassword = () => {
   const navigate = useNavigate();
-  const loading = false;
-  const error = "";
+  // const loading = false;
+  // const error = "";
   const successMsg = "";
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (values, { setSubmitting }) => {
     const email = values.email?.trim() || "";
 
+    setError("");
+    setLoading(true);
+
     try {
       // ✅ Send OTP in background (do not block UI)
-      await axios.post("/api/admin/forgot-password", { email }).catch((err) => {
-        console.error("Failed to send OTP:", err.response?.data || err.message);
-      });
+      // await axios.post("/api/admin/forgot-password", { email }).catch((err) => {
+      //   console.error("Failed to send OTP:", err.response?.data || err.message);
+      // });
 
-      // ✅ Navigate immediately (no waiting)
-      navigate(`/admin/reset-password?email=${encodeURIComponent(email)}`);
+      // // ✅ Navigate immediately (no waiting)
+      // navigate(`/admin/reset-password?email=${encodeURIComponent(email)}`);
+      const response = await axios.post("/api/admin/forgot-password", {
+        email,
+      });
+      // 01-09-2026
+      if (response.status >= 200 && response.status < 300) {
+        navigate(`/admin/reset-password?email=${encodeURIComponent(email)}`);
+      } else {
+        setError(
+          response.data?.message || "Unable to send OTP. Please try again.",
+        );
+      }
     } catch (err) {
       console.error("Failed to send OTP:", err.response?.data || err.message);
+      //01-09-2026
+      setError(
+        err.response?.data?.message || "Unable to send OTP. Please try again.",
+      );
     } finally {
       // ✅ Stop Formik submit immediately
+      //01-09-2026
+      setLoading(false);
       setSubmitting(false);
     }
   };

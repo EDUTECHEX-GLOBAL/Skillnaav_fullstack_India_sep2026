@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "../../../../../api/axiosInstance";
 
-const PAYPAL_CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID;
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID;
 
 const plans = [
   {
     title: "Free Plan",
-    price: "$0",
+    price: "₹0",
     credits: "50 Student Credits",
     features: ["Basic Dashboard Access", "Limited Email Support"],
     button: "Choose Free Plan",
@@ -23,7 +22,7 @@ const plans = [
   },
   {
     title: "Standard Plan",
-    price: "$10",
+    price: "₹849",
     credits: "500 Student Credits",
     features: ["Full Dashboard Access", "Priority Email Support"],
     button: "Choose Standard Plan",
@@ -34,11 +33,10 @@ const plans = [
     buttonColor: "bg-white text-purple-700 border-2 border-purple-400 hover:bg-purple-50",
     creditIconColor: "text-purple-600",
     checkmarkColor: "text-purple-600",
-    paypalAmount: "10.00",
   },
   {
     title: "Premium Plan",
-    price: "$25",
+    price: "₹2100",
     credits: "2000 Student Credits",
     features: [
       "Full Dashboard Access",
@@ -54,7 +52,6 @@ const plans = [
     buttonColor: "bg-white text-green-700 border-2 border-green-400 hover:bg-green-50",
     creditIconColor: "text-green-600",
     checkmarkColor: "text-green-600",
-    paypalAmount: "25.00",
   },
   {
     title: "Custom Plan",
@@ -75,6 +72,23 @@ const plans = [
 const SubscriptionPlans = () => {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState(null);
+  const [sdkReady, setSdkReady] = useState(false);
+
+  useEffect(() => {
+    if (!RAZORPAY_KEY_ID) {
+      console.error("Razorpay Key ID not set");
+      return;
+    }
+    if (window.Razorpay) {
+      setSdkReady(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => setSdkReady(true);
+    document.body.appendChild(script);
+  }, []);
 
   useEffect(() => {
     const fetchCurrentPlan = async () => {
@@ -108,42 +122,73 @@ const SubscriptionPlans = () => {
     }
   };
 
- const handlePaidPlanActivation = async (planTitle, orderId) => {
-  try {
-    const token = localStorage.getItem("schoolAdminToken");
+  const handlePaidPlanActivation = async (planTitle) => {
+    if (!sdkReady) {
+      toast.error("Razorpay is still loading. Please wait.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("schoolAdminToken");
+      const { data: orderRes } = await axios.post(
+        "/api/school-admin/payments/razorpay/order",
+        { plan: planTitle },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    await axios.post(
-      "/api/school-admin/payments/subscribe",
-      {
-        plan: planTitle,
-        orderId,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: orderRes.amount,
+        currency: orderRes.currency,
+        name: "Skillnaav",
+        description: `Upgrade to ${planTitle}`,
+        order_id: orderRes.id,
+        handler: async function (response) {
+          try {
+            await axios.post(
+              "/api/school-admin/payments/razorpay/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan: planTitle,
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(`✅ ${planTitle} activated successfully!`);
+            setCurrentPlan(planTitle);
+          } catch (err) {
+            console.error("Paid Plan verification error:", err);
+            toast.error("❌ Payment verification failed. Please contact support.");
+          }
         },
-      }
-    );
+        theme: {
+          color: "#4f46e5",
+        },
+      };
 
-    toast.success(`✅ ${planTitle} activated successfully!`);
-    setCurrentPlan(planTitle);
-  } catch (err) {
-    console.error("Paid Plan activation error:", err);
-  }
-};
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response) {
+        console.error("Razorpay payment failed:", response.error);
+        toast.error("❌ Payment failed. Please try again.");
+      });
+      rzp1.open();
+    } catch (err) {
+      console.error("Paid Plan activation error:", err);
+      toast.error("❌ Failed to initiate payment.");
+    }
+  };
 
   const handleContactSales = () => {
     toast.info("📞 Please contact sales at support@example.com");
   };
 
-  if (!PAYPAL_CLIENT_ID) {
-    console.error("❌ Missing PayPal Client ID. Check .env file.");
-    return <p className="text-red-600 text-center">PayPal is not configured.</p>;
+  if (!RAZORPAY_KEY_ID) {
+    console.error("❌ Missing Razorpay Key ID. Check .env file.");
+    return <p className="text-red-600 text-center">Razorpay is not configured.</p>;
   }
 
   return (
-    <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID }}>
-      <div className="min-h-screen bg-white py-12 px-6">
+    <div className="min-h-screen bg-white py-12 px-6">
         <ToastContainer position="top-center" autoClose={3000} />
 
         {/* Header */}
@@ -227,91 +272,47 @@ const SubscriptionPlans = () => {
                       : plan.button}
                   </button>
                 ) : plan.title === "Standard Plan" ? (
-                  selectedPlanForPayment === "Standard Plan" ? (
-                    <PayPalButtons
-                      style={{
-                        layout: "vertical",
-                      }}
-                      createOrder={(data, actions) => {
-                        return actions.order.create({
-                          purchase_units: [
-                            {
-                              amount: {
-                                value: "10.00",
-                                currency_code: "USD",
-                              },
-                              description: "500 Student Credits",
-                            },
-                          ],
-                        });
-                      }}
-                      onApprove={async (data, actions) => {
-                        const order = await actions.order.capture();
-                        await handlePaidPlanActivation("Standard Plan", order.id);
-                      }}
-                      onError={(err) => {
-                        console.error("PayPal error:", err);
-                        toast.error("❌ Payment failed. Please try again.");
-                      }}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setSelectedPlanForPayment("Standard Plan")}
-                      disabled={currentPlan === "Standard Plan"}
-                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${plan.buttonColor} ${
-                        currentPlan === "Standard Plan"
-                          ? "opacity-60 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      {currentPlan === "Standard Plan"
-                        ? "Current Plan"
-                        : plan.button}
-                    </button>
-                  )
+                  <button
+                    onClick={() => handlePaidPlanActivation("Standard Plan")}
+                    disabled={currentPlan === "Standard Plan"}
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+                      currentPlan === "Standard Plan"
+                        ? "opacity-60 cursor-not-allowed bg-gray-300 text-gray-600 shadow-none"
+                        : "bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md border-none"
+                    }`}
+                  >
+                    {currentPlan === "Standard Plan" ? (
+                      "Current Plan"
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+                        </svg>
+                        Pay with Razorpay
+                      </>
+                    )}
+                  </button>
                 ) : plan.title === "Premium Plan" ? (
-                  selectedPlanForPayment === "Premium Plan" ? (
-                    <PayPalButtons
-                      style={{
-                        layout: "vertical",
-                      }}
-                      createOrder={(data, actions) => {
-                        return actions.order.create({
-                          purchase_units: [
-                            {
-                              amount: {
-                                value: "25.00",
-                                currency_code: "USD",
-                              },
-                              description: "2000 Student Credits",
-                            },
-                          ],
-                        });
-                      }}
-                      onApprove={async (data, actions) => {
-                        const order = await actions.order.capture();
-                        await handlePaidPlanActivation("Premium Plan", order.id);
-                      }}
-                      onError={(err) => {
-                        console.error("PayPal error:", err);
-                        toast.error("❌ Payment failed. Please try again.");
-                      }}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setSelectedPlanForPayment("Premium Plan")}
-                      disabled={currentPlan === "Premium Plan"}
-                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${plan.buttonColor} ${
-                        currentPlan === "Premium Plan"
-                          ? "opacity-60 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      {currentPlan === "Premium Plan"
-                        ? "Current Plan"
-                        : plan.button}
-                    </button>
-                  )
+                  <button
+                    onClick={() => handlePaidPlanActivation("Premium Plan")}
+                    disabled={currentPlan === "Premium Plan"}
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+                      currentPlan === "Premium Plan"
+                        ? "opacity-60 cursor-not-allowed bg-gray-300 text-gray-600 shadow-none"
+                        : "bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md border-none"
+                    }`}
+                  >
+                    {currentPlan === "Premium Plan" ? (
+                      "Current Plan"
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+                        </svg>
+                        Pay with Razorpay
+                      </>
+                    )}
+                  </button>
                 ) : (
                   <button
                     onClick={handleContactSales}
@@ -325,7 +326,6 @@ const SubscriptionPlans = () => {
           ))}
         </div>
       </div>
-    </PayPalScriptProvider>
   );
 };
 

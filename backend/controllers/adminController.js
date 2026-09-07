@@ -125,10 +125,17 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     // ✅ Always return same message (security best practice)
+    // if (!user) {
+    //   return res
+    //     .status(200)
+    //     .json({ message: "If this email exists, OTP has been sent." });
+    // }
+
+    //01-09-2026
     if (!user) {
-      return res
-        .status(200)
-        .json({ message: "If this email exists, OTP has been sent." });
+      return res.status(400).json({
+        message: "This email is not registered as an admin account.",
+      });
     }
 
     const now = Date.now();

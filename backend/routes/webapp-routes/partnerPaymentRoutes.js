@@ -2,7 +2,13 @@ const express = require("express");
 const router = express.Router();
 const axios = require("axios");
 
-const { getAccessToken } = require("../../utils/paypal");
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 const PartnerPayment = require("../../models/webapp-models/PartnerPaymentModel");
 const Partner = require("../../models/webapp-models/partnerModel");
 const { partnerProtect } = require("../../middlewares/authMiddleware");
@@ -15,8 +21,8 @@ const { getIO } = require("../../utils/socket");
 // ─────────────────────────────────────────────
 const PLAN_PRICES = {
   "Freemium": 0,
-  "Premium Basic": 9.99,
-  "Premium Plus": 19.99,
+  "Premium Basic": 849,
+  "Premium Plus": 1699,
 };
 
 const PLAN_DURATIONS = {
@@ -26,9 +32,28 @@ const PLAN_DURATIONS = {
 };
 
 // ─────────────────────────────────────────────
-// CREATE ORDER
+// TEST RAZORPAY CREDENTIALS (public, dev only)
 // ─────────────────────────────────────────────
-router.post("/paypal/order", partnerProtect, async (req, res) => {
+router.get("/razorpay/test-credentials", async (req, res) => {
+  try {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      return res.json({ success: false, message: "RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not set in .env" });
+    }
+    // Try fetching orders - small call to validate credentials
+    const testOrder = await razorpay.orders.create({ amount: 100, currency: "INR", receipt: "test_receipt" });
+    return res.json({ success: true, message: "Razorpay credentials are valid ✅", orderId: testOrder.id, keyId });
+  } catch (err) {
+    const msg = err?.error?.description || err?.message || String(err);
+    return res.json({ success: false, message: "Razorpay credentials INVALID ❌: " + msg, keyId: process.env.RAZORPAY_KEY_ID });
+  }
+});
+
+// ─────────────────────────────────────────────
+// CREATE RAZORPAY ORDER
+// ─────────────────────────────────────────────
+router.post("/razorpay/order", partnerProtect, async (req, res) => {
   const partnerId = req.partner._id;
   const { planType } = req.body;
 
@@ -48,28 +73,13 @@ router.post("/paypal/order", partnerProtect, async (req, res) => {
   }
 
   try {
-    const accessToken = await getAccessToken();
+    const options = {
+      amount: Math.round(amount * 100), // amount in paise
+      currency: "INR", // Adjust if needed, but Razorpay is usually INR
+      receipt: `partner_${partnerId}`,
+    };
 
-    const response = await axios.post(
-      `${process.env.PAYPAL_API}/v2/checkout/orders`,
-      {
-        intent: "CAPTURE",
-        purchase_units: [
-          {
-            amount: {
-              currency_code: "USD",
-              value: amount.toFixed(2),
-            },
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const order = await razorpay.orders.create(options);
 
     await PartnerPayment.create({
       partnerId,
@@ -77,26 +87,27 @@ router.post("/paypal/order", partnerProtect, async (req, res) => {
       planType,
       amount,
       paymentId: "pending",
-      orderId: response.data.id,
+      orderId: order.id,
       status: "Pending",
     });
 
-    return res.json({ success: true, id: response.data.id });
+    return res.json({ success: true, id: order.id, amount: options.amount, currency: options.currency });
   } catch (err) {
-    console.error("❌ Order creation error:", err.message);
-    return res.status(500).json({ success: false });
+    const rzpError = err?.error || err?.message || String(err);
+    console.error("❌ Partner order creation error:", rzpError);
+    return res.status(500).json({ success: false, message: rzpError });
   }
 });
 
 // ─────────────────────────────────────────────
-// VERIFY PAYMENT
+// VERIFY RAZORPAY PAYMENT
 // ─────────────────────────────────────────────
-router.post("/paypal/verify", partnerProtect, async (req, res) => {
+router.post("/razorpay/verify", partnerProtect, async (req, res) => {
   const partnerId = req.partner._id;
-  const { orderID, planType } = req.body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planType } = req.body;
 
-  if (!orderID || !planType) {
-    return res.status(400).json({ success: false });
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !planType) {
+    return res.status(400).json({ success: false, message: "Missing fields" });
   }
 
   const parsedAmount = PLAN_PRICES[planType];
@@ -106,11 +117,26 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid planType" });
   }
 
+  // ✅ Verify Signature
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(body.toString())
+    .digest("hex");
+
+  if (expectedSignature !== razorpay_signature) {
+    await PartnerPayment.findOneAndUpdate(
+      { orderId: razorpay_order_id, status: { $in: ["Pending", "Processing"] } },
+      { status: "Failed" }
+    );
+    return res.status(400).json({ success: false, message: "Invalid signature" });
+  }
+
   // ✅ ATOMIC LOCK
   let lockedPayment;
   try {
     lockedPayment = await PartnerPayment.findOneAndUpdate(
-      { orderId: orderID, status: "Pending" },
+      { orderId: razorpay_order_id, status: "Pending" },
       { status: "Processing" },
       { new: true }
     );
@@ -120,7 +146,7 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
 
   if (!lockedPayment) {
     const successPayment = await PartnerPayment.findOne({
-      orderId: orderID,
+      orderId: razorpay_order_id,
       status: "Success",
     });
 
@@ -136,39 +162,7 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
   }
 
   try {
-    const accessToken = await getAccessToken();
-
-    const captureResp = await axios.post(
-      `${process.env.PAYPAL_API}/v2/checkout/orders/${orderID}/capture`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const capture =
-      captureResp.data.purchase_units?.[0]?.payments?.captures?.[0];
-
-    if (!capture || capture.status !== "COMPLETED") {
-      await PartnerPayment.findOneAndUpdate(
-        { orderId: orderID, status: { $in: ["Pending", "Processing"] } },
-        { status: "Failed" }
-      );
-      return res.status(400).json({ success: false });
-    }
-
-    const captureId = capture.id;
-    const capturedAmount = parseFloat(capture.amount.value);
-
-    if (Math.abs(capturedAmount - parsedAmount) > 0.05) {
-      await PartnerPayment.findOneAndUpdate(
-        { orderId: orderID, status: { $in: ["Pending", "Processing"] } },
-        { status: "Failed" }
-      );
-      return res.status(400).json({ success: false });
-    }
+    const captureId = razorpay_payment_id;
 
     const partnerDoc = await Partner.findById(partnerId);
 
@@ -197,7 +191,7 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
         planType,
         amount:        parsedAmount,
         transactionId: captureId,
-        orderId:       orderID,
+        orderId:       razorpay_order_id,
         date:          new Date()
       });
       invoiceId  = invoiceResult.invoiceId;
@@ -207,7 +201,7 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
     }
 
     await PartnerPayment.findOneAndUpdate(
-      { orderId: orderID },
+      { orderId: razorpay_order_id },
       {
         paymentId: captureId,
         status: "Success",
@@ -246,7 +240,7 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
         planType,
         amount:            parsedAmount,
         captureId,
-        orderId:           orderID,
+        orderId:           razorpay_order_id,
         premiumExpiration,
         invoiceUrl,
       });
@@ -257,11 +251,11 @@ router.post("/paypal/verify", partnerProtect, async (req, res) => {
     return res.json({ success: true, partner: updatedPartner });
   } catch (err) {
     await PartnerPayment.findOneAndUpdate(
-      { orderId: orderID, status: { $in: ["Pending", "Processing"] } },
+      { orderId: razorpay_order_id, status: { $in: ["Pending", "Processing"] } },
       { status: "Failed" }
     );
 
-    console.error("❌ Verify error:", err.response?.data || err.message);
+    console.error("❌ Verify error:", err.message);
     return res.status(500).json({ success: false });
   }
 });
@@ -298,46 +292,34 @@ router.post("/refund/:paymentId", partnerProtect, async (req, res) => {
       return res.status(404).json({ success: false });
     }
 
-    const accessToken = await getAccessToken();
+    await razorpay.payments.refund(payment.paymentId, {
+      amount: Math.round(payment.amount * 100),
+    });
 
-    const refundRes = await axios.post(
-      `${process.env.PAYPAL_API}/v2/payments/captures/${payment.paymentId}/refund`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    await PartnerPayment.findByIdAndUpdate(payment._id, {
+      status: "Refunded",
+    });
 
-    if (refundRes.data?.status === "COMPLETED") {
-      await PartnerPayment.findByIdAndUpdate(payment._id, {
-        status: "Refunded",
-      });
+    await Partner.findByIdAndUpdate(req.partner._id, {
+      isPremium: false,
+      planType: "Freemium",
+      premiumExpiration: null,
+    });
 
-      await Partner.findByIdAndUpdate(req.partner._id, {
+    // ✅ SOCKET FIXED
+    const io = getIO();
+    if (io) {
+      io.to(`partner_${req.partner._id}`).emit("partner:updated", {
+        partnerId: req.partner._id.toString(),
         isPremium: false,
         planType: "Freemium",
         premiumExpiration: null,
       });
-
-      // ✅ SOCKET FIXED
-      const io = getIO();
-      if (io) {
-        io.to(`partner_${req.partner._id}`).emit("partner:updated", {
-          partnerId: req.partner._id.toString(),
-          isPremium: false,
-          planType: "Freemium",
-          premiumExpiration: null,
-        });
-      }
-
-      return res.json({ success: true });
     }
 
-    return res.status(400).json({ success: false });
+    return res.json({ success: true });
   } catch (err) {
-    console.error("❌ Refund error:", err.response?.data || err.message);
+    console.error("❌ Refund error:", err.message);
     return res.status(500).json({ success: false });
   }
 });

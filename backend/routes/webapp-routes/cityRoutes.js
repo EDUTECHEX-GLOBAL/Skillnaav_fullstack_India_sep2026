@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
   try {
     const cities = await searchCities({
       query: namePrefix.trim(),
-      country: countryIds === "CA" ? "Canada" : "United States",
+      country: "India",
     });
 
     // Return in the same shape the frontend expects: { data: [...] }

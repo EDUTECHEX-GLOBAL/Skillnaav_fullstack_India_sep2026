@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useState, useRef } from "react";
 import MockInterviewModal from "./MockInterviewModal";
 import axios from "../../../../api/axiosInstance";
 import { toast } from "react-toastify";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 // env-backed bases (correct relative path)
 import { API_BASE, GOOGLE_AUTH_URL } from "../../../../config";
 import CalendarSyncStatus from "./calendarsyncstatus";
@@ -59,7 +58,23 @@ function formatEnumLabel(value) {
 }
 
 
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID;
+
 const OfferLetterCard = ({ offer, onStatusChange }) => {
+  const [sdkReady, setSdkReady] = useState(false);
+
+  useEffect(() => {
+    if (!RAZORPAY_KEY_ID) return;
+    if (window.Razorpay) {
+      setSdkReady(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => setSdkReady(true);
+    document.body.appendChild(script);
+  }, []);
   const [job, setJob] = useState(null);
   const [loadingJob, setLoadingJob] = useState(true);
   const [errorJob, setErrorJob] = useState(null);
@@ -346,18 +361,10 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     };
   }, [syncPhase, offer?.internshipId, userInfo?.email]);
 
-  // ✅ PayPal Configuration
-  if (!process.env.REACT_APP_PAYPAL_CLIENT_ID) {
-    console.error("❌ PayPal Client ID missing");
+  // ✅ Razorpay Configuration
+  if (!RAZORPAY_KEY_ID) {
+    console.error("❌ Razorpay Key ID missing");
   }
-
-  const paypalInitialOptions = {
-    "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID,
-    // PayPal requires the SDK currency to match the currency of the order.
-    // Keeping this as USD made CAD (and other non-USD) paid internships fail.
-    currency: String(job?.compensationDetails?.currency || "USD").toUpperCase(),
-    intent: "capture",
-  };
 
 
   useEffect(() => {
@@ -664,7 +671,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         return;
       }
 
-      if (!process.env.REACT_APP_PAYPAL_CLIENT_ID) {
+      if (!RAZORPAY_KEY_ID) {
         toast.error("Payments are temporarily unavailable. Please contact support.");
         return;
       }
@@ -687,58 +694,88 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       : `https://${url}`;
   };
 
-  // ✅ Updated PayPal order creation
-  const createPayPalOrder = async () => {
+  const handleRazorpayPayment = async () => {
+    if (!sdkReady) {
+      toast.error("Razorpay is still loading. Please wait.");
+      return;
+    }
     try {
-      const response = await axios.post('/api/internship/payments/create-paypal-order', {
+      const { data: orderRes } = await axios.post('/api/internship/payments/create-razorpay-order', {
         internshipId: offer.internshipId,
         offerId: offer._id,
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
       });
 
-      return response.data.orderId;
-    } catch (error) {
-      console.error('Error creating PayPal order:', error);
-      toast.error('Failed to create payment order');
-      throw error;
-    }
-  };
-
-  // ✅ Updated PayPal payment capture
-  const onPayPalApprove = async (data, actions) => {
-    try {
-      const response = await axios.post(
-        '/api/internship/payments/capture-paypal-payment',
-        {
-          orderId: data.orderID,
-          offerId: offer._id,
-        },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` } }
-      );
-
-      if (response.data.success) {
-        setPaymentStatus(prev => ({
-          ...prev,
-          paid: true,
-          mongoPaymentId: response.data.paymentId,
-          paypalPaymentId: response.data.paypalPaymentId, // ✅ KEEP IT
-          amount: response.data.amount,
-          currency: response.data.currency
-        }));
-
-
-        setShowPaymentModal(false);
-        toast.success('✅ Payment successful! You can now accept the offer.');
-
-        setTimeout(() => {
-          setResponseType("Accepted");
-          setShowModal(true);
-        }, 500);
+      if (!orderRes.orderId) {
+        toast.error("Failed to create payment order. Please try again.");
+        return;
       }
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: orderRes.amount,
+        currency: orderRes.currency,
+        name: "Skillnaav",
+        description: `Payment for ${job?.jobTitle || "Internship"}`,
+        order_id: orderRes.orderId,
+        handler: async function (response) {
+          try {
+            const { data: verify } = await axios.post(
+              '/api/internship/payments/verify-razorpay-payment',
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                offerId: offer._id,
+              },
+              { headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` } }
+            );
+
+            if (verify.success) {
+              setPaymentStatus(prev => ({
+                ...prev,
+                paid: true,
+                mongoPaymentId: verify.paymentId,
+                paypalPaymentId: verify.razorpayPaymentId, // Keep state structure
+                amount: verify.amount,
+                currency: verify.currency
+              }));
+
+              setShowPaymentModal(false);
+              toast.success('✅ Payment successful! You can now accept the offer.');
+
+              setTimeout(() => {
+                setResponseType("Accepted");
+                setShowModal(true);
+              }, 500);
+            } else {
+              toast.error('Payment verification failed.');
+            }
+          } catch (error) {
+            console.error('Error capturing payment:', error);
+            toast.error('Payment failed. Please try again.');
+          }
+        },
+        prefill: {
+          name: userInfo?.name || "",
+          email: userInfo?.email || "",
+          contact: userInfo?.phone || "",
+        },
+        theme: {
+          color: "#4f46e5",
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response) {
+        console.error("Razorpay payment failed:", response.error);
+        toast.error("Payment failed: " + response.error.description);
+      });
+      rzp1.open();
     } catch (error) {
-      console.error('Error capturing payment:', error);
-      toast.error('Payment failed. Please try again.');
+      console.error('Error initiating Razorpay payment:', error);
+      toast.error('Failed to initiate payment.');
     }
   };
 
@@ -873,7 +910,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   const requiresPayment = job?.internshipType === "PAID";
   const requiresStipendDetails = job?.internshipType === "STIPEND";
   const paymentAmount = job?.compensationDetails?.amount || 0;
-  const currency = String(job?.compensationDetails?.currency || "USD").toUpperCase();
+  const currency = String(job?.compensationDetails?.currency || "INR").toUpperCase();
 
   const isUnpaidAccepted =
     offer?.status?.toLowerCase() === "accepted" &&
@@ -1383,24 +1420,16 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               </div>
             </div>
 
-            {/* ✅ PayPal Buttons */}
-            <PayPalScriptProvider options={paypalInitialOptions}>
-              <PayPalButtons
-                createOrder={createPayPalOrder}
-                onApprove={onPayPalApprove}
-                forceReRender={[currency]}
-                onError={(error) => {
-                  console.error('PayPal error:', error);
-                  toast.error('Payment failed. Please try again.');
-                }}
-                style={{
-                  layout: 'vertical',
-                  color: 'blue',
-                  shape: 'rect',
-                  label: 'paypal'
-                }}
-              />
-            </PayPalScriptProvider>
+            {/* ✅ Razorpay Button */}
+            <button
+              onClick={handleRazorpayPayment}
+              className="w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+              </svg>
+              Pay with Razorpay
+            </button>
           </div>
         </div>
       )}

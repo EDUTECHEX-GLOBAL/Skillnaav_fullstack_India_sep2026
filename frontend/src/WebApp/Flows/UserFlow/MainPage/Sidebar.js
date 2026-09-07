@@ -27,25 +27,86 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const navigate = useNavigate();
   const { openFeedback } = useFeedback();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  //01-09-2026
+  const [showAllSectors, setShowAllSectors] = useState(false);
 
+  // const topSectors = [
+  //   { id: "advanced-ai", name: "Advanced AI & Autonomous Systems" },
+  //   { id: "quantum-computing", name: "Quantum Computing & Next-Gen Computing" },
+  //   { id: "climate-tech", name: "Climate Tech & Carbon Capture" },
+  //   { id: "biotech", name: "Biotechnology & Synthetic Biology" },
+  //   { id: "materials-science", name: "Advanced Materials Science" },
+  //   { id: "space-exploration", name: "Space Exploration & Commercial Space" },
+  //   {
+  //     id: "neurotechnology",
+  //     name: "Neurotechnology & Brain-Computer Interfaces",
+  //   },
+  //   { id: "precision-agriculture", name: "Precision Agriculture & AgriTech" },
+  //   {
+  //     id: "advanced-robotics",
+  //     name: "Advanced Robotics & Human-Machine Collaboration",
+  //   },
+  //   { id: "renewable-energy", name: "Renewable Energy & Grid Innovation" },
+  //   { id: "architecture-built-environment", name: "Architecture & Built Environment" },
+  // ];
+
+  //01-09-2026
   const topSectors = [
-    { id: "advanced-ai", name: "Advanced AI & Autonomous Systems" },
-    { id: "quantum-computing", name: "Quantum Computing & Next-Gen Computing" },
-    { id: "climate-tech", name: "Climate Tech & Carbon Capture" },
-    { id: "biotech", name: "Biotechnology & Synthetic Biology" },
-    { id: "materials-science", name: "Advanced Materials Science" },
-    { id: "space-exploration", name: "Space Exploration & Commercial Space" },
+    {
+      id: "advanced-ai",
+      name: "Advanced AI & Autonomous Systems",
+      short: "AI & Autonomous",
+    },
+    {
+      id: "quantum-computing",
+      name: "Quantum Computing & Next-Gen Computing",
+      short: "Quantum Computing",
+    },
+    {
+      id: "climate-tech",
+      name: "Climate Tech & Carbon Capture",
+      short: "Climate Tech",
+    },
+    {
+      id: "biotech",
+      name: "Biotechnology & Synthetic Biology",
+      short: "Biotech",
+    },
+    {
+      id: "materials-science",
+      name: "Advanced Materials Science",
+      short: "Materials Science",
+    },
+    {
+      id: "space-exploration",
+      name: "Space Exploration & Commercial Space",
+      short: "Space Exploration",
+    },
     {
       id: "neurotechnology",
       name: "Neurotechnology & Brain-Computer Interfaces",
+      short: "Neurotechnology",
     },
-    { id: "precision-agriculture", name: "Precision Agriculture & AgriTech" },
+    {
+      id: "precision-agriculture",
+      name: "Precision Agriculture & AgriTech",
+      short: "AgriTech",
+    },
     {
       id: "advanced-robotics",
       name: "Advanced Robotics & Human-Machine Collaboration",
+      short: "Robotics",
     },
-    { id: "renewable-energy", name: "Renewable Energy & Grid Innovation" },
-    { id: "architecture-built-environment", name: "Architecture & Built Environment" },
+    {
+      id: "renewable-energy",
+      name: "Renewable Energy & Grid Innovation",
+      short: "Renewable Energy",
+    },
+    {
+      id: "architecture-built-environment",
+      name: "Architecture & Built Environment",
+      short: "Architecture",
+    },
   ];
 
   const menuItems = [
@@ -220,7 +281,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
                     />
                   </button>
 
-                  {showSectors && (
+                  {/* {showSectors && (
                     <ul className="pl-8 mt-2 space-y-1">
                       {topSectors.map((sector, index) => (
                         <li
@@ -232,6 +293,36 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
                         </li>
                       ))}
                     </ul>
+                  )} */}
+                  {/* 01-09-2026 */}
+                  {showSectors && (
+                    <div className="pl-8 mt-2 flex flex-col">
+                      {(showAllSectors
+                        ? topSectors
+                        : topSectors.slice(0, 5)
+                      ).map((sector, index) => (
+                        <button
+                          key={index}
+                          title={sector.name}
+                          onClick={() => handleTabClick(sector.id)}
+                          className={`text-left text-sm px-3 py-2 border-l-2 transition-colors ${
+                            selectedTab === sector.id
+                              ? "border-[#7520A9] bg-[#F0DEFD] text-[#7520A9] font-medium"
+                              : "border-transparent text-gray-600 hover:bg-gray-50 border-b border-b-gray-100"
+                          }`}
+                        >
+                          {sector.short}
+                        </button>
+                      ))}
+                      {topSectors.length > 5 && (
+                        <button
+                          onClick={() => setShowAllSectors(!showAllSectors)}
+                          className="mt-2 text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50"
+                        >
+                          {showAllSectors ? "Show less" : "Show all sectors"}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

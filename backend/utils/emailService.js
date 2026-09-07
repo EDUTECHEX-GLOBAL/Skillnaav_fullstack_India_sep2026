@@ -77,7 +77,7 @@ async function sendPaymentConfirmationEmail({
                     </tr>
                     <tr>
                       <td style="font-size:13px;color:#6b7280;padding-bottom:10px;">Amount paid</td>
-                      <td style="font-size:13px;color:#111827;font-weight:600;text-align:right;padding-bottom:10px;">$${amount.toFixed(2)} USD</td>
+                      <td style="font-size:13px;color:#111827;font-weight:600;text-align:right;padding-bottom:10px;">₹${amount.toFixed(2)} INR</td>
                     </tr>
                     <tr>
                       <td colspan="2" style="border-top:1px solid #e5e7eb;padding-top:10px;"></td>
@@ -159,7 +159,7 @@ async function sendPaymentConfirmationEmail({
  * @param {string} opts.internshipTitle    - Job/internship title
  * @param {string} opts.companyName        - Company name
  * @param {number} opts.amount             - Amount paid
- * @param {string} opts.currency           - Currency code e.g. "USD"
+ * @param {string} opts.currency           - Currency code e.g. "INR"
  * @param {string} opts.paypalPaymentId    - PayPal capture/payment ID
  * @param {string} opts.paypalOrderId      - PayPal order ID
  * @param {string} [opts.startDate]        - Internship start date
@@ -171,7 +171,7 @@ async function sendInternshipPaymentConfirmationEmail({
   internshipTitle,
   companyName,
   amount,
-  currency = "USD",
+  currency = "INR",
   paypalPaymentId,
   paypalOrderId,
   startDate,
@@ -368,7 +368,7 @@ async function sendSchoolAdminPaymentConfirmationEmail({
                     </tr>
                     <tr>
                       <td style="font-size:13px;color:#6b7280;padding-bottom:10px;">Amount paid</td>
-                      <td style="font-size:13px;color:#111827;font-weight:600;text-align:right;padding-bottom:10px;">$${Number(amount).toFixed(2)} USD</td>
+                      <td style="font-size:13px;color:#111827;font-weight:600;text-align:right;padding-bottom:10px;">₹${Number(amount).toFixed(2)} INR</td>
                     </tr>
                     <tr>
                       <td colspan="2" style="border-top:1px solid #e5e7eb;padding-top:10px;"></td>

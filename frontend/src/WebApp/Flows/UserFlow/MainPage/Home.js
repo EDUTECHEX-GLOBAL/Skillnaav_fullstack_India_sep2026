@@ -39,8 +39,12 @@ const Home = () => {
   const [assistantPreviewVisible, setAssistantPreviewVisible] = useState(
     () => window.__skillnaavAssistantPreviewVisible ?? true
   );
+  const [assistantExpanded, setAssistantExpanded] = useState(false);
   useEffect(() => {
-    const updateAssistantPreview = (event) => setAssistantPreviewVisible(event.detail.visible);
+    const updateAssistantPreview = (event) => {
+      setAssistantPreviewVisible(event.detail.visible);
+      setAssistantExpanded(!!event.detail.expanded);
+    };
     window.addEventListener("skillnaav-assistant-preview", updateAssistantPreview);
     return () => window.removeEventListener("skillnaav-assistant-preview", updateAssistantPreview);
   }, []);
@@ -473,7 +477,7 @@ const Home = () => {
       )}
 
       {/* Skillnaav analysis FAB */}
-      <div className={`fixed right-6 z-50 transition-all duration-300 ${assistantPreviewVisible ? "bottom-[20rem]" : "bottom-28"}`}>
+      <div className={`fixed right-6 z-50 transition-all duration-300 ${!assistantPreviewVisible ? "bottom-28" : assistantExpanded ? "bottom-[390px]" : "bottom-[300px]"}`}>
         <button
           onClick={() => navigate("/skillnaav-analysis")}
           className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"

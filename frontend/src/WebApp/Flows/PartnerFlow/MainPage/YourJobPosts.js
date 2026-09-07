@@ -713,7 +713,7 @@ const EditModalBody = ({
       updateField("compensationDetails.frequency", "");
     } else {
       if (!si.compensationDetails?.currency)
-        updateField("compensationDetails.currency", "USD");
+        updateField("compensationDetails.currency", "INR");
       if (!si.compensationDetails?.frequency)
         updateField("compensationDetails.frequency", "MONTHLY");
     }
@@ -994,14 +994,14 @@ const EditModalBody = ({
                   Currency
                 </label>
                 <select
-                  value={si.compensationDetails?.currency || "USD"}
+                  value={si.compensationDetails?.currency || "INR"}
                   onChange={(e) =>
                     updateField("compensationDetails.currency", e.target.value)
                   }
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   style={{ fontFamily: "'Poppins', sans-serif" }}
                 >
-                  {["USD", "CAD", "EUR", "INR", "GBP"].map((c) => (
+                  {["INR"].map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>

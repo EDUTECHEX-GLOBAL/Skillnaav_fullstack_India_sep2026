@@ -364,9 +364,9 @@ export default function InstructureDetailsView({
                   }
                 />
                 <DetailField label="Country" value={item.country} />
-                <DetailField label="State / Province" value={item.state} />
+                <DetailField label="State / Union Territory" value={item.state} />
                 <DetailField label="City" value={item.city} />
-                <DetailField label="Postal Code" value={item.postalCode} />
+                <DetailField label="PIN Code" value={item.postalCode} />
                 <DetailField label="Address Line 1" value={item.address1} span={2} />
                 <DetailField label="Address Line 2" value={item.address2} />
               </FormSection>

@@ -2,7 +2,7 @@
 const { searchUniversities } = require("../services/university.service");
 
 // ✅ FIX 6: Accepted country values match exactly what the frontend dropdown sends
-const ALLOWED_COUNTRIES = ["United States", "Canada"];
+const ALLOWED_COUNTRIES = ["India"];
 
 exports.getUniversities = async (req, res) => {
   try {

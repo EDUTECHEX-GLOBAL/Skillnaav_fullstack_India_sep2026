@@ -3,7 +3,7 @@ import axios from "../../../../api/axiosInstance";
 import LevelThree from "./LevelThree";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { US_STATES, CA_PROVINCES } from "../../../../constants/locations";
+import { IN_STATES } from "../../../../constants/locations";
 import { PencilIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
 const ProfileForm = () => {
@@ -19,7 +19,7 @@ const ProfileForm = () => {
     portfolio: "",
     financialStatus: "",
     state: "",
-    country: "",
+    country: "India",
     city: "",
     postalCode: "",
     address: "",
@@ -51,25 +51,16 @@ const ProfileForm = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const stateList =
-    tempUser.country === "Canada"
-      ? CA_PROVINCES
-      : tempUser.country === "United States"
-        ? US_STATES
-        : [];
+    tempUser.country === "India"
+      ? IN_STATES
+      : [];
 
   const stateLabel =
-    tempUser.country === "Canada"
-      ? "Province / Territory"
-      : tempUser.country === "United States"
-        ? "State"
-        : "State / Province";
+    tempUser.country === "India"
+      ? "State / Union Territory"
+      : "State / Province";
 
-  const zipLabel =
-    tempUser.country === "Canada"
-      ? "Postal Code"
-      : tempUser.country === "United States"
-        ? "ZIP Code"
-        : "ZIP / Postal Code";
+  const zipLabel = "PIN Code";
 
   const educationLevels = [
     { value: "", label: "Select Education Level" },
@@ -116,6 +107,7 @@ const ProfileForm = () => {
 
         const formattedData = {
           ...data,
+          country: data.country || "India",
           dob: isValidDate(data.dob) ? new Date(data.dob) : "",
           skills: Array.isArray(data.skills)
             ? data.skills.join(", ")
@@ -1000,8 +992,7 @@ const ProfileForm = () => {
                         className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="">Select</option>
-                        <option value="United States">United States</option>
-                        <option value="Canada">Canada</option>
+                        <option value="India">India</option>
                       </select>
                     ) : (
                       <div className="border border-gray-200 bg-gray-50 px-3 py-2 rounded-lg">
@@ -1084,11 +1075,7 @@ const ProfileForm = () => {
                         value={tempUser.postalCode}
                         onChange={handleTempChange}
                         className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={
-                          tempUser.country === "Canada"
-                            ? "e.g., K1A 0B1"
-                            : "e.g., 94105"
-                        }
+                        placeholder="e.g., 500001"
                         autoComplete="postal-code"
                       />
                     ) : (

@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../../middlewares/authMiddleware');
 const {
-  createPayPalOrder,
-  capturePayPalPayment,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
   getPaymentStatus,
   getStudentPayments,
   getPaymentsForInternship,
@@ -13,9 +13,9 @@ const {
   getPaymentsForPartnerDetailed, // ✅ New
 } = require('../../controllers/internshipPaymentController');
 
-// ─── PayPal Payment Flow ───────────────────────────────────────────────────────
-router.post('/create-paypal-order', authenticate, createPayPalOrder);
-router.post('/capture-paypal-payment', authenticate, capturePayPalPayment);
+// ─── Razorpay Payment Flow ───────────────────────────────────────────────────────
+router.post('/create-razorpay-order', authenticate, createRazorpayOrder);
+router.post('/verify-razorpay-payment', authenticate, verifyRazorpayPayment);
 router.get('/status/:offerId', authenticate, getPaymentStatus);
 
 // ─── Student Payment History ───────────────────────────────────────────────────

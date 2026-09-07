@@ -308,7 +308,7 @@ router.post("/", async (req, res) => {
     const finalComp = { type: internshipType };
     if (["PAID", "STIPEND"].includes(internshipType)) {
       finalComp.amount = compensationDetails?.amount ?? 0;
-      finalComp.currency = compensationDetails?.currency ?? "USD";
+      finalComp.currency = compensationDetails?.currency ?? "INR";
       finalComp.frequency = compensationDetails?.frequency ?? "MONTHLY";
     } else {
       finalComp.amount = 0; finalComp.currency = null; finalComp.frequency = null;

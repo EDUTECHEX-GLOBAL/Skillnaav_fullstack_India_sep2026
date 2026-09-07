@@ -62,7 +62,7 @@ const SuccessModal = ({ onOk }) => (
         className="w-full py-3 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700 active:scale-95 transition-all"
         style={{ fontFamily: "'Poppins', sans-serif" }}
       >
-        OK — View My Posts
+        OK â€” View My Posts
       </button>
     </div>
     <style>{`
@@ -82,75 +82,7 @@ const SuccessModal = ({ onOk }) => (
   </div>
 );
 
-const US_STATES = [
-  "Alabama",
-  "Alaska",
-  "Arizona",
-  "Arkansas",
-  "California",
-  "Colorado",
-  "Connecticut",
-  "Delaware",
-  "District of Columbia",
-  "Florida",
-  "Georgia",
-  "Hawaii",
-  "Idaho",
-  "Illinois",
-  "Indiana",
-  "Iowa",
-  "Kansas",
-  "Kentucky",
-  "Louisiana",
-  "Maine",
-  "Maryland",
-  "Massachusetts",
-  "Michigan",
-  "Minnesota",
-  "Mississippi",
-  "Missouri",
-  "Montana",
-  "Nebraska",
-  "Nevada",
-  "New Hampshire",
-  "New Jersey",
-  "New Mexico",
-  "New York",
-  "North Carolina",
-  "North Dakota",
-  "Ohio",
-  "Oklahoma",
-  "Oregon",
-  "Pennsylvania",
-  "Rhode Island",
-  "South Carolina",
-  "South Dakota",
-  "Tennessee",
-  "Texas",
-  "Utah",
-  "Vermont",
-  "Virginia",
-  "Washington",
-  "West Virginia",
-  "Wisconsin",
-  "Wyoming",
-];
-
-const CA_PROVINCES = [
-  "Alberta",
-  "British Columbia",
-  "Manitoba",
-  "New Brunswick",
-  "Newfoundland and Labrador",
-  "Northwest Territories",
-  "Nova Scotia",
-  "Nunavut",
-  "Ontario",
-  "Prince Edward Island",
-  "Quebec",
-  "Saskatchewan",
-  "Yukon",
-];
+import { IN_STATES } from "../../../../constants/locations";
 
 const PostAJob = () => {
   const { saveJob, handleSelectTab } = useTabContext();
@@ -180,7 +112,7 @@ const PostAJob = () => {
     companyName: "",
     sector: "",
     city: "",
-    country: "",
+    country: "India",
     state: "",
     jobType: "Internship",
     jobDescription: "",
@@ -213,9 +145,9 @@ const PostAJob = () => {
   const [freemiumAlert, setFreemiumAlert] = useState("");
   const cityDebounceRef = useRef(null);
 
-  const stateList = formData.country === "Canada" ? CA_PROVINCES : US_STATES;
+  const stateList = formData.country === "India" ? IN_STATES : [];
   const stateLabel =
-    formData.country === "Canada" ? "Province / Territory" : "State";
+    formData.country === "India" ? "State / Union Territory" : "State";
   const [qualInput, setQualInput] = useState("");
 
   useEffect(() => {
@@ -237,11 +169,9 @@ const PostAJob = () => {
       }
       try {
         const countryIds =
-          formData.country === "Canada"
-            ? "CA"
-            : formData.country === "United States"
-              ? "US"
-              : "US,CA";
+          formData.country === "India"
+            ? "IN"
+            : "IN";
 
         const resp = await axios.get("/api/cities", {
           params: {
@@ -382,7 +312,7 @@ const PostAJob = () => {
       companyName: "",
       sector: "",
       city: "",
-      country: "",
+      country: "India",
       state: "",
       jobType: "Internship",
       jobDescription: "",
@@ -548,7 +478,7 @@ const PostAJob = () => {
             required
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select a Sector
             </option>
             {topSectors.map((s) => (
@@ -571,7 +501,7 @@ const PostAJob = () => {
             required
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select Classification
             </option>
             <option value="Basic">Basic</option>
@@ -585,7 +515,7 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Location
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div className="flex flex-col gap-1">
               <label htmlFor="country" className="block text-gray-700 text-sm">
                 Country *
@@ -605,11 +535,10 @@ const PostAJob = () => {
                 required
                 className={locationInputCls}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select Country
                 </option>
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
+                <option value="India">India</option>
               </select>
             </div>
 
@@ -625,7 +554,7 @@ const PostAJob = () => {
                 required
                 className={locationInputCls}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select {stateLabel}
                 </option>
                 {stateList.map((s) => (
@@ -751,7 +680,7 @@ const PostAJob = () => {
             required
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select Mode
             </option>
             <option value="Online">Online</option>
@@ -781,7 +710,7 @@ const PostAJob = () => {
                   className="ml-1 text-teal-500 hover:text-red-500 leading-none"
                   aria-label={`Remove ${q}`}
                 >
-                  ×
+                  Ã—
                 </button>
               </span>
             ))}
@@ -812,7 +741,7 @@ const PostAJob = () => {
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            Press Enter or click Add. Click × to remove a skill.
+            Press Enter or click Add. Click Ã— to remove a skill.
           </p>
         </div>
 
@@ -875,13 +804,13 @@ const PostAJob = () => {
           />
         </div>
 
-        {/* Internship Type — select (Free/Stipend) + Paid radio */}
+        {/* Internship Type â€” select (Free/Stipend) + Paid radio */}
         <div>
           <label className="block text-gray-700 font-medium mb-3">
             Internship Type
           </label>
 
-          {/* Hidden input for form validation — fires if no type is selected */}
+          {/* Hidden input for form validation â€” fires if no type is selected */}
           <input
             type="text"
             value={formData.internshipType}
@@ -907,7 +836,7 @@ const PostAJob = () => {
             name="internshipType"
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select Internship Type
             </option>
             <option value="FREE">Free</option>
@@ -992,7 +921,7 @@ const PostAJob = () => {
           )}
         </div>
 
-        {/* Compensation Details — shown only for STIPEND or PAID */}
+        {/* Compensation Details â€” shown only for STIPEND or PAID */}
         {(formData.internshipType === "STIPEND" ||
           formData.internshipType === "PAID") && (
           <div className="space-y-4">
@@ -1025,18 +954,14 @@ const PostAJob = () => {
                 required
                 className={inputCls}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select Currency
                 </option>
-                <option value="USD">USD</option>
-                <option value="CAD">CAD</option>
-                <option value="EUR">EUR</option>
                 <option value="INR">INR</option>
-                <option value="GBP">GBP</option>
               </select>
             </div>
 
-            {/* Frequency is always One Time — hidden */}
+            {/* Frequency is always One Time â€” hidden */}
             <input
               type="hidden"
               name="compensationDetails.frequency"

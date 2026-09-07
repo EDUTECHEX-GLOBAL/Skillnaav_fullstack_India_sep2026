@@ -7,9 +7,15 @@ const Partner = require('../models/webapp-models/partnerModel');
 const Student = require('../models/webapp-models/userModel');
 const axios = require('axios');
 
-const { getAccessToken } = require('../utils/paypal');
 const { generateAndUploadInvoice } = require('../services/invoiceGenerator');
 const { sendInternshipPaymentConfirmationEmail } = require('../utils/emailService');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 const getAuthenticatedStudentId = (req, res) => {
   if (req.user?.role !== 'user') {
@@ -19,8 +25,8 @@ const getAuthenticatedStudentId = (req, res) => {
   return req.user._id;
 };
 
-// ─── Create PayPal Order ───────────────────────────────────────────────────────
-const createPayPalOrder = async (req, res) => {
+// ─── Create Razorpay Order ───────────────────────────────────────────────────────
+const createRazorpayOrder = async (req, res) => {
   try {
     const { internshipId, offerId } = req.body;
     const studentId = getAuthenticatedStudentId(req, res);
@@ -47,7 +53,7 @@ const createPayPalOrder = async (req, res) => {
     }
 
     const amount = Number(internship.compensationDetails?.amount);
-    const currency = String(internship.compensationDetails?.currency || 'USD').toUpperCase();
+    const currency = String(internship.compensationDetails?.currency || 'INR').toUpperCase();
     if (!Number.isFinite(amount) || amount <= 0 || !/^[A-Z]{3}$/.test(currency)) {
       return res.status(400).json({ error: 'The internship payment amount or currency is invalid' });
     }
@@ -56,39 +62,20 @@ const createPayPalOrder = async (req, res) => {
       return res.status(400).json({ error: 'Internship is missing partnerId' });
     }
 
-    const accessToken = await getAccessToken();
-
-    const orderData = {
-      intent: 'CAPTURE',
-      purchase_units: [{
-        amount: { currency_code: currency, value: amount.toFixed(2) },
-        description: `Payment for Paid Internship - Offer ID: ${offerId}`,
-      }],
-      application_context: {
-        return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/offer-letters`,
-        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/offer-letters`,
-        shipping_preference: 'NO_SHIPPING',
-        user_action: 'PAY_NOW',
-      },
+    const options = {
+      amount: Math.round(amount * 100), // amount in smallest currency unit
+      currency,
+      receipt: `receipt_${offerId}`,
     };
 
-    const response = await axios.post(
-      `${process.env.PAYPAL_API}/v2/checkout/orders`,
-      orderData,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const order = await razorpay.orders.create(options);
 
     const payment = new Payment({
       studentId,
       offerId,
       internshipId,
       partnerId: internship.partnerId,
-      paypalOrderId: response.data.id,
+      razorpayOrderId: order.id,
       amount: parseFloat(amount),
       currency,
       status: 'CREATED',
@@ -98,78 +85,67 @@ const createPayPalOrder = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      orderId: response.data.id,
+      orderId: order.id,
       paymentId: payment._id,
+      amount: options.amount,
+      currency: options.currency,
     });
   } catch (error) {
-    console.error('Error creating PayPal order:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to create payment order', details: error.response?.data || error.message });
+    console.error('Error creating Razorpay order:', error);
+    res.status(500).json({ error: 'Failed to create payment order', details: error.message });
   }
 };
 
-// ─── Capture PayPal Payment ────────────────────────────────────────────────────
-const capturePayPalPayment = async (req, res) => {
+// ─── Verify Razorpay Payment ────────────────────────────────────────────────────
+const verifyRazorpayPayment = async (req, res) => {
   try {
-    const { orderId, offerId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, offerId } = req.body;
     const studentId = getAuthenticatedStudentId(req, res);
     if (!studentId) return;
 
-    if (!orderId || !offerId) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !offerId) {
+      return res.status(400).json({ error: 'Missing required fields for payment verification' });
     }
 
-    const existingPayment = await Payment.findOne({ paypalOrderId: orderId, studentId, offerId });
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ error: 'Invalid signature. Payment verification failed.' });
+    }
+
+    const existingPayment = await Payment.findOne({ razorpayOrderId: razorpay_order_id, studentId, offerId });
     if (!existingPayment) {
       return res.status(404).json({ error: 'Payment record not found' });
     }
+    
     if (existingPayment.status === 'COMPLETED') {
       return res.status(200).json({
         success: true,
         paymentId: existingPayment._id,
-        paypalPaymentId: existingPayment.paypalPaymentId,
+        razorpayPaymentId: existingPayment.razorpayPaymentId,
         status: existingPayment.status,
         amount: existingPayment.amount,
         currency: existingPayment.currency,
       });
     }
 
-    const accessToken = await getAccessToken();
-
-    const response = await axios.post(
-      `${process.env.PAYPAL_API}/v2/checkout/orders/${orderId}/capture`,
-      {},
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const capture = response.data?.purchase_units?.[0]?.payments?.captures?.[0];
-    const capturedAmount = Number(capture?.amount?.value);
-    if (
-      response.data?.status !== 'COMPLETED' ||
-      !Number.isFinite(capturedAmount) ||
-      capturedAmount !== Number(existingPayment.amount) ||
-      String(capture?.amount?.currency_code || '').toUpperCase() !== existingPayment.currency
-    ) {
-      throw new Error('PayPal returned an unexpected payment amount, currency, or status');
-    }
-
     const payment = await Payment.findOneAndUpdate(
-      { paypalOrderId: orderId, studentId },
+      { razorpayOrderId: razorpay_order_id, studentId },
       {
         status: 'COMPLETED',
-        paypalPaymentId: response.data.id,
-        paypalDetails: response.data,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
         completedAt: new Date(),
       },
       { new: true }
     );
 
     if (!payment) {
-      return res.status(404).json({ error: 'Payment record not found' });
+      return res.status(404).json({ error: 'Payment record not found after verification' });
     }
 
     // ─── Fetch student + internship info for email & invoice ───────────────
@@ -192,8 +168,8 @@ const capturePayPalPayment = async (req, res) => {
           userEmail:         studentDoc.email,
           planType:          internshipDoc.jobTitle || 'Paid Internship',
           amount:            payment.amount,
-          transactionId:     response.data.id || '',
-          orderId:           orderId,
+          transactionId:     razorpay_payment_id,
+          orderId:           razorpay_order_id,
           date:              new Date(),
           description:       `${internshipDoc.jobTitle} at ${internshipDoc.companyName}`,
           descriptionDetail: `Paid internship fee — Internship ID: ${payment.internshipId}`,
@@ -217,9 +193,9 @@ const capturePayPalPayment = async (req, res) => {
           internshipTitle: internshipDoc.jobTitle || 'Internship',
           companyName:     internshipDoc.companyName || 'Company',
           amount:          payment.amount,
-          currency:        payment.currency || 'USD',
-          paypalPaymentId: response.data.id || '',
-          paypalOrderId:   orderId,
+          currency:        payment.currency || 'INR',
+          razorpayPaymentId: razorpay_payment_id,
+          razorpayOrderId:   razorpay_order_id,
           startDate:       internshipDoc.startDate,
           offerId:         payment.offerId?.toString() || '',
           invoiceUrl,
@@ -232,21 +208,21 @@ const capturePayPalPayment = async (req, res) => {
     res.status(200).json({
       success: true,
       paymentId: payment._id,
-      paypalPaymentId: response.data.id,
-      status: response.data.status,
+      razorpayPaymentId: razorpay_payment_id,
+      status: 'COMPLETED',
       amount: payment.amount,
       currency: payment.currency,
     });
   } catch (error) {
-    console.error('Error capturing PayPal payment:', error.response?.data || error.message);
+    console.error('Error verifying Razorpay payment:', error);
 
-    if (req.body.orderId) {
+    if (req.body.razorpay_order_id) {
       try {
         await Payment.findOneAndUpdate(
-          { paypalOrderId: req.body.orderId },
+          { razorpayOrderId: req.body.razorpay_order_id },
           {
             status: 'FAILED',
-            failureReason: error.response?.data?.details?.[0]?.description || error.message,
+            failureReason: error.message,
             failedAt: new Date(),
           }
         );
@@ -256,8 +232,8 @@ const capturePayPalPayment = async (req, res) => {
     }
 
     res.status(500).json({
-      error: 'Failed to capture payment',
-      details: error.response?.data?.details || error.message,
+      error: 'Failed to verify payment',
+      details: error.message,
     });
   }
 };
@@ -277,7 +253,7 @@ const getPaymentStatus = async (req, res) => {
       amount: payment?.amount,
       currency: payment?.currency,
       paymentDate: payment?.completedAt || payment?.updatedAt,
-      paypalPaymentId: payment?.paypalPaymentId,
+      razorpayPaymentId: payment?.razorpayPaymentId,
     });
   } catch (error) {
     console.error('Error getting payment status:', error);
@@ -431,8 +407,8 @@ const getPaymentsForPartnerDetailed = async (req, res) => {
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
 module.exports = {
-  createPayPalOrder,
-  capturePayPalPayment,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
   getPaymentStatus,
   getStudentPayments,
   getPaymentsForInternship,

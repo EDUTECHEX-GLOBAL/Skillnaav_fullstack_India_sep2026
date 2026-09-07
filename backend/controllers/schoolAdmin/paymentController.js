@@ -1,9 +1,15 @@
 const asyncHandler = require("express-async-handler");
 const Payment = require("../../models/webapp-models/schoolAdmin/SchoolAdminPayment");
 const SchoolAdmin = require("../../models/webapp-models/schoolAdmin/SchoolAdminModel");
-const axios = require("axios");
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
 const { generateAndUploadInvoice } = require("../../services/invoiceGenerator");
 const { sendSchoolAdminPaymentConfirmationEmail } = require("../../utils/emailService");
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 const normalizeSchoolAdminPlanForStorage = (plan) =>
   plan === "Premium Plus Plan" ? "Premium Plan" : plan;
@@ -24,67 +30,66 @@ const getCreditsForPlan = (plan) => {
   }
 };
 
-// 📦 Verify PayPal Order
-const verifyPayPalOrder = async (orderId) => {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-
-  const { data: authData } = await axios.post(
-    "https://api-m.sandbox.paypal.com/v1/oauth2/token",
-    new URLSearchParams({ grant_type: "client_credentials" }),
-    {
-      headers: {
-        Authorization: `Basic ${basicAuth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    }
-  );
-
-  const { data: orderDetails } = await axios.get(
-    `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${authData.access_token}`,
-      },
-    }
-  );
-
-  return orderDetails;
-};
-
-// 💳 Subscribe Handler
-const subscribeToPlan = asyncHandler(async (req, res) => {
-  const { plan, orderId } = req.body;
+const createRazorpayOrder = asyncHandler(async (req, res) => {
+  const { plan } = req.body;
   const adminId = req.schoolAdmin?._id;
+
+  if (!adminId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   const planForStorage = normalizeSchoolAdminPlanForStorage(plan);
+  
+  let amount = 0;
+  if (planForStorage === "Standard Plan") amount = 849;
+  else if (planForStorage === "Premium Plan") amount = 2100;
+  else return res.status(400).json({ message: "Invalid plan selected" });
+
+  try {
+    const options = {
+      amount: Math.round(amount * 100), // paise
+      currency: "INR",
+      receipt: `schooladmin_${adminId}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+    res.json({ success: true, id: order.id, amount: options.amount, currency: options.currency });
+  } catch (error) {
+    console.error("❌ Error creating Razorpay order:", error);
+    res.status(500).json({ message: "Failed to create order" });
+  }
+});
+
+const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan } = req.body;
+  const adminId = req.schoolAdmin?._id;
 
   const admin = await SchoolAdmin.findById(adminId);
   if (!admin) return res.status(401).json({ message: "Unauthorized" });
 
-  const order = await verifyPayPalOrder(orderId);
-  if (order.status !== "COMPLETED") {
-    return res.status(400).json({ message: "Payment not completed." });
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(body.toString())
+    .digest("hex");
+
+  if (expectedSignature !== razorpay_signature) {
+    return res.status(400).json({ message: "Invalid signature" });
   }
 
-  const capture = order?.purchase_units?.[0]?.payments?.captures?.[0];
-  if (!capture || capture.status !== "COMPLETED") {
-    return res.status(400).json({ message: "Invalid or incomplete payment capture." });
-  }
-
-  const capturedAmount = parseFloat(capture.amount?.value || "0");
-  const currency = capture.amount?.currency_code || "USD";
-
-  // Normalize & set credits to add
-  let planInternal;
+  const planForStorage = normalizeSchoolAdminPlanForStorage(plan);
   const creditsToAdd = getCreditsForPlan(planForStorage);
-
+  
+  let planInternal;
+  let amount = 0;
   switch (planForStorage) {
     case "Standard Plan":
       planInternal = "Standard Plan";
+      amount = 849;
       break;
     case "Premium Plan":
       planInternal = "Premium Plan";
+      amount = 2100;
       break;
     default:
       return res.status(400).json({ message: "Invalid plan selected" });
@@ -107,12 +112,12 @@ const subscribeToPlan = asyncHandler(async (req, res) => {
   const payment = await Payment.create({
     schoolAdmin: admin._id,
     plan: planForStorage,
-    orderId,
-    amount: capturedAmount,
-    currency,
+    orderId: razorpay_order_id,
+    amount,
+    currency: "INR",
     status: "COMPLETED",
-    rawPayPalResponse: order,
-    paymentMethod: order?.payer?.email_address || "paypal",
+    rawPayPalResponse: { id: razorpay_payment_id }, // keeping the structure similar for frontend/backend
+    paymentMethod: "razorpay",
   });
 
   // ─── Generate PDF Invoice ──────────────────────────────────
@@ -123,9 +128,9 @@ const subscribeToPlan = asyncHandler(async (req, res) => {
       userName: admin.name || "School Admin",
       userEmail: admin.email,
       planType: normalizeSchoolAdminPlanForClient(planForStorage),
-      amount: capturedAmount,
-      transactionId: order.id || "",
-      orderId: orderId,
+      amount,
+      transactionId: razorpay_payment_id || "",
+      orderId: razorpay_order_id,
       date: new Date(),
       description: `${normalizeSchoolAdminPlanForClient(planForStorage)} - Student Licenses`,
       descriptionDetail: `Includes ${creditsToAdd} student credential licenses for your institution`,
@@ -144,10 +149,10 @@ const subscribeToPlan = asyncHandler(async (req, res) => {
       email: admin.email,
       name: admin.name || "School Admin",
       planType: normalizeSchoolAdminPlanForClient(planForStorage),
-      amount: capturedAmount,
+      amount,
       creditsAdded: creditsToAdd,
-      captureId: order.id || "",
-      orderId: orderId,
+      captureId: razorpay_payment_id || "",
+      orderId: razorpay_order_id,
       invoiceUrl,
     });
   } catch (emailErr) {
@@ -207,7 +212,7 @@ const getPaymentHistory = asyncHandler(async (req, res) => {
     plan: normalizeSchoolAdminPlanForClient(payment.plan),
     orderId: payment.orderId,
     amount: payment.amount,
-    currency: payment.currency || "USD",
+    currency: payment.currency || "INR",
     status: payment.status,
     creditsAdded: getCreditsForPlan(payment.plan),
     purchasedAt: payment.createdAt,
@@ -231,7 +236,7 @@ const getPaymentHistory = asyncHandler(async (req, res) => {
 
 
 module.exports = {
-  subscribeToPlan,
-  verifyPayPalOrder,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
   getPaymentHistory,
 };

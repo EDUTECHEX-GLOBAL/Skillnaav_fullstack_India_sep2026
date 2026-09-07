@@ -5,40 +5,18 @@ const cache = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const FALLBACK_UNIVERSITIES = {
-  "United States": [
-    { name: "Harvard University", state: "Massachusetts", website: "https://www.harvard.edu" },
-    { name: "Stanford University", state: "California", website: "https://www.stanford.edu" },
-    { name: "Massachusetts Institute of Technology", state: "Massachusetts", website: "https://www.mit.edu" },
-    { name: "University of California, Berkeley", state: "California", website: "https://www.berkeley.edu" },
-    { name: "University of California, Los Angeles", state: "California", website: "https://www.ucla.edu" },
-    { name: "Yale University", state: "Connecticut", website: "https://www.yale.edu" },
-    { name: "Princeton University", state: "New Jersey", website: "https://www.princeton.edu" },
-    { name: "Columbia University", state: "New York", website: "https://www.columbia.edu" },
-    { name: "Cornell University", state: "New York", website: "https://www.cornell.edu" },
-    { name: "University of Michigan", state: "Michigan", website: "https://umich.edu" },
-    { name: "Carnegie Mellon University", state: "Pennsylvania", website: "https://www.cmu.edu" },
-    { name: "University of Washington", state: "Washington", website: "https://www.washington.edu" },
-    { name: "University of Texas at Austin", state: "Texas", website: "https://www.utexas.edu" },
-    { name: "New York University", state: "New York", website: "https://www.nyu.edu" },
-    { name: "University of Chicago", state: "Illinois", website: "https://www.uchicago.edu" },
-  ],
-  Canada: [
-    { name: "University of Toronto", state: "Ontario", website: "https://www.utoronto.ca" },
-    { name: "University of British Columbia", state: "British Columbia", website: "https://www.ubc.ca" },
-    { name: "McGill University", state: "Quebec", website: "https://www.mcgill.ca" },
-    { name: "University of Alberta", state: "Alberta", website: "https://www.ualberta.ca" },
-    { name: "University of Waterloo", state: "Ontario", website: "https://uwaterloo.ca" },
-    { name: "Western University", state: "Ontario", website: "https://www.uwo.ca" },
-    { name: "McMaster University", state: "Ontario", website: "https://www.mcmaster.ca" },
-    { name: "Universite de Montreal", state: "Quebec", website: "https://www.umontreal.ca" },
-    { name: "University of Calgary", state: "Alberta", website: "https://www.ucalgary.ca" },
-    { name: "Queen's University", state: "Ontario", website: "https://www.queensu.ca" },
-    { name: "University of Ottawa", state: "Ontario", website: "https://www.uottawa.ca" },
-    { name: "Simon Fraser University", state: "British Columbia", website: "https://www.sfu.ca" },
-    { name: "Dalhousie University", state: "Nova Scotia", website: "https://www.dal.ca" },
-    { name: "University of Manitoba", state: "Manitoba", website: "https://umanitoba.ca" },
-    { name: "York University", state: "Ontario", website: "https://www.yorku.ca" },
-  ],
+  "India": [
+    { name: "Indian Institute of Technology Bombay", state: "Maharashtra", website: "https://www.iitb.ac.in" },
+    { name: "Indian Institute of Technology Delhi", state: "Delhi", website: "https://home.iitd.ac.in" },
+    { name: "Indian Institute of Technology Madras", state: "Tamil Nadu", website: "https://www.iitm.ac.in" },
+    { name: "Indian Institute of Science", state: "Karnataka", website: "https://iisc.ac.in" },
+    { name: "Indian Institute of Technology Kanpur", state: "Uttar Pradesh", website: "https://www.iitk.ac.in" },
+    { name: "Indian Institute of Technology Kharagpur", state: "West Bengal", website: "https://www.iitkgp.ac.in" },
+    { name: "Indian Institute of Technology Roorkee", state: "Uttarakhand", website: "https://www.iitr.ac.in" },
+    { name: "University of Delhi", state: "Delhi", website: "http://www.du.ac.in" },
+    { name: "Jawaharlal Nehru University", state: "Delhi", website: "https://www.jnu.ac.in" },
+    { name: "Anna University", state: "Tamil Nadu", website: "https://www.annauniv.edu" },
+  ]
 };
 
 const getCached = (key) => {

@@ -27,6 +27,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import InstructureDetailsView from "./InstructureDetailsView";
 import InstructorManagementedit from "./InstructorManagementedit";
+import { IN_STATES } from "../../../../constants/locations";
 
 /* ─── Shared UI tokens (same format as edit modal) ─── */
 const inputCls =
@@ -85,94 +86,8 @@ const defaultSectionTheme = {
 const dayOpts = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const INSTRUCTORS_PER_PAGE = 10;
 
-const US_STATES = [
-  "Alabama",
-  "Alaska",
-  "Arizona",
-  "Arkansas",
-  "California",
-  "Colorado",
-  "Connecticut",
-  "Delaware",
-  "District of Columbia",
-  "Florida",
-  "Georgia",
-  "Hawaii",
-  "Idaho",
-  "Illinois",
-  "Indiana",
-  "Iowa",
-  "Kansas",
-  "Kentucky",
-  "Louisiana",
-  "Maine",
-  "Maryland",
-  "Massachusetts",
-  "Michigan",
-  "Minnesota",
-  "Mississippi",
-  "Missouri",
-  "Montana",
-  "Nebraska",
-  "Nevada",
-  "New Hampshire",
-  "New Jersey",
-  "New Mexico",
-  "New York",
-  "North Carolina",
-  "North Dakota",
-  "Ohio",
-  "Oklahoma",
-  "Oregon",
-  "Pennsylvania",
-  "Rhode Island",
-  "South Carolina",
-  "South Dakota",
-  "Tennessee",
-  "Texas",
-  "Utah",
-  "Vermont",
-  "Virginia",
-  "Washington",
-  "West Virginia",
-  "Wisconsin",
-  "Wyoming",
-];
-
-const CA_PROVINCES = [
-  "Alberta",
-  "British Columbia",
-  "Manitoba",
-  "New Brunswick",
-  "Newfoundland and Labrador",
-  "Northwest Territories",
-  "Nova Scotia",
-  "Nunavut",
-  "Ontario",
-  "Prince Edward Island",
-  "Quebec",
-  "Saskatchewan",
-  "Yukon",
-];
-
-const TIMEZONES_US_MX = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Phoenix",
-  "America/Anchorage",
-  "America/Honolulu",
-  "America/Toronto",
-  "America/Vancouver",
-  "America/Edmonton",
-  "America/Winnipeg",
-  "America/Halifax",
-  "America/St_Johns",
-  "America/Regina",
-  "America/Whitehorse",
-  "America/Yellowknife",
-  "America/Iqaluit",
+const TIMEZONES_IN = [
+  "Asia/Kolkata",
 ];
 
 const getPartnerToken = () => {
@@ -256,9 +171,9 @@ const InstructureManagement = () => {
   const [page, setPage] = useState(1);
   const [rateType, setRateType] = useState("");
   const [currency, setCurrency] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState("India");
   const [stateProv, setStateProv] = useState("");
-  const [payoutMethod, setPayoutMethod] = useState("ACH (US Bank)");
+  const [payoutMethod, setPayoutMethod] = useState("NEFT/RTGS");
   const [tz, setTz] = useState("");
   const [viewing, setViewing] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -331,17 +246,8 @@ const InstructureManagement = () => {
     setPrefSlots((prev) => prev.filter((_, i) => i !== idx));
 
   useEffect(() => {
-    if (country === "Canada") {
-      if (
-        !["EFT (CA Bank)", "Interac e-Transfer", "PayPal"].includes(
-          payoutMethod,
-        )
-      )
-        setPayoutMethod("EFT (CA Bank)");
-    } else if (country === "United States") {
-      if (!["ACH (US Bank)", "Zelle", "PayPal"].includes(payoutMethod))
-        setPayoutMethod("ACH (US Bank)");
-    }
+    const inMethods = ["NEFT/RTGS", "UPI", "IMPS", "Bank Transfer"];
+    if (country === "India" && !inMethods.includes(payoutMethod)) setPayoutMethod("NEFT/RTGS");
   }, [country, payoutMethod]);
 
   useEffect(() => {
@@ -402,25 +308,19 @@ const InstructureManagement = () => {
     }
   }, []);
 
-  const stateList = country === "Canada" ? CA_PROVINCES : US_STATES;
-  const stateLabel = country === "Canada" ? "Province / Territory" : "State";
-  const postalLabel = country === "Canada" ? "Postal Code" : "ZIP Code";
-  const phonePlaceholder =
-    country === "Canada" ? "+1 (416) 555-1234" : "+1 (555) 555-1234";
-  const cityPlaceholder =
-    country === "Canada" ? "e.g., Toronto" : "e.g., San Jose";
+  const stateList = country === "India" ? IN_STATES : [];
+  const stateLabel = country === "India" ? "State / Union Territory" : "State";
+  const postalLabel = "PIN Code";
+  const phonePlaceholder = country === "India" ? "+91 98765 43210" : "+1 (555) 555-1234";
+  const cityPlaceholder = country === "India" ? "e.g., Hyderabad" : "e.g., Mumbai";
   const address1Placeholder = "Street address, suite, unit";
 
   const payIdPlaceholder =
-    payoutMethod === "ACH (US Bank)"
-      ? "Routing & last-4 (e.g., 111000025 | ****1234)"
-      : payoutMethod === "Zelle"
-        ? "Zelle email or phone"
-        : payoutMethod === "EFT (CA Bank)"
-          ? "Transit|Institution|Account"
-          : payoutMethod === "Interac e-Transfer"
-            ? "Email or mobile number"
-            : "PayPal email";
+    payoutMethod === "NEFT/RTGS"
+      ? "Account No. & IFSC (e.g., 123456789 | SBIN0001234)"
+      : payoutMethod === "UPI"
+        ? "UPI ID (e.g., user@upi)"
+        : "PayPal email";
 
   async function createInstructorWithFormData(fd) {
     const { data } = await axios.post("/api/instructors", fd, {
@@ -760,12 +660,12 @@ const InstructureManagement = () => {
               type="button"
               onClick={() => {
                 setViewing(null);
-                setCountry("");
+                setCountry("India");
                 setStateProv("");
                 setQualification("");
                 setTeachingMode("");
                 setRateType("");
-                setCurrency("");
+                setCurrency("INR");
                 setBackgroundCheck("");
                 setIsAddOpen(true);
                 setCurrentStep(1);
@@ -1057,8 +957,7 @@ const InstructureManagement = () => {
                           <option value="" disabled={country !== ""}>
                             Select
                           </option>
-                          <option value="United States">United States</option>
-                          <option value="Canada">Canada</option>
+                          <option value="India">India</option>
                         </select>
                       </Field>
 
@@ -1099,7 +998,7 @@ const InstructureManagement = () => {
                           ref={postalRef}
                           className={inputCls}
                           placeholder={
-                            country === "Canada" ? "M5V 3L9" : "95113"
+                            country === "India" ? "500001" : "95113"
                           }
                         />
                       </Field>
@@ -1314,7 +1213,7 @@ const InstructureManagement = () => {
                           <option value="" disabled={tz !== ""}>
                             Select
                           </option>
-                          {TIMEZONES_US_MX.map((z) => (
+                          {TIMEZONES_IN.map((z) => (
                             <option key={z} value={z}>
                               {z}
                             </option>
@@ -1474,9 +1373,7 @@ const InstructureManagement = () => {
                           <option value="" disabled={currency !== ""}>
                             Select
                           </option>
-                          <option value="USD">USD</option>
-                          <option value="CAD">CAD</option>
-                          <option value="EUR">EUR</option>
+                          <option value="INR">INR</option>
                         </select>
                       </Field>
 
@@ -1487,24 +1384,18 @@ const InstructureManagement = () => {
                           value={payoutMethod}
                           onChange={(e) => setPayoutMethod(e.target.value)}
                           disabled={
-                            country !== "United States" && country !== "Canada"
+                            country !== "India"
                           }
                         >
-                          <option value="" disabled>
+                          <option value="" disabled hidden>
                             {country ? "Select" : "Select country first"}
                           </option>
-                          {country === "Canada" && (
+                          {country === "India" && (
                             <>
-                              <option>EFT (CA Bank)</option>
-                              <option>Interac e-Transfer</option>
-                              <option>PayPal</option>
-                            </>
-                          )}
-                          {country === "United States" && (
-                            <>
-                              <option>ACH (US Bank)</option>
-                              <option>Zelle</option>
-                              <option>PayPal</option>
+                              <option>NEFT/RTGS</option>
+                              <option>UPI</option>
+                              <option>IMPS</option>
+                              <option>Bank Transfer</option>
                             </>
                           )}
                         </select>

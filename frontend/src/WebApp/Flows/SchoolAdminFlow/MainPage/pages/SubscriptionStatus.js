@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../../api/axiosInstance";
 import { FaArrowRight, FaChartLine, FaCoins, FaCreditCard, FaReceipt } from "react-icons/fa";
 
-const formatCurrency = (amount, currency = "USD") => {
+const formatCurrency = (amount, currency = "INR") => {
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency,
       minimumFractionDigits: 2,

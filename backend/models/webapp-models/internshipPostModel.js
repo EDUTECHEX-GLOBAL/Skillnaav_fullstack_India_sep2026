@@ -14,7 +14,7 @@ const internshipPostingSchema = new mongoose.Schema(
  */
     country: {
       type: String,
-      enum: ["United States", "Canada"],
+      enum: ["India"],
       required: true
     },
     state: { type: String, required: true },

@@ -1,20 +1,9 @@
 // routes/webhookRoutes.js
-// PayPal webhook receiver — handles payments that complete after the browser closes.
-//
-// SETUP STEPS:
-//   1. Go to PayPal Developer Dashboard → My Apps → Your App → Webhooks
-//   2. Add endpoint: https://yourdomain.com/api/webhooks/paypal
-//   3. Subscribe to event: PAYMENT.CAPTURE.COMPLETED
-//   4. Copy the Webhook ID into your .env as PAYPAL_WEBHOOK_ID
-//   5. npm install @paypal/checkout-server-sdk   (already available via axios)
-//
-// NOTE: PayPal sends webhooks as raw JSON with verification headers.
-//       This route must be mounted BEFORE express.json() or with express.raw().
+// Razorpay webhook receiver — handles payments that complete after the browser closes.
 
 const express = require("express");
 const router = express.Router();
-const axios = require("axios");
-const { getAccessToken } = require("../../utils/paypal");
+const crypto = require("crypto");
 const Payment = require("../../models/webapp-models/PaymentModel");
 const User = require("../../models/webapp-models/userModel");
 const { sendPaymentConfirmationEmail } = require("../../utils/emailService");
@@ -26,58 +15,46 @@ const PLAN_DURATIONS = {
 };
 
 // ─────────────────────────────────────────────
-// Verify PayPal webhook signature
+// Verify Razorpay webhook signature
 // ─────────────────────────────────────────────
-async function verifyWebhookSignature(req) {
-  const accessToken = await getAccessToken();
-  const rawBody = req.body; // Buffer from express.raw()
-  
-  const body = {
-    auth_algo:         req.headers["paypal-auth-algo"],
-    cert_url:          req.headers["paypal-cert-url"],
-    transmission_id:   req.headers["paypal-transmission-id"],
-    transmission_sig:  req.headers["paypal-transmission-sig"],
-    transmission_time: req.headers["paypal-transmission-time"],
-    webhook_id:        process.env.PAYPAL_WEBHOOK_ID,
-    webhook_event:     JSON.parse(rawBody.toString()), // parse from raw
-  };
+function verifyWebhookSignature(req) {
+  const signature = req.headers["x-razorpay-signature"];
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-  const response = await axios.post(
-    `${process.env.PAYPAL_API}/v1/notifications/verify-webhook-signature`,
-    body,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  if (!signature || !secret) return false;
 
-  return response.data?.verification_status === "SUCCESS";
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(req.body.toString())
+    .digest("hex");
+
+  return expectedSignature === signature;
 }
 
 // ─────────────────────────────────────────────
-// POST /api/webhooks/paypal
+// POST /api/webhooks/razorpay
 // ─────────────────────────────────────────────
-router.post("/paypal", async (req, res) => {
-  // Always return 200 quickly so PayPal doesn't retry endlessly
+router.post("/razorpay", async (req, res) => {
+  // Always return 200 quickly so Razorpay doesn't retry endlessly
   res.sendStatus(200);
 
   try {
-    const isValid = await verifyWebhookSignature(req);
+    const isValid = verifyWebhookSignature(req);
     if (!isValid) {
-      console.warn("⚠️ PayPal webhook signature verification failed — ignoring");
+      console.warn("⚠️ Razorpay webhook signature verification failed — ignoring");
       return;
     }
 
-     const event = JSON.parse(req.body.toString());
+    const event = JSON.parse(req.body.toString());
 
-    if (event.event_type !== "PAYMENT.CAPTURE.COMPLETED") return;
+    if (event.event !== "order.paid") return;
 
-    const capture = event.resource;
-    const captureId = capture?.id;
-    const orderId = capture?.supplementary_data?.related_ids?.order_id;
-    const capturedAmount = parseFloat(capture?.amount?.value || "0");
+    const paymentEntity = event.payload?.payment?.entity;
+    const orderEntity = event.payload?.order?.entity;
+
+    const captureId = paymentEntity?.id;
+    const orderId = orderEntity?.id;
+    const capturedAmount = (paymentEntity?.amount || 0) / 100; // Razorpay sends in paise
 
     if (!captureId || !orderId) {
       console.error("❌ Webhook missing captureId or orderId", event);

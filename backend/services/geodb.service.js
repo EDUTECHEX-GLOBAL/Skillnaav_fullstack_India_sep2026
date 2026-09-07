@@ -3,45 +3,18 @@ const axios = require("axios");
 const GEODB_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/cities";
 
 const FALLBACK_CITIES = {
-  "United States": [
-    { name: "New York", region: "New York", regionCode: "NY" },
-    { name: "Los Angeles", region: "California", regionCode: "CA" },
-    { name: "Chicago", region: "Illinois", regionCode: "IL" },
-    { name: "Houston", region: "Texas", regionCode: "TX" },
-    { name: "Phoenix", region: "Arizona", regionCode: "AZ" },
-    { name: "Philadelphia", region: "Pennsylvania", regionCode: "PA" },
-    { name: "San Antonio", region: "Texas", regionCode: "TX" },
-    { name: "San Diego", region: "California", regionCode: "CA" },
-    { name: "Dallas", region: "Texas", regionCode: "TX" },
-    { name: "San Jose", region: "California", regionCode: "CA" },
-    { name: "Austin", region: "Texas", regionCode: "TX" },
-    { name: "Jacksonville", region: "Florida", regionCode: "FL" },
-    { name: "San Francisco", region: "California", regionCode: "CA" },
-    { name: "Columbus", region: "Ohio", regionCode: "OH" },
-    { name: "Indianapolis", region: "Indiana", regionCode: "IN" },
-    { name: "Charlotte", region: "North Carolina", regionCode: "NC" },
-    { name: "Seattle", region: "Washington", regionCode: "WA" },
-    { name: "Denver", region: "Colorado", regionCode: "CO" },
-    { name: "Boston", region: "Massachusetts", regionCode: "MA" },
-    { name: "Nashville", region: "Tennessee", regionCode: "TN" },
-  ],
-  Canada: [
-    { name: "Toronto", region: "Ontario", regionCode: "ON" },
-    { name: "Montreal", region: "Quebec", regionCode: "QC" },
-    { name: "Vancouver", region: "British Columbia", regionCode: "BC" },
-    { name: "Calgary", region: "Alberta", regionCode: "AB" },
-    { name: "Edmonton", region: "Alberta", regionCode: "AB" },
-    { name: "Ottawa", region: "Ontario", regionCode: "ON" },
-    { name: "Winnipeg", region: "Manitoba", regionCode: "MB" },
-    { name: "Quebec City", region: "Quebec", regionCode: "QC" },
-    { name: "Hamilton", region: "Ontario", regionCode: "ON" },
-    { name: "Kitchener", region: "Ontario", regionCode: "ON" },
-    { name: "London", region: "Ontario", regionCode: "ON" },
-    { name: "Halifax", region: "Nova Scotia", regionCode: "NS" },
-    { name: "Victoria", region: "British Columbia", regionCode: "BC" },
-    { name: "Saskatoon", region: "Saskatchewan", regionCode: "SK" },
-    { name: "Regina", region: "Saskatchewan", regionCode: "SK" },
-  ],
+  "India": [
+    { name: "Mumbai", region: "Maharashtra", regionCode: "MH" },
+    { name: "Delhi", region: "Delhi", regionCode: "DL" },
+    { name: "Bengaluru", region: "Karnataka", regionCode: "KA" },
+    { name: "Hyderabad", region: "Telangana", regionCode: "TS" },
+    { name: "Chennai", region: "Tamil Nadu", regionCode: "TN" },
+    { name: "Kolkata", region: "West Bengal", regionCode: "WB" },
+    { name: "Pune", region: "Maharashtra", regionCode: "MH" },
+    { name: "Ahmedabad", region: "Gujarat", regionCode: "GJ" },
+    { name: "Jaipur", region: "Rajasthan", regionCode: "RJ" },
+    { name: "Surat", region: "Gujarat", regionCode: "GJ" }
+  ]
 };
 
 const fallbackCitySearch = ({ country, query }) => {
@@ -54,7 +27,7 @@ const fallbackCitySearch = ({ country, query }) => {
 };
 
 const searchCities = async ({ country, query }) => {
-  const countryIds = country === "Canada" ? "CA" : "US";
+  const countryIds = "IN";
 
   if (!process.env.GEODB_API_KEY) {
     return fallbackCitySearch({ country, query });

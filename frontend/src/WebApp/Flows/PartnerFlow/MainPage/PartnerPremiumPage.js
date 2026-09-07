@@ -3,22 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
 import { useSelector } from "react-redux";
 
-// ─── Module-level PayPal cross-origin error suppressor ────────────────────────
-(function suppressPayPalCrossOriginErrors() {
-  const handler = (event) => {
-    if (
-      event.message === "Script error." ||
-      event.message === "Script error" ||
-      (event.message === "" && !event.filename && event.lineno === 0)
-    ) {
-      event.stopImmediatePropagation();
-      event.preventDefault();
-    }
-  };
-  window.addEventListener("error", handler, true);
-})();
-
-const PAYPAL_CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID;
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID;
 
 // Frontend plan definitions — price/duration here is display-only.
 // Server derives all values from planType — client never sends amount or duration.
@@ -43,7 +28,7 @@ const plans = [
   },
   {
     title: "Premium Basic",
-    price: "9.99",
+    price: "849",
     duration: 2,
     features: [
       "Unlimited internship postings",
@@ -61,7 +46,7 @@ const plans = [
   },
   {
     title: "Premium Plus",
-    price: "19.99",
+    price: "1699",
     duration: 5,
     features: [
       "All Premium Basic features",
@@ -122,99 +107,65 @@ export default function PartnerPremiumPage() {
     }
   }, [partner?.premiumExpiration]);
 
-  // ─── Load PayPal SDK ──────────────────────────────────────────────────────
+  // ─── Load Razorpay SDK ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (!PAYPAL_CLIENT_ID) {
-      setAlert({ type: "error", message: "PayPal Client ID not set. Check .env" });
+    if (!RAZORPAY_KEY_ID) {
+      setAlert({ type: "error", message: "Razorpay Key ID not set. Check .env" });
       return;
     }
-    if (window.paypal) {
+    if (window.Razorpay) {
       setSdkReady(true);
-      return () => setSdkReady(false);
-    }
-    const existing = document.querySelector('script[src*="paypal.com/sdk/js"]');
-    if (existing) {
-      const onLoad = () => setSdkReady(true);
-      existing.addEventListener("load", onLoad);
-      return () => { existing.removeEventListener("load", onLoad); setSdkReady(false); };
+      return;
     }
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD`;
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     script.onload  = () => setSdkReady(true);
-    script.onerror = () => setAlert({ type: "error", message: "Failed to load PayPal SDK. Check your Client ID." });
+    script.onerror = () => setAlert({ type: "error", message: "Failed to load Razorpay SDK." });
     document.body.appendChild(script);
     return () => { setSdkReady(false); if (script?.parentNode) script.parentNode.removeChild(script); };
   }, []);
 
-  // ─── Suppress PayPal cross-origin "Script error." ────────────────────────
-  useEffect(() => {
-    if (selectedIndex === null) return;
-    const suppressScriptError = (event) => {
-      if (
-        event.message === "Script error." ||
-        event.message === "Script error" ||
-        (event.message === "" && !event.filename && event.lineno === 0)
-      ) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-      }
-    };
-    window.addEventListener("error", suppressScriptError, true);
-    return () => window.removeEventListener("error", suppressScriptError, true);
-  }, [selectedIndex]);
+  // (Removed PayPal button logic - replaced with Razorpay handler in selectPlan)
 
-  // ─── Render PayPal Buttons ────────────────────────────────────────────────
-  useEffect(() => {
-    const renderButtons = async () => {
-      if (selectedIndex === null || !sdkReady || !selectedPlanType) return;
-      if (!window.paypal?.Buttons) {
-        console.warn("window.paypal not available yet, skipping button render");
-        return;
-      }
-
-      const containerId = `paypal-button-container-${selectedIndex}`;
-      const container   = document.getElementById(containerId);
-      if (!container) return;
-
-      if (paypalInstanceRef.current) {
-        try { paypalInstanceRef.current.close(); } catch (_) {}
-        paypalInstanceRef.current = null;
-        await new Promise((r) => setTimeout(r, 0));
-      }
-      if (!document.getElementById(containerId)) return;
-      container.innerHTML = "";
-
-      // ✅ FIX 3: authHeader computed HERE — inside the effect — so partner is
-      // always the current, resolved value and never "undefined".
+  // ─── Select a plan ────────────────────────────────────────────────────────
+  const selectPlan = async (plan, idx) => {
+    if (plan.price === "0.00") return;
+    if (!sdkReady) {
+      setAlert({ type: "error", message: "Razorpay is still loading. Please wait a moment." });
+      return;
+    }
+    setSelectedPlanType(plan.title);
+    setSelectedIndex(idx);
+    
+    setIsProcessing(true);
+    try {
       const authHeader = getAuthHeader();
+      const { data: orderRes } = await axios.post(
+        "/api/partner/payments/razorpay/order",
+        { planType: plan.title },
+        { headers: authHeader },
+      );
 
-      const buttons = window.paypal.Buttons({
-        style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal" },
-
-        createOrder: async () => {
-          try {
-            const { data } = await axios.post(
-              "/api/partner/payments/paypal/order",
-              { planType: selectedPlanType },
-              { headers: authHeader }, // ✅ auth token attached
-            );
-            if (data.free) throw new Error("Free plan — no PayPal order needed");
-            return data.id;
-          } catch (err) {
-            console.error("Partner order creation failed:", err);
-            setAlert({ type: "error", message: "Unable to create PayPal order. Please try again." });
-            throw err;
-          }
-        },
-
-        onApprove: async (data) => {
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: orderRes.amount,
+        currency: orderRes.currency,
+        name: "Skillnaav",
+        description: `Upgrade to ${plan.title}`,
+        order_id: orderRes.id,
+        handler: async function (response) {
           setIsProcessing(true);
           try {
             const { data: verify } = await axios.post(
-              "/api/partner/payments/paypal/verify",
-              { orderID: data.orderID, planType: selectedPlanType },
-              { headers: authHeader }, // ✅ auth token attached
+              "/api/partner/payments/razorpay/verify",
+              { 
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                planType: plan.title 
+              },
+              { headers: authHeader },
             );
 
             if (verify.success) {
@@ -227,7 +178,6 @@ export default function PartnerPremiumPage() {
                 premiumExpiration: verify.partner.premiumExpiration,
               };
               localStorage.setItem("partnerInfo", JSON.stringify(updated));
-              // Notify Navbar and any other listener (socket handler also dispatches this)
               window.dispatchEvent(new CustomEvent("partnerUpdated", { detail: updated }));
 
               setPaymentHistory([]);
@@ -235,8 +185,6 @@ export default function PartnerPremiumPage() {
               setSelectedIndex(null);
               setSelectedPlanType(null);
               setExpiryWarning(false);
-            } else if (verify.retry) {
-              setAlert({ type: "error", message: verify.message || "Payment declined. Try another payment method." });
             } else {
               setAlert({ type: "error", message: verify.message || "Payment verification failed." });
               setSelectedIndex(null);
@@ -244,11 +192,6 @@ export default function PartnerPremiumPage() {
             }
           } catch (err) {
             console.error("Partner verification error:", err);
-            const info = err.response?.data;
-            if (info?.retry) {
-              setAlert({ type: "error", message: info.message || "Payment declined. Try another funding source." });
-              return;
-            }
             setAlert({ type: "error", message: "Payment verification error. Please contact support." });
             setSelectedIndex(null);
             setSelectedPlanType(null);
@@ -256,51 +199,29 @@ export default function PartnerPremiumPage() {
             setIsProcessing(false);
           }
         },
-
-        onCancel: () => {
-          setTimeout(() => { setSelectedIndex(null); setSelectedPlanType(null); }, 300);
+        prefill: {
+          name: partner?.name || "",
+          email: partner?.email || "",
+          contact: partner?.phone || "",
         },
-
-        onError: (err) => {
-          const msg = err?.message || String(err);
-          if (
-            !msg ||
-            msg === "Script error." ||
-            msg.includes("Window closed before response") ||
-            msg.includes("window closed") ||
-            msg.includes("popup closed")
-          ) {
-            console.warn("PayPal popup closed by partner (non-critical):", msg);
-            setTimeout(() => { setSelectedIndex(null); setSelectedPlanType(null); }, 300);
-            return;
-          }
-          console.error("PayPal SDK error:", err);
-          setAlert({ type: "error", message: "Payment failed. Please try again." });
-          setTimeout(() => { setSelectedIndex(null); setSelectedPlanType(null); }, 300);
+        theme: {
+          color: "#4f46e5",
         },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response) {
+        console.error("Razorpay payment failed:", response.error);
+        setAlert({ type: "error", message: "Payment failed: " + response.error.description });
       });
-
-      if (buttons.isEligible()) {
-        buttons.render(`#${containerId}`);
-        paypalInstanceRef.current = buttons;
-      } else {
-        container.innerHTML =
-          '<p class="text-red-500 text-sm mt-2">PayPal is not available. Try a different browser or disable ad blockers.</p>';
-      }
-    };
-    renderButtons();
-  // ✅ FIX 4: partner added to dependency array so effect re-runs if token changes
-  }, [selectedIndex, selectedPlanType, sdkReady, partner]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ─── Select a plan ────────────────────────────────────────────────────────
-  const selectPlan = (plan, idx) => {
-    if (!sdkReady) {
-      setAlert({ type: "error", message: "PayPal is still loading. Please wait a moment." });
-      return;
+      rzp1.open();
+    } catch (err) {
+      console.error("Partner order creation failed:", err);
+      const msg = err?.response?.data?.message || err?.message || "Unable to create Razorpay order. Please try again.";
+      setAlert({ type: "error", message: msg });
+    } finally {
+      setIsProcessing(false);
     }
-    if (plan.price === "0.00") return;
-    setSelectedPlanType(plan.title);
-    setSelectedIndex(idx);
   };
 
   // ─── Fetch payment history ────────────────────────────────────────────────
@@ -453,7 +374,7 @@ export default function PartnerPremiumPage() {
                 {isCurrentPlan && (
                   <p className="text-sm text-green-600 mb-3 font-semibold">✓ Active Plan</p>
                 )}
-                <p className={`text-5xl font-bold ${theme.price} mb-2`}>${plan.price}</p>
+                <p className={`text-5xl font-bold ${theme.price} mb-2`}>₹{plan.price}</p>
                 <p className="text-sm text-gray-600 mb-5">
                   Duration: {plan.duration ? `${plan.duration} Days` : "Unlimited"}
                 </p>
@@ -470,18 +391,27 @@ export default function PartnerPremiumPage() {
               <button
                 onClick={() => selectPlan(plan, idx)}
                 disabled={plan.disabled || isCurrentPlan || isProcessing}
-                className={`mt-8 py-3 rounded-lg font-semibold transition-all ${
+                className={`mt-8 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
                   plan.disabled || isCurrentPlan
                     ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : theme.btn
+                    : "bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md"
                 }`}
               >
-                {isCurrentPlan ? "✓ Subscribed" : plan.disabled ? `On ${plan.title}` : plan.btnText}
+                {isCurrentPlan ? (
+                  "✓ Subscribed"
+                ) : plan.disabled ? (
+                  `On ${plan.title}`
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                      <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+                    </svg>
+                    Pay with Razorpay
+                  </>
+                )}
               </button>
 
-              {selectedIndex === idx && (
-                <div id={`paypal-button-container-${idx}`} className="mt-4"></div>
-              )}
+              {/* Removed PayPal container */}
             </div>
           );
         })}
@@ -527,7 +457,7 @@ export default function PartnerPremiumPage() {
                       <tr key={p._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-3 text-gray-700">{formatDate(p.createdAt)}</td>
                         <td className="px-5 py-3 text-gray-900 font-medium">{p.planType}</td>
-                        <td className="px-5 py-3 text-gray-700">${Number(p.amount).toFixed(2)}</td>
+                        <td className="px-5 py-3 text-gray-700">₹{Number(p.amount).toFixed(2)}</td>
                         <td className="px-5 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(p.status)}`}>
                             {p.status}

@@ -25,28 +25,10 @@ const labelCls =
 
 const dayOpts = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-  "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
-  "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
-  "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
-  "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah",
-  "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
-];
+import { IN_STATES } from "../../../../constants/locations";
 
-const CA_PROVINCES = [
-  "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
-  "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
-  "Quebec", "Saskatchewan", "Yukon",
-];
-
-const TIMEZONES_US_MX = [
-  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "America/Phoenix", "America/Anchorage", "America/Honolulu",
-  "America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg",
-  "America/Halifax", "America/St_Johns", "America/Regina", "America/Whitehorse",
-  "America/Yellowknife", "America/Iqaluit",
+const TIMEZONES_IN = [
+  "Asia/Kolkata",
 ];
 
 const sectionThemes = {
@@ -127,6 +109,53 @@ const Field = ({ label, required, span = 1, children }) => (
   </div>
 );
 
+const CustomSelect = ({ options, value, onChange, placeholder = "Select", disabled, className }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <div 
+        className={`${className} flex items-center justify-between cursor-pointer ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <span className={value ? "text-slate-800" : "text-slate-400"}>
+          {value || placeholder}
+        </span>
+        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+          {options.map((opt) => (
+            <div
+              key={opt}
+              className={`px-4 py-2 text-sm cursor-pointer transition-colors ${value === opt ? "bg-violet-500 text-white" : "text-slate-700 hover:bg-violet-50 hover:text-violet-700"}`}
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
+              }}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function InstructorManagementedit({ open, item, onClose, onSaved }) {
   const authCfg = () => {
     const token =
@@ -149,7 +178,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
   const itemId = useMemo(() => item?._id || item?.id, [item]);
 
-  const initialCountry = item?.country === "Canada" ? "Canada" : "United States";
+  const initialCountry = "India";
   const [country, setCountry] = useState(initialCountry);
   const [stateProv, setStateProv] = useState(item?.state || "");
   const [city, setCity] = useState(item?.city || "");
@@ -158,23 +187,19 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const [address2, setAddress2] = useState(item?.address2 || "");
 
   const [currency, setCurrency] = useState(
-    item?.currency || (initialCountry === "Canada" ? "CAD" : "USD")
+    item?.currency || "INR"
   );
 
   useEffect(() => {
     setCurrency((c) => {
-      if (country === "Canada" && c === "USD") return "CAD";
-      if (country === "United States" && c === "CAD") return "USD";
       return c;
     });
   }, [country]);
 
   const [payoutMethod, setPayoutMethod] = useState(() => {
-    const us = ["ACH (US Bank)", "Zelle", "PayPal"];
-    const ca = ["EFT (CA Bank)", "Interac e-Transfer", "PayPal"];
+    const inMethods = ["NEFT/RTGS", "UPI", "IMPS", "Bank Transfer"];
     const m = item?.payoutMethod;
-    if (initialCountry === "Canada") return ca.includes(m) ? m : "EFT (CA Bank)";
-    return us.includes(m) ? m : "ACH (US Bank)";
+    return inMethods.includes(m) ? m : "NEFT/RTGS";
   });
 
   useEffect(() => {
@@ -184,15 +209,13 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   }, []);
 
   useEffect(() => {
-    const us = ["ACH (US Bank)", "Zelle", "PayPal"];
-    const ca = ["EFT (CA Bank)", "Interac e-Transfer", "PayPal"];
-    if (country === "Canada" && !ca.includes(payoutMethod)) setPayoutMethod("EFT (CA Bank)");
-    else if (country === "United States" && !us.includes(payoutMethod)) setPayoutMethod("ACH (US Bank)");
+    const inMethods = ["NEFT/RTGS", "UPI", "IMPS", "Bank Transfer"];
+    if (country === "India" && !inMethods.includes(payoutMethod)) setPayoutMethod("NEFT/RTGS");
   }, [country, payoutMethod]);
 
   const [availStart, setAvailStart] = useState(item?.availableStart || "");
   const [availEnd, setAvailEnd] = useState(item?.availableEnd || "");
-  const [tz, setTz] = useState(item?.timezone || "America/Los_Angeles");
+  const [tz, setTz] = useState(item?.timezone || "Asia/Kolkata");
 
   const [prefSlots, setPrefSlots] = useState(
     Array.isArray(item?.preferableSlots)
@@ -210,23 +233,19 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const prefStartRefs = useRef([]);
   const prefEndRefs = useRef([]);
 
-  const stateList = country === "Canada" ? CA_PROVINCES : US_STATES;
-  const stateLabel = country === "Canada" ? "Province / Territory" : "State";
-  const postalLabel = country === "Canada" ? "Postal Code" : "ZIP Code";
-  const phonePlaceholder = country === "Canada" ? "+1 (416) 555-1234" : "+1 (555) 555-1234";
-  const cityPlaceholder = country === "Canada" ? "e.g., Toronto" : "e.g., San Jose";
+  const stateList = country === "India" ? IN_STATES : [];
+  const stateLabel = country === "India" ? "State / Union Territory" : "State";
+  const postalLabel = "PIN Code";
+  const phonePlaceholder = country === "India" ? "+91 98765 43210" : "+1 (555) 555-1234";
+  const cityPlaceholder = country === "India" ? "e.g., Hyderabad" : "e.g., Mumbai";
   const address1Placeholder = "Street address, suite, unit";
 
   const payIdPlaceholder =
-    payoutMethod === "ACH (US Bank)"
-      ? "Routing & last-4 (e.g., 111000025 | ****1234)"
-      : payoutMethod === "Zelle"
-        ? "Zelle email or phone"
-        : payoutMethod === "EFT (CA Bank)"
-          ? "Transit|Institution|Account (e.g., 12345|004|0012345)"
-          : payoutMethod === "Interac e-Transfer"
-            ? "Email or mobile number"
-            : "PayPal email";
+    payoutMethod === "NEFT/RTGS"
+      ? "Account No. & IFSC (e.g., 123456789 | SBIN0001234)"
+      : payoutMethod === "UPI"
+        ? "UPI ID (e.g., user@upi)"
+        : "PayPal email";
 
   const toCSV = (arr) =>
     Array.isArray(arr) ? arr.join(", ") : typeof arr === "string" ? arr : "";
@@ -552,8 +571,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                     setAddress2("");
                   }}
                 >
-                  <option>United States</option>
-                  <option>Canada</option>
+                  <option>India</option>
                 </select>
               </Field>
 
@@ -595,7 +613,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   className={inputCls}
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder={country === "Canada" ? "M5V 3L9" : "95113"}
+                  placeholder={country === "India" ? "500001" : "95113"}
                 />
               </Field>
 
@@ -810,18 +828,12 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
               </Field>
 
               <Field label="Timezone">
-                <select
-                  name="timezone"
-                  className={inputCls}
+                <CustomSelect
+                  options={TIMEZONES_IN}
                   value={tz}
-                  onChange={(e) => setTz(e.target.value)}
-                >
-                  {TIMEZONES_US_MX.map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setTz(val)}
+                  className={inputCls}
+                />
               </Field>
 
               <div className="md:col-span-3 mt-2">
@@ -941,9 +953,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                 >
-                  <option>USD</option>
-                  <option>CAD</option>
-                  <option>EUR</option>
+                  <option>INR</option>
                 </select>
               </Field>
 
@@ -954,16 +964,16 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   value={payoutMethod}
                   onChange={(e) => setPayoutMethod(e.target.value)}
                 >
-                  {country === "Canada" ? (
+                  {country === "India" ? (
                     <>
-                      <option>EFT (CA Bank)</option>
-                      <option>Interac e-Transfer</option>
-                      <option>PayPal</option>
+                      <option>NEFT/RTGS</option>
+                      <option>UPI</option>
+                      <option>IMPS</option>
+                      <option>Bank Transfer</option>
                     </>
                   ) : (
                     <>
-                      <option>ACH (US Bank)</option>
-                      <option>Zelle</option>
+                      <option>International Wire Transfer</option>
                       <option>PayPal</option>
                     </>
                   )}
