@@ -14,6 +14,8 @@ import {
   faClipboardList,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
+import { IN_STATES } from "../../../../constants/locations";
+import { StateDropdown } from "../../../../components/StateDropdown";
 
 /* ─── Shared style tokens ─── */
 const inputCls =
@@ -25,51 +27,41 @@ const labelCls =
 
 const dayOpts = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-import { IN_STATES } from "../../../../constants/locations";
-
-const TIMEZONES_IN = [
-  "Asia/Kolkata",
-];
+const TIMEZONES_IN = ["Asia/Kolkata"];
 
 const sectionThemes = {
   "Personal & Contact": {
-    wrap:
-      "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-sky-50/30 to-indigo-50/40 p-5 shadow-sm shadow-slate-200/60",
+    wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-sky-50/30 to-indigo-50/40 p-5 shadow-sm shadow-slate-200/60",
     title:
       "text-xs font-bold text-sky-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-sky-300 after:via-indigo-200 after:to-transparent",
     icon: "text-sky-500 text-[10px]",
   },
   "Professional & Teaching": {
-    wrap:
-      "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-violet-50/25 to-fuchsia-50/35 p-5 shadow-sm shadow-slate-200/60",
+    wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-violet-50/25 to-fuchsia-50/35 p-5 shadow-sm shadow-slate-200/60",
     title:
       "text-xs font-bold text-violet-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-violet-300 after:via-fuchsia-200 after:to-transparent",
     icon: "text-violet-500 text-[10px]",
   },
   Availability: {
-    wrap:
-      "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-cyan-50/25 to-blue-50/35 p-5 shadow-sm shadow-slate-200/60",
+    wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-cyan-50/25 to-blue-50/35 p-5 shadow-sm shadow-slate-200/60",
     title:
       "text-xs font-bold text-cyan-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-cyan-300 after:via-blue-200 after:to-transparent",
     icon: "text-cyan-500 text-[10px]",
   },
   "Compensation / Payout": {
-    wrap:
-      "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-emerald-50/25 to-teal-50/35 p-5 shadow-sm shadow-slate-200/60",
+    wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-emerald-50/25 to-teal-50/35 p-5 shadow-sm shadow-slate-200/60",
     title:
       "text-xs font-bold text-emerald-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-emerald-300 after:via-teal-200 after:to-transparent",
     icon: "text-emerald-500 text-[10px]",
   },
   "Compliance & Documents": {
-    wrap:
-      "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-amber-50/25 to-orange-50/35 p-5 shadow-sm shadow-slate-200/60",
+    wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-amber-50/25 to-orange-50/35 p-5 shadow-sm shadow-slate-200/60",
     title:
       "text-xs font-bold text-amber-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-amber-300 after:via-orange-200 after:to-transparent",
     icon: "text-amber-500 text-[10px]",
   },
   Assignment: {
-    wrap:
-      "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-rose-50/20 to-pink-50/30 p-5 shadow-sm shadow-slate-200/60",
+    wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-rose-50/20 to-pink-50/30 p-5 shadow-sm shadow-slate-200/60",
     title:
       "text-xs font-bold text-rose-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-rose-300 after:via-pink-200 after:to-transparent",
     icon: "text-rose-500 text-[10px]",
@@ -77,8 +69,7 @@ const sectionThemes = {
 };
 
 const defaultSectionTheme = {
-  wrap:
-    "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-indigo-50/20 p-5 shadow-sm shadow-slate-200/60",
+  wrap: "rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-indigo-50/20 p-5 shadow-sm shadow-slate-200/60",
   title:
     "text-xs font-bold text-indigo-700 uppercase tracking-widest flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-gradient-to-r after:from-indigo-300 after:to-transparent",
   icon: "text-indigo-500 text-[10px]",
@@ -94,14 +85,18 @@ const FormSection = ({ title, icon, children }) => {
         {icon && <FontAwesomeIcon icon={icon} className={theme.icon} />}
         {title}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-5">{children}</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-5">
+        {children}
+      </div>
     </div>
   );
 };
 
 /* ─── Field wrapper ─── */
 const Field = ({ label, required, span = 1, children }) => (
-  <div className={span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : ""}>
+  <div
+    className={span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : ""}
+  >
     <label className={labelCls}>
       {label} {required && <span className="text-rose-500">*</span>}
     </label>
@@ -109,7 +104,14 @@ const Field = ({ label, required, span = 1, children }) => (
   </div>
 );
 
-const CustomSelect = ({ options, value, onChange, placeholder = "Select", disabled, className }) => {
+const CustomSelect = ({
+  options,
+  value,
+  onChange,
+  placeholder = "Select",
+  disabled,
+  className,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -125,15 +127,25 @@ const CustomSelect = ({ options, value, onChange, placeholder = "Select", disabl
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <div 
+      <div
         className={`${className} flex items-center justify-between cursor-pointer ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         <span className={value ? "text-slate-800" : "text-slate-400"}>
           {value || placeholder}
         </span>
-        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        <svg
+          className="w-4 h-4 text-slate-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </div>
       {isOpen && (
@@ -156,7 +168,12 @@ const CustomSelect = ({ options, value, onChange, placeholder = "Select", disabl
   );
 };
 
-export default function InstructorManagementedit({ open, item, onClose, onSaved }) {
+export default function InstructorManagementedit({
+  open,
+  item,
+  onClose,
+  onSaved,
+}) {
   const authCfg = () => {
     const token =
       localStorage.getItem("partnerToken") ||
@@ -186,9 +203,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const [address1, setAddress1] = useState(item?.address1 || "");
   const [address2, setAddress2] = useState(item?.address2 || "");
 
-  const [currency, setCurrency] = useState(
-    item?.currency || "INR"
-  );
+  const [currency, setCurrency] = useState(item?.currency || "INR");
 
   useEffect(() => {
     setCurrency((c) => {
@@ -210,7 +225,8 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
   useEffect(() => {
     const inMethods = ["NEFT/RTGS", "UPI", "IMPS", "Bank Transfer"];
-    if (country === "India" && !inMethods.includes(payoutMethod)) setPayoutMethod("NEFT/RTGS");
+    if (country === "India" && !inMethods.includes(payoutMethod))
+      setPayoutMethod("NEFT/RTGS");
   }, [country, payoutMethod]);
 
   const [availStart, setAvailStart] = useState(item?.availableStart || "");
@@ -219,14 +235,20 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
   const [prefSlots, setPrefSlots] = useState(
     Array.isArray(item?.preferableSlots)
-      ? item.preferableSlots.map((s) => ({ start: s.start || "", end: s.end || "" }))
-      : []
+      ? item.preferableSlots.map((s) => ({
+          start: s.start || "",
+          end: s.end || "",
+        }))
+      : [],
   );
 
   const addPrefSlot = () => setPrefSlots((p) => [...p, { start: "", end: "" }]);
   const updatePrefSlot = (idx, field, value) =>
-    setPrefSlots((p) => p.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
-  const removePrefSlot = (idx) => setPrefSlots((p) => p.filter((_, i) => i !== idx));
+    setPrefSlots((p) =>
+      p.map((s, i) => (i === idx ? { ...s, [field]: value } : s)),
+    );
+  const removePrefSlot = (idx) =>
+    setPrefSlots((p) => p.filter((_, i) => i !== idx));
 
   const startRef = useRef(null);
   const endRef = useRef(null);
@@ -236,8 +258,10 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const stateList = country === "India" ? IN_STATES : [];
   const stateLabel = country === "India" ? "State / Union Territory" : "State";
   const postalLabel = "PIN Code";
-  const phonePlaceholder = country === "India" ? "+91 98765 43210" : "+1 (555) 555-1234";
-  const cityPlaceholder = country === "India" ? "e.g., Hyderabad" : "e.g., Mumbai";
+  const phonePlaceholder =
+    country === "India" ? "+91 98765 43210" : "+1 (555) 555-1234";
+  const cityPlaceholder =
+    country === "India" ? "e.g., Hyderabad" : "e.g., Mumbai";
   const address1Placeholder = "Street address, suite, unit";
 
   const payIdPlaceholder =
@@ -259,9 +283,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
     if (!itemId) return;
     setSubmitting(true);
 
-    [...e.currentTarget.querySelectorAll('input[name="availableDays"]')].forEach((el) =>
-      el.setCustomValidity("")
-    );
+    [
+      ...e.currentTarget.querySelectorAll('input[name="availableDays"]'),
+    ].forEach((el) => el.setCustomValidity(""));
     startRef.current?.setCustomValidity("");
     endRef.current?.setCustomValidity("");
     (prefStartRefs.current || []).forEach((el) => el?.setCustomValidity(""));
@@ -274,11 +298,26 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
     form.querySelector('[name="postalCode"]')?.setCustomValidity("");
     form.querySelector('[name="address1"]')?.setCustomValidity("");
 
-    if (!country) form.querySelector('[name="country"]')?.setCustomValidity("Please fill in this field.");
-    if (!stateProv) form.querySelector('[name="state"]')?.setCustomValidity("Please fill in this field.");
-    if (!city) form.querySelector('[name="city"]')?.setCustomValidity("Please fill in this field.");
-    if (!postalCode) form.querySelector('[name="postalCode"]')?.setCustomValidity("Please fill in this field.");
-    if (!address1) form.querySelector('[name="address1"]')?.setCustomValidity("Please fill in this field.");
+    if (!country)
+      form
+        .querySelector('[name="country"]')
+        ?.setCustomValidity("Please fill in this field.");
+    if (!stateProv)
+      form
+        .querySelector('[name="state"]')
+        ?.setCustomValidity("Please fill in this field.");
+    if (!city)
+      form
+        .querySelector('[name="city"]')
+        ?.setCustomValidity("Please fill in this field.");
+    if (!postalCode)
+      form
+        .querySelector('[name="postalCode"]')
+        ?.setCustomValidity("Please fill in this field.");
+    if (!address1)
+      form
+        .querySelector('[name="address1"]')
+        ?.setCustomValidity("Please fill in this field.");
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -318,7 +357,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         const s = cleanedSlots[i];
 
         if (!(s.start < s.end)) {
-          prefEndRefs.current[i]?.setCustomValidity("End must be after Start for this slot.");
+          prefEndRefs.current[i]?.setCustomValidity(
+            "End must be after Start for this slot.",
+          );
           prefEndRefs.current[i]?.reportValidity();
           setSubmitting(false);
           return;
@@ -326,7 +367,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
         if (start && s.start < start) {
           prefStartRefs.current[i]?.setCustomValidity(
-            `Slot ${i + 1}: Start must be ≥ overall Start (${start}).`
+            `Slot ${i + 1}: Start must be ≥ overall Start (${start}).`,
           );
           prefStartRefs.current[i]?.reportValidity();
           setSubmitting(false);
@@ -335,7 +376,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
         if (end && s.end > end) {
           prefEndRefs.current[i]?.setCustomValidity(
-            `Slot ${i + 1}: End must be ≤ overall End (${end}).`
+            `Slot ${i + 1}: End must be ≤ overall End (${end}).`,
           );
           prefEndRefs.current[i]?.reportValidity();
           setSubmitting(false);
@@ -373,7 +414,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         address1: fd.get("address1") || "",
         address2: fd.get("address2") || "",
         qualification: fd.get("qualification") || "",
-        experienceYears: fd.get("experienceYears") ? Number(fd.get("experienceYears")) : null,
+        experienceYears: fd.get("experienceYears")
+          ? Number(fd.get("experienceYears"))
+          : null,
         organization: fd.get("organization") || "",
         specializations: (fd.get("specializations") || "")
           .split(",")
@@ -395,7 +438,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         timezone: fd.get("timezone") || tz,
         preferableSlots: cleanedSlots,
         rateType: fd.get("rateType") || "Hourly",
-        expectedRate: fd.get("expectedRate") ? Number(fd.get("expectedRate")) : null,
+        expectedRate: fd.get("expectedRate")
+          ? Number(fd.get("expectedRate"))
+          : null,
         currency,
         payoutMethod,
         payoutIdentifier: fd.get("payoutIdentifier") || "",
@@ -413,10 +458,11 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
       const formData = new FormData();
       formData.append(
         "payload",
-        new Blob([JSON.stringify(payload)], { type: "application/json" })
+        new Blob([JSON.stringify(payload)], { type: "application/json" }),
       );
 
-      if (resume instanceof File && resume.size) formData.append("resume", resume);
+      if (resume instanceof File && resume.size)
+        formData.append("resume", resume);
       if (photo instanceof File && photo.size) formData.append("photo", photo);
       (certs || [])
         .filter((f) => f && f.size)
@@ -429,7 +475,11 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         return;
       }
 
-      await axios.post("/api/instructors/otp/start", { email: emailForOtp }, authCfg());
+      await axios.post(
+        "/api/instructors/otp/start",
+        { email: emailForOtp },
+        authCfg(),
+      );
 
       setPendingFormData(formData);
       setPendingId(itemId);
@@ -451,13 +501,13 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
       await axios.post(
         "/api/instructors/otp/verify",
         { email: otpEmail, otp: otpCode },
-        authCfg()
+        authCfg(),
       );
 
       const { data } = await axios.put(
         `/api/instructors/${pendingId}`,
         pendingFormData,
-        authCfg()
+        authCfg(),
       );
 
       onSaved?.(data);
@@ -483,7 +533,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         {/* ── Header ── */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-7 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Edit Instructor Details</h2>
+            <h2 className="text-lg font-bold text-slate-900">
+              Edit Instructor Details
+            </h2>
             {(item?.firstName || item?.lastName) && (
               <p className="text-xs text-slate-400 mt-0.5">
                 {item.firstName} {item.lastName}
@@ -501,81 +553,86 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         </div>
 
         {/* ── Body ── */}
-        <div id="wizard-scroll-container" className="p-7 overflow-y-auto flex-1 min-h-0 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/60">
+        <div
+          id="wizard-scroll-container"
+          className="p-7 overflow-y-auto flex-1 min-h-0 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/60"
+        >
           <form onSubmit={handleSubmit} className="space-y-7" noValidate>
             {/* ── Personal & Contact ── */}
-            <div className={currentStep === 1 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Personal & Contact" icon={faEnvelope}>
-              <Field label="First Name" required>
-                <input
-                  name="firstName"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.firstName || ""}
-                  placeholder="e.g., Priya"
-                />
-              </Field>
+            <div
+              className={currentStep === 1 ? "block animate-fade-in" : "hidden"}
+            >
+              <FormSection title="Personal & Contact" icon={faEnvelope}>
+                <Field label="First Name" required>
+                  <input
+                    name="firstName"
+                    required
+                    className={inputCls}
+                    defaultValue={item?.firstName || ""}
+                    placeholder="e.g., Priya"
+                  />
+                </Field>
 
-              <Field label="Last Name" required>
-                <input
-                  name="lastName"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.lastName || ""}
-                  placeholder="e.g., Sharma"
-                />
-              </Field>
+                <Field label="Last Name" required>
+                  <input
+                    name="lastName"
+                    required
+                    className={inputCls}
+                    defaultValue={item?.lastName || ""}
+                    placeholder="e.g., Sharma"
+                  />
+                </Field>
 
-              <Field label="Email" required>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.email || ""}
-                  placeholder="name@example.com"
-                />
-              </Field>
+                <Field label="Email" required>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className={inputCls}
+                    defaultValue={item?.email || ""}
+                    placeholder="name@example.com"
+                  />
+                </Field>
 
-              <Field label="Mobile" required>
-                <input
-                  name="phone"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.phone || ""}
-                  placeholder={phonePlaceholder}
-                />
-              </Field>
+                <Field label="Mobile" required>
+                  <input
+                    name="phone"
+                    required
+                    className={inputCls}
+                    defaultValue={item?.phone || ""}
+                    placeholder={phonePlaceholder}
+                  />
+                </Field>
 
-              <Field label="Alternate Phone">
-                <input
-                  name="altPhone"
-                  className={inputCls}
-                  defaultValue={item?.altPhone || ""}
-                  placeholder={phonePlaceholder}
-                />
-              </Field>
+                <Field label="Alternate Phone">
+                  <input
+                    name="altPhone"
+                    className={inputCls}
+                    defaultValue={item?.altPhone || ""}
+                    placeholder={phonePlaceholder}
+                  />
+                </Field>
 
-              <Field label="Country" required>
-                <select
-                  name="country"
-                  required
-                  className={inputCls}
-                  value={country}
-                  onChange={(e) => {
-                    setCountry(e.target.value);
-                    setStateProv("");
-                    setCity("");
-                    setPostalCode("");
-                    setAddress1("");
-                    setAddress2("");
-                  }}
-                >
-                  <option>India</option>
-                </select>
-              </Field>
+                <Field label="Country" required>
+                  <select
+                    name="country"
+                    required
+                    className={inputCls}
+                    value={country}
+                    onChange={(e) => {
+                      setCountry(e.target.value);
+                      setStateProv("");
+                      setCity("");
+                      setPostalCode("");
+                      setAddress1("");
+                      setAddress2("");
+                    }}
+                  >
+                    <option>India</option>
+                  </select>
+                </Field>
 
-              <Field label={stateLabel} required>
+                {/* <Field label={stateLabel} required>
                 <select
                   name="state"
                   required
@@ -593,557 +650,596 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                     </option>
                   ))}
                 </select>
-              </Field>
+              </Field> */}
+                <Field label={stateLabel} required>
+                  <StateDropdown
+                    label={stateLabel}
+                    value={stateProv}
+                    onChange={setStateProv}
+                    options={stateList}
+                    className={inputCls}
+                    disabled={!country}
+                  />
+                </Field>
 
-              <Field label="City" required>
-                <input
-                  name="city"
-                  required
-                  className={inputCls}
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder={cityPlaceholder}
-                />
-              </Field>
+                <Field label="City" required>
+                  <input
+                    name="city"
+                    required
+                    className={inputCls}
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder={cityPlaceholder}
+                  />
+                </Field>
 
-              <Field label={postalLabel} required>
-                <input
-                  name="postalCode"
-                  required
-                  className={inputCls}
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder={country === "India" ? "500001" : "95113"}
-                />
-              </Field>
+                <Field label={postalLabel} required>
+                  <input
+                    name="postalCode"
+                    required
+                    className={inputCls}
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder={country === "India" ? "500001" : "95113"}
+                  />
+                </Field>
 
-              <Field label="Address Line 1" required span={2}>
-                <input
-                  name="address1"
-                  required
-                  className={inputCls}
-                  value={address1}
-                  onChange={(e) => setAddress1(e.target.value)}
-                  placeholder={address1Placeholder}
-                />
-              </Field>
+                <Field label="Address Line 1" required span={2}>
+                  <input
+                    name="address1"
+                    required
+                    className={inputCls}
+                    value={address1}
+                    onChange={(e) => setAddress1(e.target.value)}
+                    placeholder={address1Placeholder}
+                  />
+                </Field>
 
-              <Field label="Address Line 2">
-                <input
-                  name="address2"
-                  className={inputCls}
-                  value={address2}
-                  onChange={(e) => setAddress2(e.target.value)}
-                  placeholder="Optional"
-                />
-              </Field>
-            </FormSection>
-                    </div>
+                <Field label="Address Line 2">
+                  <input
+                    name="address2"
+                    className={inputCls}
+                    value={address2}
+                    onChange={(e) => setAddress2(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </Field>
+              </FormSection>
+            </div>
 
             {/* ── Professional & Teaching ── */}
-            <div className={currentStep === 2 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Professional & Teaching" icon={faStar}>
-              <Field label="Highest Qualification" required>
-                <select
-                  name="qualification"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.qualification || ""}
-                >
-                  <option value="" disabled hidden>
-                    Select
-                  </option>
-                  <option value="Diploma">Diploma</option>
-                  <option value="Bachelor">Bachelor</option>
-                  <option value="Master">Master</option>
-                  <option value="PhD">PhD</option>
-                  <option value="Other">Other</option>
-                </select>
-              </Field>
+            <div
+              className={currentStep === 2 ? "block animate-fade-in" : "hidden"}
+            >
+              <FormSection title="Professional & Teaching" icon={faStar}>
+                <Field label="Highest Qualification" required>
+                  <select
+                    name="qualification"
+                    required
+                    className={inputCls}
+                    defaultValue={item?.qualification || ""}
+                  >
+                    <option value="" disabled hidden>
+                      Select
+                    </option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Bachelor">Bachelor</option>
+                    <option value="Master">Master</option>
+                    <option value="PhD">PhD</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </Field>
 
-              <Field label="Years of Experience">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  name="experienceYears"
-                  className={inputCls}
-                  defaultValue={item?.experienceYears ?? ""}
-                  placeholder="e.g., 3"
-                />
-              </Field>
+                <Field label="Years of Experience">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    name="experienceYears"
+                    className={inputCls}
+                    defaultValue={item?.experienceYears ?? ""}
+                    placeholder="e.g., 3"
+                  />
+                </Field>
 
-              <Field label="Current / Recent Organization">
-                <input
-                  name="organization"
-                  className={inputCls}
-                  defaultValue={item?.organization || ""}
-                  placeholder="Company / Institute"
-                />
-              </Field>
+                <Field label="Current / Recent Organization">
+                  <input
+                    name="organization"
+                    className={inputCls}
+                    defaultValue={item?.organization || ""}
+                    placeholder="Company / Institute"
+                  />
+                </Field>
 
+                <Field label="Skills / Technologies" required span={3}>
+                  <input
+                    name="skills"
+                    required
+                    className={inputCls}
+                    defaultValue={initialSkills}
+                    placeholder="e.g., MongoDB, Node.js, AWS (comma-separated)"
+                  />
+                </Field>
 
+                <Field label="Spoken Languages" span={2}>
+                  <input
+                    name="languages"
+                    className={inputCls}
+                    defaultValue={initialLanguages}
+                    placeholder="e.g., English, Spanish (comma-separated)"
+                  />
+                </Field>
 
-              <Field label="Skills / Technologies" required span={3}>
-                <input
-                  name="skills"
-                  required
-                  className={inputCls}
-                  defaultValue={initialSkills}
-                  placeholder="e.g., MongoDB, Node.js, AWS (comma-separated)"
-                />
-              </Field>
+                <Field label="Teaching Mode" required>
+                  <select
+                    name="teachingMode"
+                    required
+                    className={inputCls}
+                    defaultValue={item?.teachingMode || ""}
+                  >
+                    <option value="" disabled hidden>
+                      Select
+                    </option>
+                    <option value="Online">Online</option>
+                    <option value="Offline">Offline</option>
+                    <option value="Hybrid">Hybrid</option>
+                  </select>
+                </Field>
 
-              <Field label="Spoken Languages" span={2}>
-                <input
-                  name="languages"
-                  className={inputCls}
-                  defaultValue={initialLanguages}
-                  placeholder="e.g., English, Spanish (comma-separated)"
-                />
-              </Field>
-
-              <Field label="Teaching Mode" required>
-                <select
-                  name="teachingMode"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.teachingMode || ""}
-                >
-                  <option value="" disabled hidden>
-                    Select
-                  </option>
-                  <option value="Online">Online</option>
-                  <option value="Offline">Offline</option>
-                  <option value="Hybrid">Hybrid</option>
-                </select>
-              </Field>
-
-              <Field label="Short Bio / Summary" span={3}>
-                <textarea
-                  name="bio"
-                  rows={3}
-                  className={textareaCls}
-                  defaultValue={item?.bio || ""}
-                  placeholder="Brief profile to show on your site"
-                />
-              </Field>
-            </FormSection>
-                    </div>
+                <Field label="Short Bio / Summary" span={3}>
+                  <textarea
+                    name="bio"
+                    rows={3}
+                    className={textareaCls}
+                    defaultValue={item?.bio || ""}
+                    placeholder="Brief profile to show on your site"
+                  />
+                </Field>
+              </FormSection>
+            </div>
 
             {/* ── Availability ── */}
-            <div className={currentStep === 3 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Availability" icon={faClock}>
-              <div className="md:col-span-3">
-                <label className={labelCls}>
-                  Weekdays <span className="text-rose-500">*</span>
-                </label>
+            <div
+              className={currentStep === 3 ? "block animate-fade-in" : "hidden"}
+            >
+              <FormSection title="Availability" icon={faClock}>
+                <div className="md:col-span-3">
+                  <label className={labelCls}>
+                    Weekdays <span className="text-rose-500">*</span>
+                  </label>
 
-                <div
-                  role="group"
-                  aria-label="Weekdays"
-                  className="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-2"
-                >
-                  {dayOpts.map((d) => {
-                    const checked = Array.isArray(item?.availableDays)
-                      ? item.availableDays.includes(d)
-                      : false;
-
-                    return (
-                      <label key={d} className="relative block cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="availableDays"
-                          value={d}
-                          defaultChecked={checked}
-                          className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                          onChange={(e) => {
-                            const formEl = e.currentTarget.form;
-                            if (!formEl) return;
-
-                            const boxes = formEl.querySelectorAll(
-                              'input[name="availableDays"]'
-                            );
-                            const anyChecked = Array.from(boxes).some((b) => b.checked);
-
-                            boxes.forEach((b) => b.setCustomValidity(""));
-                            if (!anyChecked) {
-                              e.currentTarget.setCustomValidity(
-                                "Select at least one weekday."
-                              );
-                            }
-                          }}
-                        />
-                        <span className="flex h-11 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold text-slate-600 shadow-sm transition-all duration-150 peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-blue-600 peer-checked:text-white peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-cyan-200/70 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-400 hover:border-cyan-300">
-                          {d}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <Field label="Start Time (24h)" required>
-                <input
-                  type="time"
-                  name="availableStart"
-                  className={inputCls}
-                  ref={startRef}
-                  step="60"
-                  required
-                  value={availStart}
-                  onChange={(e) => {
-                    setAvailStart(e.target.value);
-                    startRef.current?.setCustomValidity("");
-                    (prefStartRefs.current || []).forEach((el) =>
-                      el?.setCustomValidity("")
-                    );
-                    (prefEndRefs.current || []).forEach((el) =>
-                      el?.setCustomValidity("")
-                    );
-                  }}
-                />
-              </Field>
-
-              <Field label="End Time (24h)" required>
-                <input
-                  type="time"
-                  name="availableEnd"
-                  className={inputCls}
-                  ref={endRef}
-                  step="60"
-                  required
-                  value={availEnd}
-                  onChange={(e) => {
-                    setAvailEnd(e.target.value);
-                    endRef.current?.setCustomValidity("");
-                    (prefStartRefs.current || []).forEach((el) =>
-                      el?.setCustomValidity("")
-                    );
-                    (prefEndRefs.current || []).forEach((el) =>
-                      el?.setCustomValidity("")
-                    );
-                  }}
-                />
-              </Field>
-
-              <Field label="Timezone">
-                <CustomSelect
-                  options={TIMEZONES_IN}
-                  value={tz}
-                  onChange={(val) => setTz(val)}
-                  className={inputCls}
-                />
-              </Field>
-
-              <div className="md:col-span-3 mt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Preferable Time Slots{" "}
-                    <span className="text-slate-400 font-normal normal-case">
-                      (optional)
-                    </span>
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={addPrefSlot}
-                    disabled={!availStart || !availEnd}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 text-blue-700 text-xs font-semibold border border-cyan-100 hover:from-cyan-100 hover:to-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  <div
+                    role="group"
+                    aria-label="Weekdays"
+                    className="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-2"
                   >
-                    <FontAwesomeIcon icon={faPlus} className="text-[10px]" /> Add Slot
-                  </button>
+                    {dayOpts.map((d) => {
+                      const checked = Array.isArray(item?.availableDays)
+                        ? item.availableDays.includes(d)
+                        : false;
+
+                      return (
+                        <label
+                          key={d}
+                          className="relative block cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            name="availableDays"
+                            value={d}
+                            defaultChecked={checked}
+                            className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                            onChange={(e) => {
+                              const formEl = e.currentTarget.form;
+                              if (!formEl) return;
+
+                              const boxes = formEl.querySelectorAll(
+                                'input[name="availableDays"]',
+                              );
+                              const anyChecked = Array.from(boxes).some(
+                                (b) => b.checked,
+                              );
+
+                              boxes.forEach((b) => b.setCustomValidity(""));
+                              if (!anyChecked) {
+                                e.currentTarget.setCustomValidity(
+                                  "Select at least one weekday.",
+                                );
+                              }
+                            }}
+                          />
+                          <span className="flex h-11 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold text-slate-600 shadow-sm transition-all duration-150 peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-blue-600 peer-checked:text-white peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-cyan-200/70 peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-400 hover:border-cyan-300">
+                            {d}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Must fall within your overall start &amp; end times.
-                </p>
+                <Field label="Start Time (24h)" required>
+                  <input
+                    type="time"
+                    name="availableStart"
+                    className={inputCls}
+                    ref={startRef}
+                    step="60"
+                    required
+                    value={availStart}
+                    onChange={(e) => {
+                      setAvailStart(e.target.value);
+                      startRef.current?.setCustomValidity("");
+                      (prefStartRefs.current || []).forEach((el) =>
+                        el?.setCustomValidity(""),
+                      );
+                      (prefEndRefs.current || []).forEach((el) =>
+                        el?.setCustomValidity(""),
+                      );
+                    }}
+                  />
+                </Field>
 
-                <div className="mt-3 space-y-3">
-                  {prefSlots.length === 0 ? (
-                    <div className="text-xs text-slate-500 italic py-3 text-center border border-dashed border-cyan-200 bg-white/70 rounded-xl">
-                      No preferable slots added. Set times above, then click "Add Slot."
-                    </div>
-                  ) : (
-                    prefSlots.map((s, idx) => (
-                      <div
-                        key={idx}
-                        className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-gradient-to-r from-white to-cyan-50/50 rounded-2xl p-3 border border-cyan-100 shadow-sm"
-                      >
-                        <div className="md:col-span-3">
-                          <label className={labelCls}>Slot {idx + 1}: Start</label>
-                          <input
-                            type="time"
-                            value={s.start}
-                            onChange={(e) => {
-                              prefStartRefs.current[idx]?.setCustomValidity("");
-                              prefEndRefs.current[idx]?.setCustomValidity("");
-                              updatePrefSlot(idx, "start", e.target.value);
-                            }}
-                            className={inputCls}
-                            ref={(el) => (prefStartRefs.current[idx] = el)}
-                            step="60"
-                          />
-                        </div>
+                <Field label="End Time (24h)" required>
+                  <input
+                    type="time"
+                    name="availableEnd"
+                    className={inputCls}
+                    ref={endRef}
+                    step="60"
+                    required
+                    value={availEnd}
+                    onChange={(e) => {
+                      setAvailEnd(e.target.value);
+                      endRef.current?.setCustomValidity("");
+                      (prefStartRefs.current || []).forEach((el) =>
+                        el?.setCustomValidity(""),
+                      );
+                      (prefEndRefs.current || []).forEach((el) =>
+                        el?.setCustomValidity(""),
+                      );
+                    }}
+                  />
+                </Field>
 
-                        <div className="md:col-span-3">
-                          <label className={labelCls}>Slot {idx + 1}: End</label>
-                          <input
-                            type="time"
-                            value={s.end}
-                            onChange={(e) => {
-                              prefEndRefs.current[idx]?.setCustomValidity("");
-                              prefStartRefs.current[idx]?.setCustomValidity("");
-                              updatePrefSlot(idx, "end", e.target.value);
-                            }}
-                            className={inputCls}
-                            ref={(el) => (prefEndRefs.current[idx] = el)}
-                            step="60"
-                          />
-                        </div>
+                <Field label="Timezone">
+                  <CustomSelect
+                    options={TIMEZONES_IN}
+                    value={tz}
+                    onChange={(val) => setTz(val)}
+                    className={inputCls}
+                  />
+                </Field>
 
-                        <div className="md:col-span-1">
-                          <button
-                            type="button"
-                            onClick={() => removePrefSlot(idx)}
-                            className="w-full h-11 rounded-xl border border-rose-200 text-rose-600 bg-white text-sm font-medium hover:bg-rose-50 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
+                <div className="md:col-span-3 mt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Preferable Time Slots{" "}
+                      <span className="text-slate-400 font-normal normal-case">
+                        (optional)
+                      </span>
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={addPrefSlot}
+                      disabled={!availStart || !availEnd}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 text-blue-700 text-xs font-semibold border border-cyan-100 hover:from-cyan-100 hover:to-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="text-[10px]" />{" "}
+                      Add Slot
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Must fall within your overall start &amp; end times.
+                  </p>
+
+                  <div className="mt-3 space-y-3">
+                    {prefSlots.length === 0 ? (
+                      <div className="text-xs text-slate-500 italic py-3 text-center border border-dashed border-cyan-200 bg-white/70 rounded-xl">
+                        No preferable slots added. Set times above, then click
+                        "Add Slot."
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      prefSlots.map((s, idx) => (
+                        <div
+                          key={idx}
+                          className="grid grid-cols-1 md:grid-cols-7 gap-3 items-end bg-gradient-to-r from-white to-cyan-50/50 rounded-2xl p-3 border border-cyan-100 shadow-sm"
+                        >
+                          <div className="md:col-span-3">
+                            <label className={labelCls}>
+                              Slot {idx + 1}: Start
+                            </label>
+                            <input
+                              type="time"
+                              value={s.start}
+                              onChange={(e) => {
+                                prefStartRefs.current[idx]?.setCustomValidity(
+                                  "",
+                                );
+                                prefEndRefs.current[idx]?.setCustomValidity("");
+                                updatePrefSlot(idx, "start", e.target.value);
+                              }}
+                              className={inputCls}
+                              ref={(el) => (prefStartRefs.current[idx] = el)}
+                              step="60"
+                            />
+                          </div>
+
+                          <div className="md:col-span-3">
+                            <label className={labelCls}>
+                              Slot {idx + 1}: End
+                            </label>
+                            <input
+                              type="time"
+                              value={s.end}
+                              onChange={(e) => {
+                                prefEndRefs.current[idx]?.setCustomValidity("");
+                                prefStartRefs.current[idx]?.setCustomValidity(
+                                  "",
+                                );
+                                updatePrefSlot(idx, "end", e.target.value);
+                              }}
+                              className={inputCls}
+                              ref={(el) => (prefEndRefs.current[idx] = el)}
+                              step="60"
+                            />
+                          </div>
+
+                          <div className="md:col-span-1">
+                            <button
+                              type="button"
+                              onClick={() => removePrefSlot(idx)}
+                              className="w-full h-11 rounded-xl border border-rose-200 text-rose-600 bg-white text-sm font-medium hover:bg-rose-50 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            </FormSection>
-                    </div>
+              </FormSection>
+            </div>
 
             {/* ── Compensation / Payout ── */}
-            <div className={currentStep === 4 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Compensation / Payout" icon={faDollarSign}>
-              <Field label="Rate Type">
-                <select
-                  name="rateType"
-                  className={inputCls}
-                  defaultValue={item?.rateType || "Hourly"}
-                >
-                  <option>Hourly</option>
-                  <option>Per Session</option>
-                  <option>Fixed</option>
-                </select>
-              </Field>
+            <div
+              className={currentStep === 4 ? "block animate-fade-in" : "hidden"}
+            >
+              <FormSection title="Compensation / Payout" icon={faDollarSign}>
+                <Field label="Rate Type">
+                  <select
+                    name="rateType"
+                    className={inputCls}
+                    defaultValue={item?.rateType || "Hourly"}
+                  >
+                    <option>Hourly</option>
+                    <option>Per Session</option>
+                    <option>Fixed</option>
+                  </select>
+                </Field>
 
-              <Field label="Expected Rate">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  name="expectedRate"
-                  className={inputCls}
-                  defaultValue={item?.expectedRate ?? ""}
-                  placeholder="e.g., 1500"
-                />
-              </Field>
+                <Field label="Expected Rate">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    name="expectedRate"
+                    className={inputCls}
+                    defaultValue={item?.expectedRate ?? ""}
+                    placeholder="e.g., 1500"
+                  />
+                </Field>
 
-              <Field label="Currency">
-                <select
-                  name="currency"
-                  className={inputCls}
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                >
-                  <option>INR</option>
-                </select>
-              </Field>
+                <Field label="Currency">
+                  <select
+                    name="currency"
+                    className={inputCls}
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                  >
+                    <option>INR</option>
+                  </select>
+                </Field>
 
-              <Field label="Preferred Payout Method">
-                <select
-                  name="payoutMethod"
-                  className={inputCls}
-                  value={payoutMethod}
-                  onChange={(e) => setPayoutMethod(e.target.value)}
-                >
-                  {country === "India" ? (
-                    <>
-                      <option>NEFT/RTGS</option>
-                      <option>UPI</option>
-                      <option>IMPS</option>
-                      <option>Bank Transfer</option>
-                    </>
-                  ) : (
-                    <>
-                      <option>International Wire Transfer</option>
-                      <option>PayPal</option>
-                    </>
-                  )}
-                </select>
-              </Field>
+                <Field label="Preferred Payout Method">
+                  <select
+                    name="payoutMethod"
+                    className={inputCls}
+                    value={payoutMethod}
+                    onChange={(e) => setPayoutMethod(e.target.value)}
+                  >
+                    {country === "India" ? (
+                      <>
+                        <option>NEFT/RTGS</option>
+                        <option>UPI</option>
+                        <option>IMPS</option>
+                        <option>Bank Transfer</option>
+                      </>
+                    ) : (
+                      <>
+                        <option>International Wire Transfer</option>
+                        <option>PayPal</option>
+                      </>
+                    )}
+                  </select>
+                </Field>
 
-              <Field label="Payout Identifier" span={2}>
-                <input
-                  name="payoutIdentifier"
-                  className={inputCls}
-                  defaultValue={item?.payoutIdentifier || ""}
-                  placeholder={payIdPlaceholder}
-                />
-              </Field>
-            </FormSection>
-                    </div>
+                <Field label="Payout Identifier" span={2}>
+                  <input
+                    name="payoutIdentifier"
+                    className={inputCls}
+                    defaultValue={item?.payoutIdentifier || ""}
+                    placeholder={payIdPlaceholder}
+                  />
+                </Field>
+              </FormSection>
+            </div>
 
             {/* ── Compliance & Documents ── */}
-            <div className={currentStep === 5 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Compliance & Documents" icon={faShieldAlt}>
-              <Field label="Resume / CV (upload to replace)">
-                <input
-                  type="file"
-                  name="resume"
-                  className={inputCls}
-                  accept=".pdf,.doc,.docx"
-                />
-              </Field>
-
-              <Field label="Profile Photo (upload to replace)">
-                <input
-                  type="file"
-                  name="photo"
-                  className={inputCls}
-                  accept="image/*"
-                />
-              </Field>
-
-              <Field label="Certificates (upload to add)">
-                <input
-                  type="file"
-                  name="certificates"
-                  className={inputCls}
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  multiple
-                />
-              </Field>
-
-              <Field label="Background Check">
-                <select
-                  name="backgroundCheck"
-                  className={inputCls}
-                  defaultValue={item?.backgroundCheck || "Pending"}
-                >
-                  <option>Pending</option>
-                  <option>Cleared</option>
-                  <option>Not Required</option>
-                </select>
-              </Field>
-
-              <div className="md:col-span-2 flex items-center gap-6">
-                <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+            <div
+              className={currentStep === 5 ? "block animate-fade-in" : "hidden"}
+            >
+              <FormSection title="Compliance & Documents" icon={faShieldAlt}>
+                <Field label="Resume / CV (upload to replace)">
                   <input
-                    type="checkbox"
-                    name="ndaSigned"
-                    defaultChecked={!!item?.ndaSigned}
-                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    type="file"
+                    name="resume"
+                    className={inputCls}
+                    accept=".pdf,.doc,.docx"
                   />
-                  <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                    NDA signed
-                  </span>
-                </label>
+                </Field>
 
-                <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                <Field label="Profile Photo (upload to replace)">
                   <input
-                    type="checkbox"
-                    name="agreeToTerms"
-                    defaultChecked={!!item?.agreeToTerms}
-                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    type="file"
+                    name="photo"
+                    className={inputCls}
+                    accept="image/*"
                   />
-                  <span className="text-sm text-slate-600 group-hover:text-slate-800">
-                    I confirm all details are accurate
-                  </span>
-                </label>
-              </div>
-            </FormSection>
-                    </div>
+                </Field>
+
+                <Field label="Certificates (upload to add)">
+                  <input
+                    type="file"
+                    name="certificates"
+                    className={inputCls}
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    multiple
+                  />
+                </Field>
+
+                <Field label="Background Check">
+                  <select
+                    name="backgroundCheck"
+                    className={inputCls}
+                    defaultValue={item?.backgroundCheck || "Pending"}
+                  >
+                    <option>Pending</option>
+                    <option>Cleared</option>
+                    <option>Not Required</option>
+                  </select>
+                </Field>
+
+                <div className="md:col-span-2 flex items-center gap-6">
+                  <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="ndaSigned"
+                      defaultChecked={!!item?.ndaSigned}
+                      className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                      NDA signed
+                    </span>
+                  </label>
+
+                  <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="agreeToTerms"
+                      defaultChecked={!!item?.agreeToTerms}
+                      className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    />
+                    <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                      I confirm all details are accurate
+                    </span>
+                  </label>
+                </div>
+              </FormSection>
+            </div>
 
             {/* ── Assignment ── */}
-            <div className={currentStep === 5 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Assignment" icon={faClipboardList}>
-              <Field label="Assign to Internship (title or ID)">
-                <input
-                  name="assignInternship"
-                  className={inputCls}
-                  defaultValue={item?.assignInternship || ""}
-                  placeholder="e.g., MERN Bootcamp – 2025 Summer"
-                />
-              </Field>
+            <div
+              className={currentStep === 5 ? "block animate-fade-in" : "hidden"}
+            >
+              <FormSection title="Assignment" icon={faClipboardList}>
+                <Field label="Assign to Internship (title or ID)">
+                  <input
+                    name="assignInternship"
+                    className={inputCls}
+                    defaultValue={item?.assignInternship || ""}
+                    placeholder="e.g., MERN Bootcamp – 2025 Summer"
+                  />
+                </Field>
 
-              <Field label="Notes" span={3}>
-                <textarea
-                  name="notes"
-                  rows={3}
-                  className={textareaCls}
-                  defaultValue={item?.notes || ""}
-                  placeholder="Internal notes"
-                />
-              </Field>
-            </FormSection>
-                    </div>
+                <Field label="Notes" span={3}>
+                  <textarea
+                    name="notes"
+                    rows={3}
+                    className={textareaCls}
+                    defaultValue={item?.notes || ""}
+                    placeholder="Internal notes"
+                  />
+                </Field>
+              </FormSection>
+            </div>
 
-            
-                    {/* Wizard Footer */}
-                    <div className="flex items-center justify-between pt-5 border-t border-slate-100 mt-8">
-                      <button
-                        type="button"
-                        onClick={() => {
-                           setCurrentStep(s => Math.max(1, s - 1));
-                           document.getElementById('wizard-scroll-container')?.scrollTo(0,0);
-                        }}
-                        disabled={currentStep === 1}
-                        className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all ${currentStep === 1 ? 'opacity-50 cursor-not-allowed bg-slate-50 text-slate-400 border border-slate-200' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'}`}
-                      >
-                        Back
-                      </button>
+            {/* Wizard Footer */}
+            <div className="flex items-center justify-between pt-5 border-t border-slate-100 mt-8">
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentStep((s) => Math.max(1, s - 1));
+                  document
+                    .getElementById("wizard-scroll-container")
+                    ?.scrollTo(0, 0);
+                }}
+                disabled={currentStep === 1}
+                className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all ${currentStep === 1 ? "opacity-50 cursor-not-allowed bg-slate-50 text-slate-400 border border-slate-200" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"}`}
+              >
+                Back
+              </button>
 
-                      <div className="flex items-center gap-3">
-                        {currentStep < 5 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                                const container = document.getElementById('wizard-scroll-container');
-                                if (!container) return;
-                                
-                                const visibleStep = container.querySelector('.block.animate-fade-in');
-                                if (!visibleStep) return;
+              <div className="flex items-center gap-3">
+                {currentStep < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const container = document.getElementById(
+                        "wizard-scroll-container",
+                      );
+                      if (!container) return;
 
-                                const inputs = visibleStep.querySelectorAll('input, select, textarea');
-                                let isValid = true;
-                                for (const input of inputs) {
-                                    if (!input.checkValidity()) {
-                                        input.reportValidity();
-                                        isValid = false;
-                                        break;
-                                    }
-                                }
+                      const visibleStep = container.querySelector(
+                        ".block.animate-fade-in",
+                      );
+                      if (!visibleStep) return;
 
-                                if (isValid) {
-                                    setCurrentStep(s => Math.min(5, s + 1));
-                                    container.scrollTo(0,0);
-                                }
-                            }}
-                            className="px-7 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm shadow-md hover:bg-slate-800 active:scale-95 transition-all"
-                          >
-                            Next
-                          </button>
-                        )}
-                        {currentStep === 5 && (
-                          <button
-                            type="submit"
-                            disabled={submitting }
-                            className="inline-flex items-center gap-2.5 px-7 py-2.5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-violet-200/70 hover:from-indigo-700 hover:via-violet-700 hover:to-fuchsia-700 disabled:opacity-50 active:scale-[0.98] transition-all duration-150"
-                          >
-                            {submitting ? "Saving..." : "Save Instructor"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-    
+                      const inputs = visibleStep.querySelectorAll(
+                        "input, select, textarea",
+                      );
+                      let isValid = true;
+                      for (const input of inputs) {
+                        if (!input.checkValidity()) {
+                          input.reportValidity();
+                          isValid = false;
+                          break;
+                        }
+                      }
+
+                      if (isValid) {
+                        setCurrentStep((s) => Math.min(5, s + 1));
+                        container.scrollTo(0, 0);
+                      }
+                    }}
+                    className="px-7 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm shadow-md hover:bg-slate-800 active:scale-95 transition-all"
+                  >
+                    Next
+                  </button>
+                )}
+                {currentStep === 5 && (
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2.5 px-7 py-2.5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-violet-200/70 hover:from-indigo-700 hover:via-violet-700 hover:to-fuchsia-700 disabled:opacity-50 active:scale-[0.98] transition-all duration-150"
+                  >
+                    {submitting ? "Saving..." : "Save Instructor"}
+                  </button>
+                )}
+              </div>
+            </div>
           </form>
         </div>
       </div>
@@ -1153,10 +1249,15 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 backdrop-blur-[3px]">
           <div className="bg-white rounded-[28px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] w-full max-w-sm p-7 border border-slate-200/70">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 via-violet-100 to-fuchsia-100 flex items-center justify-center mb-5 shadow-sm">
-              <FontAwesomeIcon icon={faEnvelope} className="text-violet-600 text-xl" />
+              <FontAwesomeIcon
+                icon={faEnvelope}
+                className="text-violet-600 text-xl"
+              />
             </div>
 
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Verify Email</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">
+              Verify Email
+            </h3>
 
             <p className="text-sm text-slate-500 mb-5">
               We sent a 6-digit code to{" "}
@@ -1200,7 +1301,11 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                 className="text-xs text-violet-700 font-medium hover:underline"
                 onClick={async () => {
                   try {
-                    await axios.post("/api/instructors/otp/start", { email: otpEmail }, authCfg());
+                    await axios.post(
+                      "/api/instructors/otp/start",
+                      { email: otpEmail },
+                      authCfg(),
+                    );
                     alert("OTP resent.");
                   } catch {
                     alert("Failed to resend OTP.");
@@ -1214,6 +1319,6 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
         </div>
       )}
     </div>,
-    portalTarget
+    portalTarget,
   );
 }
