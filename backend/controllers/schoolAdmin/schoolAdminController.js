@@ -412,7 +412,7 @@ const uploadStudentsFromCSV = async (req, res) => {
           emailPromises.push(
             notifyUser(
               student.email,
-              "Welcome to SkillNaav â€“ Your Login Credentials",
+              "Welcome to SkillNaav - Your Login Credentials",
               `<p>Hello ${student.name},</p>
               <p>Welcome to SkillNaav! Here are your login credentials:</p>
               <ul>

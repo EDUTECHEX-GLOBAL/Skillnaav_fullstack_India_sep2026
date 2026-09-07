@@ -62,7 +62,7 @@ const SuccessModal = ({ onOk }) => (
         className="w-full py-3 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700 active:scale-95 transition-all"
         style={{ fontFamily: "'Poppins', sans-serif" }}
       >
-        OK â€” View My Posts
+        OK - View My Posts
       </button>
     </div>
     <style>{`
@@ -804,13 +804,13 @@ const PostAJob = () => {
           />
         </div>
 
-        {/* Internship Type â€” select (Free/Stipend) + Paid radio */}
+        {/* Internship Type - select (Free/Stipend) + Paid radio */}
         <div>
           <label className="block text-gray-700 font-medium mb-3">
             Internship Type
           </label>
 
-          {/* Hidden input for form validation â€” fires if no type is selected */}
+          {/* Hidden input for form validation - fires if no type is selected */}
           <input
             type="text"
             value={formData.internshipType}
@@ -921,7 +921,7 @@ const PostAJob = () => {
           )}
         </div>
 
-        {/* Compensation Details â€” shown only for STIPEND or PAID */}
+        {/* Compensation Details - shown only for STIPEND or PAID */}
         {(formData.internshipType === "STIPEND" ||
           formData.internshipType === "PAID") && (
           <div className="space-y-4">
@@ -961,7 +961,7 @@ const PostAJob = () => {
               </select>
             </div>
 
-            {/* Frequency is always One Time â€” hidden */}
+            {/* Frequency is always One Time - hidden */}
             <input
               type="hidden"
               name="compensationDetails.frequency"
