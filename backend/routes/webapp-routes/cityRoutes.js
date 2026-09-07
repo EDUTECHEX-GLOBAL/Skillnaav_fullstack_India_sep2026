@@ -5,7 +5,7 @@ const { searchCities } = require("../../services/geodb.service");
 
 const router = express.Router();
 
-// GET /api/cities?namePrefix=montr&countryIds=CA
+// GET /api/cities?namePrefix=mumb&countryIds=IN
 router.get("/", async (req, res) => {
   const { namePrefix, countryIds } = req.query;
 

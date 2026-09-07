@@ -9,7 +9,7 @@ const internshipPostingSchema = new mongoose.Schema(
     location: { type: String, required: true },
 
     /**
- * Normalized location fields (US/CA only)
+ * Normalized location fields (India only)
  * Kept alongside the legacy `location` string for backward compatibility.
  */
     country: {

@@ -852,7 +852,7 @@ const UnifiedUserRegistration = () => {
                 <h2 className="text-lg font-bold text-gray-700">LOCATION</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
-                {/* Country (US/CA only) */}
+                {/* Country (India only) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Country *</label>
                   <select name="country" value={formData.country} onChange={(e) => handleCountryChange(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
