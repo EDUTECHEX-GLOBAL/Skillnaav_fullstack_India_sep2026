@@ -73,8 +73,8 @@ const exportCSV = (payments, internshipTitle) => {
     "Amount",
     "Currency",
     "Status",
-    "PayPal Order ID",
-    "PayPal Payment ID",
+    "Razorpay Order ID",
+    "Razorpay Payment ID",
     "Date",
   ];
   const rows = payments.map((p) => [
@@ -83,8 +83,8 @@ const exportCSV = (payments, internshipTitle) => {
     p.amount || 0,
     p.currency || "",
     p.status || "",
-    p.paypalOrderId || "",
-    p.paypalPaymentId || "",
+    p.razorpayOrderId || "",
+    p.razorpayPaymentId || "",
     p.completedAt
       ? new Date(p.completedAt).toLocaleString()
       : new Date(p.createdAt).toLocaleString(),
@@ -377,8 +377,8 @@ const InternshipPayments = () => {
         !search ||
         p.studentId?.name?.toLowerCase().includes(search.toLowerCase()) ||
         p.studentId?.email?.toLowerCase().includes(search.toLowerCase()) ||
-        p.paypalOrderId?.toLowerCase().includes(search.toLowerCase()) ||
-        p.paypalPaymentId?.toLowerCase().includes(search.toLowerCase());
+        p.razorpayOrderId?.toLowerCase().includes(search.toLowerCase()) ||
+        p.razorpayPaymentId?.toLowerCase().includes(search.toLowerCase());
       return matchesStatus && matchesSearch;
     });
   }, [payments, statusFilter, search]);
@@ -427,7 +427,7 @@ const InternshipPayments = () => {
               className="text-xs text-gray-400 mt-0.5"
               style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              Select a paid internship to view PayPal payments received from
+              Select a paid internship to view Razorpay payments received from
               students
             </p>
           </div>
@@ -666,7 +666,7 @@ const InternshipPayments = () => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Search by student name, email, or PayPal ID..."
+                placeholder="Search by student name, email, or Razorpay ID..."
                 className="!mt-0 w-full pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               />
@@ -782,7 +782,7 @@ const InternshipPayments = () => {
                       { icon: faUser, label: "Student" },
                       { icon: faCoins, label: "Amount" },
                       { icon: faCircleCheck, label: "Status" },
-                      { icon: faHashtag, label: "PayPal ID" },
+                      { icon: faHashtag, label: "Razorpay ID" },
                       { icon: faCalendarDays, label: "Date" },
                     ].map(({ icon, label }) => (
                       <th
@@ -828,19 +828,18 @@ const InternshipPayments = () => {
                       <td className="px-5 py-3">
                         <StatusBadge status={p.status} />
                       </td>
-                      {/* PayPal ID */}
-                      <td className="px-5 py-3 font-mono text-xs text-gray-500 max-w-[140px]">
-                        <span className="flex items-center gap-1 truncate">
-                          <FontAwesomeIcon
-                            icon={faHashtag}
-                            className="text-gray-300 text-[9px] flex-shrink-0"
-                          />
-                          {p.paypalPaymentId
-                            ? p.paypalPaymentId.slice(0, 16) + "…"
-                            : p.paypalOrderId
-                              ? p.paypalOrderId.slice(0, 16) + "…"
+                      {/* Razorpay ID */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <FontAwesomeIcon icon={faHashtag} className="w-4 h-4 text-gray-400" />
+                          <span className="font-mono text-xs">
+                          {p.razorpayPaymentId
+                            ? p.razorpayPaymentId.slice(0, 16) + "…"
+                            : p.razorpayOrderId
+                              ? p.razorpayOrderId.slice(0, 16) + "…"
                               : "—"}
                         </span>
+                        </div>
                       </td>
                       {/* Date */}
                       <td className="px-5 py-3 text-xs text-gray-400">

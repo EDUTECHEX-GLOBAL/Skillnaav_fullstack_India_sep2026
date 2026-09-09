@@ -102,56 +102,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   </noscript>
 
-  <!--
-    PayPal popup-close error suppressor
-    ====================================
-    When a user closes the PayPal checkout popup (clicks ✕ or clicks outside),
-    PayPal's SDK internally throws two things:
 
-      1. A synchronous "Script error." via window.onerror  (cross-origin iframe noise)
-      2. An unhandled Promise rejection: "Error: Window closed before response"
-
-    In development, React DevTools listens to BOTH window.onerror AND
-    window.onunhandledrejection and shows its red error overlay for either.
-
-    This script runs BEFORE React boots (it's inline in <head>), so our listeners
-    are registered first in the queue. We intercept both cases and swallow them
-    before React ever sees them.
-
-    This is 100% safe — neither of these indicates a real application error.
-    They are expected PayPal SDK behaviour on user-initiated popup dismissal.
-  -->
-  <script>
-    (function () {
-      // ── 1. Synchronous cross-origin errors (Script error.) ──────────────────
-      window.addEventListener('error', function (event) {
-        if (
-          event.message === 'Script error.' ||
-          event.message === 'Script error' ||
-          (event.message === '' && !event.filename && event.lineno === 0)
-        ) {
-          event.stopImmediatePropagation();
-          event.preventDefault();
-        }
-      }, true);
-
-      // ── 2. Unhandled Promise rejections (Window closed before response) ─────
-      window.addEventListener('unhandledrejection', function (event) {
-        var reason = event.reason;
-        var msg = (reason && (reason.message || String(reason))) || '';
-        if (
-          msg.includes('Window closed before response') ||
-          msg.includes('window closed') ||
-          msg.includes('popup closed') ||
-          msg.includes('paypal') ||
-          (reason && reason.err && String(reason.err).includes('Window closed'))
-        ) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-      }, true);
-    })();
-  </script>
 
 </head>
 

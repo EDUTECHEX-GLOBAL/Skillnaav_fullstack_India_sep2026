@@ -133,8 +133,8 @@ async function isPaidInternshipForStudent({ internshipId, studentEmail }) {
     if (offerDoc.paymentId) return true;
 
     // Optional: if you store these
-    if (offerDoc.paypalPaymentId) return true;
-    if (offerDoc.payment?.paypalPaymentId || offerDoc.payment?.paymentId) return true;
+    if (offerDoc.razorpayPaymentId) return true;
+    if (offerDoc.payment?.razorpayPaymentId || offerDoc.payment?.paymentId) return true;
 
     // Optional: if you store internshipType on offer letter
     const it = String(offerDoc.internshipType || "").trim().toUpperCase();

@@ -21,12 +21,12 @@ const InternshipPaymentSchema = new mongoose.Schema({
     required: true,
     ref: "Partner"
   },
-  paypalOrderId: {
+  razorpayOrderId: {
     type: String,
     required: true,
     unique: true
   },
-  paypalPaymentId: String,
+  razorpayPaymentId: String,
   amount: {
     type: Number,
     required: true,
@@ -43,7 +43,7 @@ const InternshipPaymentSchema = new mongoose.Schema({
     enum: ['CREATED', 'APPROVED', 'COMPLETED', 'FAILED', 'CANCELLED'],
     default: 'CREATED'
   },
-  paypalDetails: {
+  razorpayDetails: {
     type: Object,
     default: {}
   },
@@ -58,6 +58,6 @@ const InternshipPaymentSchema = new mongoose.Schema({
 InternshipPaymentSchema.index({ studentId: 1, status: 1 });
 InternshipPaymentSchema.index({ offerId: 1, studentId: 1 });
 InternshipPaymentSchema.index({ partnerId: 1, status: 1 }); // ✅ Speeds up partner queries
-InternshipPaymentSchema.index({ paypalPaymentId: 1 });
+InternshipPaymentSchema.index({ razorpayPaymentId: 1 });
 
 module.exports = mongoose.model("InternshipPayment", InternshipPaymentSchema);

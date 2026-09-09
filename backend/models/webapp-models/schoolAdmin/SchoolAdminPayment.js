@@ -32,9 +32,9 @@ const schoolAdminPaymentSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      default: "paypal",
+      default: "razorpay",
     },
-    rawPayPalResponse: {
+    rawRazorpayResponse: {
       type: Object,
     },
     invoiceId: {

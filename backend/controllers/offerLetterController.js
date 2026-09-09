@@ -267,10 +267,10 @@ const updateOfferStatus = async (req, res) => {
         });
       }
 
-      // PayPal ID OR Mongo ID → normalize to Mongo ID
+      // Razorpay ID OR Mongo ID → normalize to Mongo ID
       const paymentDoc = mongoose.Types.ObjectId.isValid(paymentId)
         ? await Payment.findById(paymentId)
-        : await Payment.findOne({ paypalPaymentId: paymentId });
+        : await Payment.findOne({ razorpayPaymentId: paymentId });
 
       if (!paymentDoc) {
         return res.status(404).json({

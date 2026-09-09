@@ -1,5 +1,5 @@
 // src/components/Partner/PartnerPremiumPage.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../../../../api/axiosInstance";
 import { useSelector } from "react-redux";
 
@@ -68,16 +68,17 @@ const plans = [
 export default function PartnerPremiumPage() {
   const [sdkReady, setSdkReady]               = useState(false);
   const [alert, setAlert]                     = useState(null);
-  const [selectedIndex, setSelectedIndex]     = useState(null);
-  const [selectedPlanType, setSelectedPlanType] = useState(null);
+
   const [isProcessing, setIsProcessing]       = useState(false);
   const [, setTick]                           = useState(0);
   const [paymentHistory, setPaymentHistory]   = useState([]);
   const [showHistory, setShowHistory]         = useState(false);
   const [loadingHistory, setLoadingHistory]   = useState(false);
   const [expiryWarning, setExpiryWarning]     = useState(false);
+  const [selectedPlanType, setSelectedPlanType] = useState(null);
+  const [selectedIndex, setSelectedIndex]     = useState(null);
 
-  const paypalInstanceRef = useRef(null);
+
 
   // ✅ FIX 1: partner MUST be declared before any usage — moved to top of component body
   const reduxPartner = useSelector((s) => s.auth?.partnerInfo);
@@ -126,7 +127,7 @@ export default function PartnerPremiumPage() {
     return () => { setSdkReady(false); if (script?.parentNode) script.parentNode.removeChild(script); };
   }, []);
 
-  // (Removed PayPal button logic - replaced with Razorpay handler in selectPlan)
+  // Razorpay handler in selectPlan
 
   // ─── Select a plan ────────────────────────────────────────────────────────
   const selectPlan = async (plan, idx) => {
@@ -228,7 +229,7 @@ export default function PartnerPremiumPage() {
   const fetchPaymentHistory = async () => {
     setLoadingHistory(true);
     try {
-      // ✅ FIX 5: Use same getAuthHeader() helper — consistent with PayPal calls
+      // ✅ FIX 5: Use same getAuthHeader() helper
       const { data } = await axios.get("/api/partner/payments/history", {
         headers: getAuthHeader(),
       });
@@ -403,15 +404,15 @@ export default function PartnerPremiumPage() {
                   `On ${plan.title}`
                 ) : (
                   <>
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                      <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                     </svg>
                     Pay with Razorpay
                   </>
                 )}
               </button>
 
-              {/* Removed PayPal container */}
+
             </div>
           );
         })}

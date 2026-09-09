@@ -27,7 +27,7 @@ const partnerPaymentSchema = new mongoose.Schema(
     },
     orderId: {
       type: String,
-      required: true, // PayPal order ID — always distinct from paymentId
+      required: true, // Razorpay order ID — always distinct from paymentId
     },
     // FIX: Added "Refunded" to cover all real-world terminal states
     status: {

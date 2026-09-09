@@ -267,9 +267,11 @@ export default function InstructorManagementedit({
   const payIdPlaceholder =
     payoutMethod === "NEFT/RTGS"
       ? "Account No. & IFSC (e.g., 123456789 | SBIN0001234)"
-      : payoutMethod === "UPI"
-        ? "UPI ID (e.g., user@upi)"
-        : "PayPal email";
+      : payoutMethod === "Bank Transfer"
+        ? "Bank Account Number"
+        : payoutMethod === "UPI" || payoutMethod === "IMPS"
+        ? "UPI ID / Phone Number"
+        : "Email/ID";
 
   const toCSV = (arr) =>
     Array.isArray(arr) ? arr.join(", ") : typeof arr === "string" ? arr : "";
@@ -375,10 +377,10 @@ export default function InstructorManagementedit({
         }
 
         if (end && s.end > end) {
-          prefEndRefs.current[i]?.setCustomValidity(
+          prefStartRefs.current[i]?.setCustomValidity(
             `Slot ${i + 1}: End must be ≤ overall End (${end}).`,
           );
-          prefEndRefs.current[i]?.reportValidity();
+          prefStartRefs.current[i]?.reportValidity();
           setSubmitting(false);
           return;
         }
@@ -1059,8 +1061,7 @@ export default function InstructorManagementedit({
                       </>
                     ) : (
                       <>
-                        <option>International Wire Transfer</option>
-                        <option>PayPal</option>
+                        <option>Bank Transfer</option>
                       </>
                     )}
                   </select>

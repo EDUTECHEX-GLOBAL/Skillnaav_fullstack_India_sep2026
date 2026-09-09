@@ -320,9 +320,11 @@ const InstructureManagement = () => {
   const payIdPlaceholder =
     payoutMethod === "NEFT/RTGS"
       ? "Account No. & IFSC (e.g., 123456789 | SBIN0001234)"
-      : payoutMethod === "UPI"
-        ? "UPI ID (e.g., user@upi)"
-        : "PayPal email";
+      : payoutMethod === "Bank Transfer"
+        ? "Bank Account Number"
+        : payoutMethod === "UPI" || payoutMethod === "IMPS"
+        ? "UPI ID / Phone Number"
+        : "Email/ID";
 
   async function createInstructorWithFormData(fd) {
     const { data } = await axios.post("/api/instructors", fd, {

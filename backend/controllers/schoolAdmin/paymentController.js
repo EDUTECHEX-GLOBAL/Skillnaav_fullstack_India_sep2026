@@ -116,7 +116,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     amount,
     currency: "INR",
     status: "COMPLETED",
-    rawPayPalResponse: { id: razorpay_payment_id }, // keeping the structure similar for frontend/backend
+    rawRazorpayResponse: { id: razorpay_payment_id }, // keeping the structure similar for frontend/backend
     paymentMethod: "razorpay",
   });
 
@@ -192,7 +192,7 @@ const getPaymentHistory = asyncHandler(async (req, res) => {
         userEmail: admin.email,
         planType: normalizeSchoolAdminPlanForClient(p.plan),
         amount: p.amount,
-        transactionId: p.rawPayPalResponse?.id || "",
+        transactionId: p.rawRazorpayResponse?.id || "",
         orderId: p.orderId || "",
         date: p.createdAt || new Date(),
         description: `${normalizeSchoolAdminPlanForClient(p.plan)} - Student Licenses`,

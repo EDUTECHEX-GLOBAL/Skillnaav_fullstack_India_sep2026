@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../../../../api/axiosInstance";
 
-// FIX 1: Server-side price map mirrored on frontend for display only.
-// The server derives the real price from planType — this is only for UI rendering.
-const PLAN_PRICES = {
-  "Free": 0,
-  "Premium Basic": 249,
-  "Premium Plus": 599,
-};
+
 
 function PremiumPage() {
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
@@ -15,8 +9,7 @@ function PremiumPage() {
   const [planType, setPlanType] = useState("Free");
   const [premiumExpiration, setPremiumExpiration] = useState(null);
   const [sdkReady, setSdkReady] = useState(false);
-  const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
-  const [selectedPlanType, setSelectedPlanType] = useState(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   // FIX 2: Separate loading state for initial data fetch
   const [isFetching, setIsFetching] = useState(true);
@@ -87,14 +80,14 @@ function PremiumPage() {
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, []);
 
-  // (Removed PayPal Buttons Effect - replaced by direct Razorpay handler in handlePayment)
+  // Razorpay handler in handlePayment
 
   const showAlert = (message, type) => {
     setAlert({ show: true, message, type });
     setTimeout(() => setAlert({ show: false, message: "", type: "" }), 6000);
   };
 
-  // FIX 3: Free plan no longer goes through PayPal
+  // FIX 3: Free plan directly triggers handleFreePlan
   const handleFreePlan = async () => {
     showAlert("You are on the Free plan. No payment needed!", "success");
   };
@@ -427,15 +420,15 @@ function PremiumPage() {
                   ? (card.plantype === "Free" ? "✓ Subscribed" : "Subscribe Again") 
                   : (card.plantype === "Free" ? card.pricebtn : (
                     <>
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                        <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                       </svg>
                       Pay with Razorpay
                     </>
                   ))}
               </button>
 
-              {/* Removed PayPal button container */}
+
             </div>
           );
         })}

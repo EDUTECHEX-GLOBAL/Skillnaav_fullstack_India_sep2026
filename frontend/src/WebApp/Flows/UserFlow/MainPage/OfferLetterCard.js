@@ -507,14 +507,14 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   // ─── 3) Check for existing payment status on load ────────
   useEffect(() => {
     const userId = userInfo?._id;
-    const paypalPaymentId = paymentStatus?.paypalPaymentId;
+    const razorpayPaymentId = paymentStatus?.razorpayPaymentId;
 
     const checkPaymentStatus = async () => {
       if (
         !job ||
         job.internshipType !== "PAID" ||
         !userId ||
-        paypalPaymentId
+        razorpayPaymentId
       ) return;
 
       const response = await axios.get(
@@ -530,7 +530,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
           ...prev,
           paid: true,
           mongoPaymentId: response.data.paymentId,
-          paypalPaymentId: response.data.paypalPaymentId,
+          razorpayPaymentId: response.data.razorpayPaymentId,
           amount: response.data.amount,
           currency: response.data.currency
         }));
@@ -538,7 +538,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     };
 
     checkPaymentStatus();
-  }, [job, offer._id, userInfo?._id, paymentStatus?.paypalPaymentId]);
+  }, [job, offer._id, userInfo?._id, paymentStatus?.razorpayPaymentId]);
 
 
   // 4. STIPEND SUBMISSION HANDLER
@@ -737,7 +737,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                 ...prev,
                 paid: true,
                 mongoPaymentId: verify.paymentId,
-                paypalPaymentId: verify.razorpayPaymentId, // Keep state structure
+                razorpayPaymentId: verify.razorpayPaymentId, // Keep state structure
                 amount: verify.amount,
                 currency: verify.currency
               }));
@@ -865,7 +865,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
     if (job?.internshipType === "PAID") {
       payload.paymentId =
-        paymentStatus?.mongoPaymentId || paymentStatus?.paypalPaymentId || null;
+        paymentStatus?.mongoPaymentId || paymentStatus?.razorpayPaymentId || null;
     }
 
     try {
@@ -1425,8 +1425,8 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               onClick={handleRazorpayPayment}
               className="w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md"
             >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                <path d="M12 0L0 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-5zm0 2.18l6 3.33v4.49c0 4.14-2.83 8.16-6 9.4-3.17-1.24-6-5.26-6-9.4V5.51l6-3.33zm1 3.82v2h-2v-2h2zm-2 4h2v6h-2v-6z" />
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
               </svg>
               Pay with Razorpay
             </button>

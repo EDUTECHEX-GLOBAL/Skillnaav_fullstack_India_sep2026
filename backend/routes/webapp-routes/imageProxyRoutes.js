@@ -16,8 +16,8 @@ const { URL } = require("url");
 
 // Allowed S3 buckets (whitelist to prevent open-redirect abuse)
 const ALLOWED_HOSTS = [
-  "skillnaavres.s3.us-west-1.amazonaws.com",
-  "skillnaavres.s3.amazonaws.com",
+  "skillnav-documents-prod.s3.us-east-2.amazonaws.com",
+  "skillnav-documents-prod.s3.amazonaws.com",
   `${process.env.AWS_IMAGE_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`,
   `${process.env.AWS_RESUME_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`,
 ].filter(Boolean);

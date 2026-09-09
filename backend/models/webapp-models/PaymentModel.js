@@ -7,7 +7,7 @@ const PaymentSchema = new mongoose.Schema(
     planType: { type: String, required: true },
     amount: { type: Number, required: true },
     paymentId: { type: String, required: true },   // Capture transaction ID (or "pending" before capture)
-    orderId: { type: String, required: true },     // PayPal order ID
+    orderId: { type: String, required: true },     // Razorpay order ID
     // FIX: Added "Failed" and "Refunded" to cover all real-world terminal states
     status: {
       type: String,
@@ -22,7 +22,7 @@ const PaymentSchema = new mongoose.Schema(
 );
 
 // FIX: Unique index on orderId for strong idempotency guarantees
-// NOTE: unique index prevents duplicate order documents for the same PayPal orderId
+// NOTE: unique index prevents duplicate order documents for the same Razorpay orderId
 PaymentSchema.index({ orderId: 1 }, { unique: true });
 // FIX: Index on userId for fast payment history queries
 PaymentSchema.index({ userId: 1, createdAt: -1 });

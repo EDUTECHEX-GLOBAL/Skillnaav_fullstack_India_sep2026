@@ -21,7 +21,6 @@
     "@heygen/liveavatar-web-sdk": "^0.0.18",
     "@mui/icons-material": "^6.1.0",
     "@mui/material": "^6.1.0",
-    "@paypal/react-paypal-js": "^8.9.2",
     "@radix-ui/react-accordion": "^1.1.2",
     "@react-oauth/google": "^0.12.1",
     "@react-three/drei": "^9.122.0",
