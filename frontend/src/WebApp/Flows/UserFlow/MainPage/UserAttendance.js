@@ -6,10 +6,8 @@ import {
   faCheckCircle,
   faTimesCircle,
   faExclamationCircle,
-  faBuilding,
   faMapMarkerAlt,
   faClock,
-  faMoneyBillWave,
   faCalendarAlt,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";

@@ -29,6 +29,8 @@ function Home() {
         dispatch(SetSkillNaavData(response.data));
       } catch (error) {
         console.error("Error fetching SkillNaav data:", error);
+        // Dispatch empty object on failure to avoid infinite loading skeletons
+        dispatch(SetSkillNaavData({}));
       } finally {
         setPageLoading(false);
         dispatch(HideLoading());

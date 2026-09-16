@@ -8,7 +8,7 @@ function Pricing() {
   const { skillnaavData } = useSelector((state) => state.root);
 
   if (!skillnaavData) {
-    return <div>Loading...</div>; // Add loading state if skillnaavData is null
+    return null; // Return null instead of plain text if data is not loaded yet
   }
 
   const { pricing, pricingcard } = skillnaavData;

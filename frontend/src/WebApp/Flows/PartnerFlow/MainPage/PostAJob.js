@@ -654,7 +654,11 @@ const PostAJob = () => {
             value={formData.endDateOrDuration}
             onChange={handleChange}
             required
-            min={formData.startDate || new Date().toISOString().split("T")[0]}
+            min={(() => {
+              const baseDate = formData.startDate ? new Date(formData.startDate) : new Date();
+              baseDate.setMonth(baseDate.getMonth() + 1);
+              return baseDate.toISOString().split("T")[0];
+            })()}
             className={inputCls}
             style={{ marginTop: "0px" }}
           />

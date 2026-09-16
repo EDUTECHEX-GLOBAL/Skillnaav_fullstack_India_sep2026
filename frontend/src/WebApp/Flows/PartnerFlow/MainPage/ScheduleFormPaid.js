@@ -1024,6 +1024,11 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                         name="endDate"
                         value={form.endDate}
                         onChange={handleFormChange}
+                        min={(() => {
+                          const baseDate = form.startDate ? new Date(form.startDate) : new Date();
+                          baseDate.setMonth(baseDate.getMonth() + 1);
+                          return baseDate.toISOString().split("T")[0];
+                        })()}
                         className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
