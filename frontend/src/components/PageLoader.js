@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../assets-webapp/Skillnaavlogo.png"; // update path to your actual logo
+import logo from "../assets/Edutech-logo.png"; // update path to your actual logo
 
 const PageLoader = () => {
   return (

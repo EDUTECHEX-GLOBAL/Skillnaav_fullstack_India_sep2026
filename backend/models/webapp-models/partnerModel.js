@@ -59,9 +59,6 @@ const partnerwebappSchema = mongoose.Schema(
 // Index to speed up expiry queries
 partnerwebappSchema.index({ premiumExpiration: 1 });
 
-// If you want to be explicit (email already has unique:true)
-partnerwebappSchema.index({ email: 1 }, { unique: true });
-
 // 🔥 PASSWORD HASHING — safe for Google users
 partnerwebappSchema.pre("save", async function (next) {
   // Skip hashing if no password exists (Google users)

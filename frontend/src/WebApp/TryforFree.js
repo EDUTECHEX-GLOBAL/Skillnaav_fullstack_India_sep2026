@@ -1,5 +1,5 @@
 import React from "react";
-import skillnaavlogo from "../assets/skillnaav_logo-250w.png";
+import skillnaavlogo from "../assets/Edutech-logo.png";
 
 const TryforFree = () => {
   const handleOptionClick = (path) => {

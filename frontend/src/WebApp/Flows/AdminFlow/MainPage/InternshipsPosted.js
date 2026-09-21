@@ -13,7 +13,7 @@ import {
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { format } from "date-fns";
 
-import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
+import Skillnaavlogo from "../../../../assets/Edutech-logo.png";
 import AdminChatModal from "./AdminChatModal";
 
 Modal.setAppElement("#root");

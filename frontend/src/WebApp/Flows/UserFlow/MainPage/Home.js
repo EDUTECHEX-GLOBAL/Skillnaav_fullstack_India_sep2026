@@ -11,7 +11,7 @@ import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "../../../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
+import Skillnaavlogo from "../../../../assets/logo-white-tile-1024.png";
 import { format } from "date-fns";
 
 const Homeimage = "/Home-Image.png";

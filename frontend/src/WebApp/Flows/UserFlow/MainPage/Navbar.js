@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt, faBell, faBars, faCrown } from "@fortawesome/free-solid-svg-icons";
-import logo from "../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../assets/Edutech-logo.png";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";

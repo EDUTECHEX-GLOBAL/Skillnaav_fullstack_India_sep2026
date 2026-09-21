@@ -4,7 +4,7 @@ import React, { useCallback, useTransition } from "react";
 import { FaBars, FaSignOutAlt } from "react-icons/fa";
 import axios from "../../../../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import logo from "../../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../../assets/Edutech-logo.png";
 import { useFeedback } from "../../../../../context/FeedbackContext";
 import { schoolAdminFlowQuestions } from "../../../../../components/FeedbackModal/questionSets";
 

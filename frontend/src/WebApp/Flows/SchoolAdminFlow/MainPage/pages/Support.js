@@ -49,7 +49,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import io from "socket.io-client";
-import logo from "../../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../../assets/Edutech-logo.png";
 
 const BASE_URL = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 const STUDENT_API = `${BASE_URL}/api/support/school-admin`;

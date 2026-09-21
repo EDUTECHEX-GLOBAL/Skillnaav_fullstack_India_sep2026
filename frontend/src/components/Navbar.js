@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SkillNaavLogo from "../assets/skillnaav_logo-250w.png";
+import SkillNaavLogo from "../assets/Edutech-logo.png";
 import Menu from "../assets/Menu.svg";
 import Close from "../assets/close.png";
 

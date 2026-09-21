@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt, faBars, faBell } from "@fortawesome/free-solid-svg-icons";
-import logo from "../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../assets/Edutech-logo.png";
 import defaultCompanyLogo from "../../../../assets/default-company-logo.png";
 
 import { useTabContext } from "./UserHomePageContext/HomePageContext";

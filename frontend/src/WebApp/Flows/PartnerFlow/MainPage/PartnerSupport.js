@@ -43,7 +43,7 @@ import {
   FaMicrophone,
   FaMicrophoneSlash,
 } from "react-icons/fa";
-import logo from "../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../assets/Edutech-logo.png";
 import axios from "axios";
 import { io } from "socket.io-client";
 
