@@ -7,6 +7,7 @@ import {
   faDollarSign,
   faBriefcase,
   faFileAlt,
+  faIndianRupee,
 } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 
@@ -17,7 +18,9 @@ const Applications = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const savedScrollRef = React.useRef(0);
 
-  const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo")));
+  const userInfo =
+    JSON.parse(localStorage.getItem("studentInfo")) ||
+    JSON.parse(localStorage.getItem("userInfo"));
   const studentId = userInfo?._id || null;
 
   /* ================================
@@ -31,7 +34,7 @@ const Applications = () => {
         return;
       }
       const { data } = await axios.get(
-        `/api/applications/student/${studentId}/dashboard`
+        `/api/applications/student/${studentId}/dashboard`,
       );
       setApplications(data.applications || []);
     } catch (err) {
@@ -56,7 +59,10 @@ const Applications = () => {
     window.addEventListener("assessmentCompleted", handleAssessmentCompleted);
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
-      window.removeEventListener("assessmentCompleted", handleAssessmentCompleted);
+      window.removeEventListener(
+        "assessmentCompleted",
+        handleAssessmentCompleted,
+      );
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [fetchDashboardApplications]);
@@ -66,7 +72,7 @@ const Applications = () => {
   ================================= */
   const resolveApplicationStatus = (pipeline, appStatus) => {
     if (!pipeline) return appStatus || "Applied";
-    
+
     // L3 Status
     if (pipeline.l3?.status === "passed") return "Interview Passed";
     if (pipeline.l3?.status === "rejected") return "Interview Failed";
@@ -74,17 +80,21 @@ const Applications = () => {
     if (pipeline.l3?.status === "scheduled") return "Interview Scheduled";
     if (pipeline.l3?.status === "sent") return "Interview Invite Sent";
     if (pipeline.l3?.status === "created") return "Interview Pending";
-    
+
     // L2 Status
     if (pipeline.l2?.status === "passed") return "Assessment Cleared";
-    if (["generated", "sent", "started", "submitted"].includes(pipeline.l2?.status))
+    if (
+      ["generated", "sent", "started", "submitted"].includes(
+        pipeline.l2?.status,
+      )
+    )
       return "Assessment In Progress";
     if (pipeline.l2?.status === "rejected") return "Assessment Failed";
-    
+
     // L1 Status
     if (pipeline.l1?.status === "shortlisted") return "Shortlisted";
     if (pipeline.l1?.status === "rejected") return "Rejected";
-    
+
     if (appStatus && appStatus !== "Applied") return appStatus;
     return "Applied";
   };
@@ -93,18 +103,18 @@ const Applications = () => {
      STATUS STYLE MAP
   ================================= */
   const statusStyle = {
-    Applied:                 { bg: "#f3f4f6", color: "#374151" },
-    Shortlisted:             { bg: "#fef9c3", color: "#854d0e" },
-    Rejected:                { bg: "#fee2e2", color: "#991b1b" },
-    "Assessment In Progress":{ bg: "#ede9fe", color: "#5b21b6" },
-    "Assessment Cleared":    { bg: "#dcfce7", color: "#166534" },
-    "Assessment Failed":     { bg: "#fee2e2", color: "#991b1b" },
-    "Interview Pending":     { bg: "#ffedd5", color: "#9a3412" },
-    "Interview Scheduled":   { bg: "#dbeafe", color: "#1e40af" },
+    Applied: { bg: "#f3f4f6", color: "#374151" },
+    Shortlisted: { bg: "#fef9c3", color: "#854d0e" },
+    Rejected: { bg: "#fee2e2", color: "#991b1b" },
+    "Assessment In Progress": { bg: "#ede9fe", color: "#5b21b6" },
+    "Assessment Cleared": { bg: "#dcfce7", color: "#166534" },
+    "Assessment Failed": { bg: "#fee2e2", color: "#991b1b" },
+    "Interview Pending": { bg: "#ffedd5", color: "#9a3412" },
+    "Interview Scheduled": { bg: "#dbeafe", color: "#1e40af" },
     "Interview Invite Sent": { bg: "#dcfce7", color: "#14532d" },
-    "Interview Completed":   { bg: "#fef9c3", color: "#854d0e" },
-    "Interview Passed":      { bg: "#dcfce7", color: "#166534" },
-    "Interview Failed":      { bg: "#fee2e2", color: "#991b1b" },
+    "Interview Completed": { bg: "#fef9c3", color: "#854d0e" },
+    "Interview Passed": { bg: "#dcfce7", color: "#166534" },
+    "Interview Failed": { bg: "#fee2e2", color: "#991b1b" },
   };
 
   /* ================================
@@ -128,9 +138,15 @@ const Applications = () => {
           </button>
         );
       case "started":
-        return <div className="app-cta-info orange">⏳ Assessment In Progress</div>;
+        return (
+          <div className="app-cta-info orange">⏳ Assessment In Progress</div>
+        );
       case "submitted":
-        return <div className="app-cta-info blue">📝 Submitted — Awaiting Results</div>;
+        return (
+          <div className="app-cta-info blue">
+            📝 Submitted — Awaiting Results
+          </div>
+        );
       case "passed":
         return <div className="app-cta-info green">✅ Assessment Passed</div>;
       case "rejected":
@@ -148,18 +164,27 @@ const Applications = () => {
     if (!l3 || l3.status === "not_used") return null;
 
     if (l3.status === "passed") {
-      return <div className="app-cta-info green">✅ Interview Passed — Awaiting Offer</div>;
+      return (
+        <div className="app-cta-info green">
+          ✅ Interview Passed — Awaiting Offer
+        </div>
+      );
     }
     if (l3.status === "rejected") {
       return <div className="app-cta-info red">❌ Interview Failed</div>;
     }
     if (l3.status === "completed") {
-      return <div className="app-cta-info orange">⏳ Interview Completed — Awaiting Results</div>;
+      return (
+        <div className="app-cta-info orange">
+          ⏳ Interview Completed — Awaiting Results
+        </div>
+      );
     }
 
     if (!["scheduled", "sent"].includes(l3.status)) return null;
 
-    const interview = typeof l3.interviewId === "object" ? l3.interviewId : null;
+    const interview =
+      typeof l3.interviewId === "object" ? l3.interviewId : null;
     const scheduledAt = interview?.scheduledAt || l3?.scheduledAt;
 
     return (
@@ -187,7 +212,9 @@ const Applications = () => {
   const openAssessment = (assessmentId) => {
     if (!assessmentId) return;
     localStorage.setItem("activeAssessmentId", assessmentId);
-    window.dispatchEvent(new CustomEvent("openTab", { detail: { tab: "assessment" } }));
+    window.dispatchEvent(
+      new CustomEvent("openTab", { detail: { tab: "assessment" } }),
+    );
   };
 
   const handleViewDetails = (job) => {
@@ -205,11 +232,12 @@ const Applications = () => {
   };
 
   const getCompensationText = (job) => {
+    //change $ to ₹ symbol - 15-09-2026
     if (job?.internshipType === "STIPEND")
-      return `$${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase() || "mo"}`;
+      return `₹${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase() || "mo"}`;
     if (job?.internshipType === "FREE") return "Unpaid / Free";
     if (job?.internshipType === "PAID")
-      return `Student Pays: $${job?.compensationDetails?.amount}`;
+      return `Student Pays: ₹${job?.compensationDetails?.amount}`;
     return "N/A";
   };
 
@@ -222,7 +250,9 @@ const Applications = () => {
         <style>{sharedStyles}</style>
         <div className="app-wrapper">
           <div className="app-header">
-            <div className="app-header-icon"><FontAwesomeIcon icon={faFileAlt} /></div>
+            <div className="app-header-icon">
+              <FontAwesomeIcon icon={faFileAlt} />
+            </div>
             <h2>Your Applications</h2>
           </div>
           <div className="app-loading">
@@ -258,7 +288,9 @@ const Applications = () => {
       <div className="app-wrapper">
         {/* Header */}
         <div className="app-header">
-          <div className="app-header-icon"><FontAwesomeIcon icon={faFileAlt} /></div>
+          <div className="app-header-icon">
+            <FontAwesomeIcon icon={faFileAlt} />
+          </div>
           <h2>Your Applications</h2>
           {applications.length > 0 && (
             <span className="app-count">{applications.length} applied</span>
@@ -267,7 +299,9 @@ const Applications = () => {
 
         {applications.length === 0 ? (
           <div className="app-empty">
-            <div className="app-empty-icon"><FontAwesomeIcon icon={faFileAlt} /></div>
+            <div className="app-empty-icon">
+              <FontAwesomeIcon icon={faFileAlt} />
+            </div>
             <h3>No applications yet</h3>
             <p>Jobs you apply to will appear here.</p>
           </div>
@@ -277,7 +311,10 @@ const Applications = () => {
               const job = app.internship;
               if (!job) return null;
 
-              const finalStatus = resolveApplicationStatus(app.pipeline, app.status);
+              const finalStatus = resolveApplicationStatus(
+                app.pipeline,
+                app.status,
+              );
               const sStyle = statusStyle[finalStatus] || statusStyle["Applied"];
 
               return (
@@ -299,7 +336,9 @@ const Applications = () => {
                         src={job.imgUrl}
                         alt="Company Logo"
                         className="app-logo"
-                        onError={(e) => { e.target.style.display = "none"; }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
                       />
                     ) : (
                       <div className="app-logo-fallback">
@@ -313,7 +352,14 @@ const Applications = () => {
                       <p className="app-company" title={job.companyName}>
                         {job.companyName || "Unknown Company"}
                       </p>
-                      <p className="app-company" style={{ fontSize: '11px', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                      <p
+                        className="app-company"
+                        style={{
+                          fontSize: "11px",
+                          marginTop: "4px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         ID: {job._id}
                       </p>
                     </div>
@@ -332,13 +378,20 @@ const Applications = () => {
                     </div>
                     <div className="app-info-row">
                       <FontAwesomeIcon icon={faClock} />
-                      <span className="app-info-text" title={job.endDateOrDuration || "N/A"}>
+                      <span
+                        className="app-info-text"
+                        title={job.endDateOrDuration || "N/A"}
+                      >
                         {job.endDateOrDuration || "N/A"}
                       </span>
                     </div>
                     <div className="app-info-row">
-                      <FontAwesomeIcon icon={faDollarSign} />
-                      <span className="app-info-text" title={getCompensationText(job)}>
+                      {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
+                      <FontAwesomeIcon icon={faIndianRupee} />
+                      <span
+                        className="app-info-text"
+                        title={getCompensationText(job)}
+                      >
                         {getCompensationText(job)}
                       </span>
                     </div>

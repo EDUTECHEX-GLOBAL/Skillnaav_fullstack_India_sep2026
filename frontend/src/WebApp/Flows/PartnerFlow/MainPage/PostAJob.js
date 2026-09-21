@@ -426,7 +426,7 @@ const PostAJob = () => {
     "!mt-0 w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-white";
 
   return (
-    <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8 mb-40">
+    <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">
         Post an Internship
       </h2>
@@ -723,6 +723,7 @@ const PostAJob = () => {
                 </button>
               </span>
             ))}
+            {/*Add "!mt-0" for alignment - 15-09-2026 */}
             <input
               id="qualInput"
               type="text"
@@ -739,7 +740,7 @@ const PostAJob = () => {
                   ? "Type a skill and press Enter or Add..."
                   : "Add another..."
               }
-              className="flex-1 min-w-[160px] outline-none bg-transparent text-sm py-1 px-1"
+              className="!mt-0 flex-1 min-w-[160px] outline-none bg-transparent text-sm py-1 px-1"
             />
             <button
               type="button"

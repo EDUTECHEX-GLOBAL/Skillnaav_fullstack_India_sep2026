@@ -10,13 +10,13 @@ import loginImage from "../../../../assets-webapp/login-image.png";
 import { GoogleLogin } from "@react-oauth/google";
 import { IN_STATES } from "../../../../constants/locations";
 import UserAgeGateConsent from "./UserProfileBuilding/UserAgeGateConsent";
-
+import { StateDropdown } from "../../../../components/StateDropdown";
 
 // ---------------------------------------------------------------------------
 // Session storage keys — used to resume registration after a page refresh.
 // We only persist non-sensitive fields (never password, never confirmPassword).
 // ---------------------------------------------------------------------------
-const SESSION_KEY_STEP     = "reg_step";
+const SESSION_KEY_STEP = "reg_step";
 const SESSION_KEY_FORMDATA = "reg_formdata";
 
 const clearRegistrationSession = () => {
@@ -35,35 +35,52 @@ const UnifiedUserRegistration = () => {
     return saved ? parseFloat(saved) : 1;
   });
 
-  const [errorMessage, setErrorMessage]           = useState("");
-  const [otp, setOtp]                             = useState("");
-  const [showPassword, setShowPassword]           = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showAgeGateModal, setShowAgeGateModal]   = useState(false);
-  const [savingConsent, setSavingConsent]         = useState(false);
-  const [resuming, setResuming]                   = useState(false);
+  const [showAgeGateModal, setShowAgeGateModal] = useState(false);
+  const [savingConsent, setSavingConsent] = useState(false);
+  const [resuming, setResuming] = useState(false);
 
   // OTP resend
   const [resendTimer, setResendTimer] = useState(30);
-  const [resending, setResending]     = useState(false);
-  const [canResend, setCanResend]     = useState(false);
+  const [resending, setResending] = useState(false);
+  const [canResend, setCanResend] = useState(false);
 
   // City / university suggestion state
-  const [citySuggestions, setCitySuggestions]                         = useState([]);
-  const [filteredInstitutionSuggestions, setFilteredInstitutionSuggestions] = useState([]);
-  const cityTimerRef        = useRef(null);
-  const cityAbortRef        = useRef(null);
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [filteredInstitutionSuggestions, setFilteredInstitutionSuggestions] =
+    useState([]);
+  const cityTimerRef = useRef(null);
+  const cityAbortRef = useRef(null);
   const institutionTimerRef = useRef(null);
 
   // --- UNIFIED FORM STATE ---
   // Restore non-sensitive fields from sessionStorage when the page is refreshed
   const [formData, setFormData] = useState(() => {
     const defaults = {
-      name: "", email: "", password: "", confirmPassword: "",
-      institutionName: "", dob: null, educationLevel: "", grade: "", fieldOfStudy: "",
-      country: "India", state: "", city: "", zip: "", address: "",
-      desiredField: "", linkedin: "", portfolio: "", skills: "", interests: "",
-      preferredLocations: "", profilePic: null,
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      institutionName: "",
+      dob: null,
+      educationLevel: "",
+      grade: "",
+      fieldOfStudy: "",
+      country: "India",
+      state: "",
+      city: "",
+      zip: "",
+      address: "",
+      desiredField: "",
+      linkedin: "",
+      portfolio: "",
+      skills: "",
+      interests: "",
+      preferredLocations: "",
+      profilePic: null,
     };
     try {
       const saved = sessionStorage.getItem(SESSION_KEY_FORMDATA);
@@ -100,7 +117,9 @@ const UnifiedUserRegistration = () => {
     try {
       const { password, confirmPassword, profilePic, ...safeFields } = formData;
       sessionStorage.setItem(SESSION_KEY_FORMDATA, JSON.stringify(safeFields));
-    } catch { /* storage full — ignore */ }
+    } catch {
+      /* storage full — ignore */
+    }
   }, [formData, currentStep]);
 
   // --- ON MOUNT: detect an incomplete registration and resume it ---
@@ -162,19 +181,19 @@ const UnifiedUserRegistration = () => {
         // Pre-fill whatever the server already knows
         setFormData((prev) => ({
           ...prev,
-          name:            user.name            || prev.name,
-          email:           user.email           || prev.email,
-          institutionName: user.universityName  || prev.institutionName,
-          dob:             user.dob ? new Date(user.dob) : prev.dob,
-          educationLevel:  user.educationLevel  || prev.educationLevel,
-          fieldOfStudy:    user.fieldOfStudy    || prev.fieldOfStudy,
-          desiredField:    user.desiredField    || prev.desiredField,
-          linkedin:        user.linkedin        || prev.linkedin,
-          country:         user.country         || prev.country,
-          state:           user.state           || prev.state,
-          city:            user.city            || prev.city,
-          zip:             user.postalCode      || prev.zip,
-          address:         user.address         || prev.address,
+          name: user.name || prev.name,
+          email: user.email || prev.email,
+          institutionName: user.universityName || prev.institutionName,
+          dob: user.dob ? new Date(user.dob) : prev.dob,
+          educationLevel: user.educationLevel || prev.educationLevel,
+          fieldOfStudy: user.fieldOfStudy || prev.fieldOfStudy,
+          desiredField: user.desiredField || prev.desiredField,
+          linkedin: user.linkedin || prev.linkedin,
+          country: user.country || prev.country,
+          state: user.state || prev.state,
+          city: user.city || prev.city,
+          zip: user.postalCode || prev.zip,
+          address: user.address || prev.address,
         }));
       } catch (err) {
         // Token invalid / expired — clear everything and start fresh
@@ -215,8 +234,6 @@ const UnifiedUserRegistration = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-
-
   };
   const handleInstitutionInputChange = (e) => {
     const value = e.target.value;
@@ -226,8 +243,7 @@ const UnifiedUserRegistration = () => {
       institutionName: value,
     }));
 
-    if (institutionTimerRef.current)
-      clearTimeout(institutionTimerRef.current);
+    if (institutionTimerRef.current) clearTimeout(institutionTimerRef.current);
 
     // 🛑 High school → manual entry only
     if (formData.educationLevel === "highschool") {
@@ -251,7 +267,7 @@ const UnifiedUserRegistration = () => {
         });
 
         setFilteredInstitutionSuggestions(
-          Array.isArray(data) ? data : data?.data || []
+          Array.isArray(data) ? data : data?.data || [],
         );
       } catch (err) {
         console.error("Institution fetch error:", err);
@@ -260,14 +276,11 @@ const UnifiedUserRegistration = () => {
     }, 400);
   };
 
-
   const handleDateChange = (date) => {
     const updatedDate = date ? new Date(date) : null;
     if (updatedDate) updatedDate.setHours(0, 0, 0, 0);
     setFormData((prevData) => ({ ...prevData, dob: updatedDate }));
   };
-
-
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -290,10 +303,11 @@ const UnifiedUserRegistration = () => {
       return false;
     }
     // Password strength: min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char
-    const passwordStrengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]{8,}$/;
+    const passwordStrengthRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]{8,}$/;
     if (!passwordStrengthRegex.test(password)) {
       setErrorMessage(
-        "Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character (@$!%*?&^#)."
+        "Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character (@$!%*?&^#).",
       );
       return false;
     }
@@ -309,21 +323,27 @@ const UnifiedUserRegistration = () => {
 
     try {
       // Check email existence
-      const checkRes = await axios.get(`/api/users/check-email?email=${formData.email}`);
+      const checkRes = await axios.get(
+        `/api/users/check-email?email=${formData.email}`,
+      );
       if (checkRes.data.exists) {
         setErrorMessage(checkRes.data.message || "Email already registered.");
         return;
       }
 
       // Send OTP
-      await axios.post("/api/users/send-verification-code", { email: formData.email });
+      await axios.post("/api/users/send-verification-code", {
+        email: formData.email,
+      });
 
       setCurrentStep(1.5); // Move to OTP verification state
       setErrorMessage("");
       setResendTimer(30);
       setCanResend(false);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || "Failed to send OTP. Try again.");
+      setErrorMessage(
+        error.response?.data?.message || "Failed to send OTP. Try again.",
+      );
     }
   };
 
@@ -419,7 +439,9 @@ const UnifiedUserRegistration = () => {
   const handleResendOTP = async () => {
     try {
       setResending(true);
-      await axios.post("/api/users/send-verification-code", { email: formData.email });
+      await axios.post("/api/users/send-verification-code", {
+        email: formData.email,
+      });
 
       setErrorMessage("");
       setResending(false);
@@ -447,13 +469,7 @@ const UnifiedUserRegistration = () => {
     // High school → grade required
     if (educationLevel === "highschool") {
       return Boolean(
-        grade &&
-        institutionName &&
-        country &&
-        state &&
-        city &&
-        zip &&
-        address
+        grade && institutionName && country && state && city && zip && address,
       );
     }
 
@@ -465,11 +481,9 @@ const UnifiedUserRegistration = () => {
       state &&
       city &&
       zip &&
-      address
+      address,
     );
   };
-
-
 
   const handleStep2Submit = (e) => {
     e.preventDefault(); // Stop form default submission
@@ -566,20 +580,14 @@ const UnifiedUserRegistration = () => {
       // localStorage.removeItem("userToken"); // Removed to allow access to user-main-page
 
       navigate("/user-main-page");
-
     } catch (err) {
       console.error(err);
       setErrorMessage("Registration failed. Try again.");
     }
   };
 
-
-
   // --- Location/City Logic (from UserProfileForm.js) ---
-  const stateList =
-    formData.country === "India"
-      ? IN_STATES
-      : [];
+  const stateList = formData.country === "India" ? IN_STATES : [];
 
   const stateLabel =
     formData.country === "India"
@@ -622,16 +630,13 @@ const UnifiedUserRegistration = () => {
           },
         });
 
-        setCitySuggestions(
-          Array.isArray(data) ? data : data?.data || []
-        );
+        setCitySuggestions(Array.isArray(data) ? data : data?.data || []);
       } catch (err) {
         console.error("City fetch error:", err);
         setCitySuggestions([]);
       }
     }, 400);
   };
-
 
   const handleCitySelect = (c) => {
     setFormData((prev) => ({
@@ -648,27 +653,77 @@ const UnifiedUserRegistration = () => {
     if (currentStep === 1) {
       return (
         <>
-          <h1 className="text-2xl font-semibold mb-6 text-center">Create an account</h1>
+          <h1 className="text-2xl font-semibold mb-6 text-center">
+            Create an account
+          </h1>
           {/* Account Form */}
           <div className="mb-4">
-            <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
           </div>
           <div className="mb-4">
-            <input type="email" name="email" placeholder="Gmail Address" value={formData.email} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
+            <input
+              type="email"
+              name="email"
+              placeholder="Gmail Address"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
           </div>
           <div className="mb-4 relative">
-            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3">
-              {showPassword ? (<EyeIcon className="h-5 w-5 mt-4 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />)}
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3"
+            >
+              {showPassword ? (
+                <EyeIcon className="h-5 w-5 mt-4 text-gray-500" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />
+              )}
             </button>
           </div>
           <div className="mb-4 relative">
-            <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
-            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3">
-              {showConfirmPassword ? (<EyeIcon className="h-5 w-5 mt-4 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />)}
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-3"
+            >
+              {showConfirmPassword ? (
+                <EyeIcon className="h-5 w-5 mt-4 text-gray-500" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />
+              )}
             </button>
           </div>
-          <button type="button" onClick={handleStep1Submit} className="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 mb-4">
+          <button
+            type="button"
+            onClick={handleStep1Submit}
+            className="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 mb-4"
+          >
             Send OTP
           </button>
         </>
@@ -679,7 +734,9 @@ const UnifiedUserRegistration = () => {
     if (currentStep === 1.5) {
       return (
         <div>
-          <h1 className="text-2xl font-semibold mb-6 text-center">Verify Your Email</h1>
+          <h1 className="text-2xl font-semibold mb-6 text-center">
+            Verify Your Email
+          </h1>
           <label className="block mb-2 text-sm font-medium text-gray-700">
             Enter the 6-digit code sent to your Gmail:
           </label>
@@ -691,7 +748,10 @@ const UnifiedUserRegistration = () => {
             className="w-full mb-4 p-3 border border-gray-300 rounded-lg"
             placeholder="Enter OTP"
           />
-          <button onClick={handleVerifyOTP} className="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 mb-4">
+          <button
+            onClick={handleVerifyOTP}
+            className="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 mb-4"
+          >
             Verify & Continue
           </button>
           <div className="flex justify-between items-center mb-4">
@@ -700,9 +760,16 @@ const UnifiedUserRegistration = () => {
               disabled={!canResend || resending}
               className={`text-sm font-medium ${canResend ? "text-blue-500 hover:underline" : "text-gray-400 cursor-not-allowed"}`}
             >
-              {resending ? "Resending..." : canResend ? "Resend OTP" : `Resend in ${resendTimer}s`}
+              {resending
+                ? "Resending..."
+                : canResend
+                  ? "Resend OTP"
+                  : `Resend in ${resendTimer}s`}
             </button>
-            <button onClick={() => setCurrentStep(1)} className="text-sm text-gray-600 hover:text-blue-500">
+            <button
+              onClick={() => setCurrentStep(1)}
+              className="text-sm text-gray-600 hover:text-blue-500"
+            >
               Change Details
             </button>
           </div>
@@ -713,7 +780,10 @@ const UnifiedUserRegistration = () => {
     // Step 2: User Profile Form
     if (currentStep === 2) {
       return (
-        <form onSubmit={handleStep2Submit} className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
+        <form
+          onSubmit={handleStep2Submit}
+          className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg"
+        >
           <div className="space-y-4">
             {/* <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
               <h2 className="text-lg font-bold text-gray-700">BASIC INFORMATION</h2>
@@ -760,7 +830,6 @@ const UnifiedUserRegistration = () => {
                   </label>
                 ))}
               </div>
-
             </div>
 
             {/* Grade (ONLY for High School) */}
@@ -842,8 +911,24 @@ const UnifiedUserRegistration = () => {
 
             {/* Date of Birth */}
             <div>
-              <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth *</label>
-              <DatePicker selected={formData.dob} onChange={handleDateChange} dateFormat="dd/MM/yyyy" maxDate={new Date()} showYearDropdown showMonthDropdown dropdownMode="select" placeholderText="DD/MM/YYYY" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required />
+              <label
+                htmlFor="dob"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Date of Birth *
+              </label>
+              <DatePicker
+                selected={formData.dob}
+                onChange={handleDateChange}
+                dateFormat="dd/MM/yyyy"
+                maxDate={new Date()}
+                showYearDropdown
+                showMonthDropdown
+                dropdownMode="select"
+                placeholderText="DD/MM/YYYY"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                required
+              />
             </div>
 
             {/* LOCATION */}
@@ -854,55 +939,123 @@ const UnifiedUserRegistration = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
                 {/* Country (India only) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Country *</label>
-                  <select name="country" value={formData.country} onChange={(e) => handleCountryChange(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Country *
+                  </label>
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    required
+                  >
                     <option value="">Select</option>
                     <option value="India">India</option>
                   </select>
                 </div>
                 {/* State / Province */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">{stateLabel} *</label>
-                  <select name="state" value={formData.state} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100" disabled={!formData.country} required>
+                  <label className="block text-sm font-medium text-gray-700">
+                    {stateLabel} *
+                  </label>
+                  {/* <select name="state" value={formData.state} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100" disabled={!formData.country} required>
                     <option value="">Select</option>
                     {stateList.map((s) => (<option key={s} value={s}>{s}</option>))}
-                  </select>
+                  </select> */}
+                  {/*10-09-2026 */}
+                  <StateDropdown
+                    label={"State"}
+                    value={formData.state}
+                    onChange={(value) =>
+                      handleChange({ target: { name: "state", value } })
+                    }
+                    options={stateList}
+                    className={
+                      "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100"
+                    }
+                    disabled={!formData.country}
+                  />
                 </div>
                 {/* City with suggestions */}
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700">City *</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleCityInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100" disabled={!formData.country} placeholder="Start typing city" autoComplete="off" required />
-               {citySuggestions.length > 0 && (
-  <ul className="absolute z-[9999] left-0 top-full w-full bg-white border border-gray-300 rounded-md shadow-xl mt-1 max-h-48 overflow-y-auto">
-    {citySuggestions.map((c) => (
-      <li
-        key={`${c.city}-${c.state}`}
-        onClick={() => handleCitySelect(c)}
-        className="cursor-pointer px-4 py-2 hover:bg-purple-100"
-      >
-        {c.city}, {c.state}
-      </li>
-    ))}
-  </ul>
-)}
+                  <label className="block text-sm font-medium text-gray-700">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleCityInputChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100"
+                    disabled={!formData.country}
+                    placeholder="Start typing city"
+                    autoComplete="off"
+                    required
+                  />
+                  {citySuggestions.length > 0 && (
+                    <ul className="absolute z-[9999] left-0 top-full w-full bg-white border border-gray-300 rounded-md shadow-xl mt-1 max-h-48 overflow-y-auto">
+                      {citySuggestions.map((c) => (
+                        <li
+                          key={`${c.city}-${c.state}`}
+                          onClick={() => handleCitySelect(c)}
+                          className="cursor-pointer px-4 py-2 hover:bg-purple-100"
+                        >
+                          {c.city}, {c.state}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 {/* ZIP / Postal Code */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">{zipLabel} *</label>
-                  <input type="text" name="zip" value={formData.zip} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="e.g., 500001" autoComplete="postal-code" required />
+                  <label className="block text-sm font-medium text-gray-700">
+                    {zipLabel} *
+                  </label>
+                  <input
+                    type="text"
+                    name="zip"
+                    value={formData.zip}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="e.g., 500001"
+                    autoComplete="postal-code"
+                    required
+                  />
                 </div>
                 {/* Full Address */}
                 <div className="md:col-span-2 md:col-start-1">
-                  <label className="block text-sm font-medium text-gray-700">Address *</label>
-                  <textarea name="address" value={formData.address} onChange={handleChange} rows={3} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="Street address, Apt/Suite (City is above), State/Province" autoComplete="street-address" required />
+                  <label className="block text-sm font-medium text-gray-700">
+                    Address *
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    rows={3}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Street address, Apt/Suite (City is above), State/Province"
+                    autoComplete="street-address"
+                    required
+                  />
                 </div>
               </div>
             </div>
 
             {/* Field of Study Select */}
             <div>
-              <label htmlFor="fieldOfStudy" className="block text-sm font-medium text-gray-700">Field of Study *</label>
-              <select name="fieldOfStudy" value={formData.fieldOfStudy} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
+              <label
+                htmlFor="fieldOfStudy"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Field of Study *
+              </label>
+              <select
+                name="fieldOfStudy"
+                value={formData.fieldOfStudy}
+                onChange={handleChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                required
+              >
                 <option value="">Select Your Field</option>
                 <option value="Space">Space Internships</option>
                 <option value="Aeronautical">Aeronautical Internships</option>
@@ -923,7 +1076,11 @@ const UnifiedUserRegistration = () => {
             >
               Back
             </button>
-            <button type="submit" disabled={!validateStep2()} className="bg-purple-500 text-white w-full px-6 py-3 rounded-md hover:bg-purple-600 disabled:bg-gray-400">
+            <button
+              type="submit"
+              disabled={!validateStep2()}
+              className="bg-purple-500 text-white w-full px-6 py-3 rounded-md hover:bg-purple-600 disabled:bg-gray-400"
+            >
               Continue
             </button>
           </div>
@@ -934,15 +1091,25 @@ const UnifiedUserRegistration = () => {
     // Step 3: User Profile Picture/Professional
     if (currentStep === 3) {
       return (
-       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg overflow-visible">
+        <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg overflow-visible">
           <div className="space-y-4">
             <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-              <h2 className="text-lg font-bold text-gray-700">PROFESSIONAL INFORMATION</h2>
+              <h2 className="text-lg font-bold text-gray-700">
+                PROFESSIONAL INFORMATION
+              </h2>
             </div>
             {/* Desired Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Desired field of Internship/Job *</label>
-              <select name="desiredField" value={formData.desiredField} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+              <label className="block text-sm font-medium text-gray-700">
+                Desired field of Internship/Job *
+              </label>
+              <select
+                name="desiredField"
+                value={formData.desiredField}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              >
                 <option value="">Select Your Field</option>
                 <option value="Space">Space Internships</option>
                 <option value="Aeronautical">Aeronautical Internships</option>
@@ -953,49 +1120,143 @@ const UnifiedUserRegistration = () => {
             </div>
 
             <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-              <h2 className="text-lg font-bold text-gray-700">UPLOAD PROFILE INFORMATION</h2>
+              <h2 className="text-lg font-bold text-gray-700">
+                UPLOAD PROFILE INFORMATION
+              </h2>
             </div>
 
             <div className="space-y-4">
               {/* LinkedIn Profile Input */}
               <div>
-                <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700">LinkedIn Profile *</label>
-                <input id="linkedin" type="text" name="linkedin" value={formData.linkedin} onChange={handleChange} required className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="Enter your LinkedIn profile" />
+                <label
+                  htmlFor="linkedin"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  LinkedIn Profile *
+                </label>
+                <input
+                  id="linkedin"
+                  type="text"
+                  name="linkedin"
+                  value={formData.linkedin}
+                  onChange={handleChange}
+                  required
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter your LinkedIn profile"
+                />
               </div>
               {/* Portfolio Website Input (Optional) */}
               <div>
-                <label htmlFor="portfolio" className="block text-sm font-medium text-gray-700">Portfolio Website (Optional)</label>
-                <input id="portfolio" type="text" name="portfolio" value={formData.portfolio} onChange={handleChange} className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="Enter your Portfolio URL" />
+                <label
+                  htmlFor="portfolio"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Portfolio Website (Optional)
+                </label>
+                <input
+                  id="portfolio"
+                  type="text"
+                  name="portfolio"
+                  value={formData.portfolio}
+                  onChange={handleChange}
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter your Portfolio URL"
+                />
               </div>
               {/* Skills Input */}
               <div>
-                <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills (comma separated)</label>
-                <input id="skills" type="text" name="skills" value={formData.skills} onChange={handleChange} className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="e.g. React, Python, SQL" />
+                <label
+                  htmlFor="skills"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Skills (comma separated)
+                </label>
+                <input
+                  id="skills"
+                  type="text"
+                  name="skills"
+                  value={formData.skills}
+                  onChange={handleChange}
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="e.g. React, Python, SQL"
+                />
               </div>
               {/* Interests Input */}
               <div>
-                <label htmlFor="interests" className="block text-sm font-medium text-gray-700">Interests (comma separated)</label>
-                <input id="interests" type="text" name="interests" value={formData.interests} onChange={handleChange} className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="e.g. AI, Robotics, Data Science" />
+                <label
+                  htmlFor="interests"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Interests (comma separated)
+                </label>
+                <input
+                  id="interests"
+                  type="text"
+                  name="interests"
+                  value={formData.interests}
+                  onChange={handleChange}
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="e.g. AI, Robotics, Data Science"
+                />
               </div>
               {/* Preferred Locations Input */}
               <div>
-                <label htmlFor="preferredLocations" className="block text-sm font-medium text-gray-700">Preferred Locations (comma separated)</label>
-                <input id="preferredLocations" type="text" name="preferredLocations" value={formData.preferredLocations} onChange={handleChange} className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="e.g. Hyderabad, Remote, Bangalore" />
+                <label
+                  htmlFor="preferredLocations"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Preferred Locations (comma separated)
+                </label>
+                <input
+                  id="preferredLocations"
+                  type="text"
+                  name="preferredLocations"
+                  value={formData.preferredLocations}
+                  onChange={handleChange}
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="e.g. Hyderabad, Remote, Bangalore"
+                />
               </div>
               {/* Profile Image Input */}
               <div>
-                <label htmlFor="profilePic" className="block text-sm font-medium text-gray-700">Profile Image *</label>
-                <input id="profilePic" type="file" name="profilePic" onChange={handleFileChange} accept="image/*" className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required />
-                {formData.profilePic && <p className="text-xs mt-1 text-gray-500">File selected: {formData.profilePic.name}</p>}
+                <label
+                  htmlFor="profilePic"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Profile Image *
+                </label>
+                <input
+                  id="profilePic"
+                  type="file"
+                  name="profilePic"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  required
+                />
+                {formData.profilePic && (
+                  <p className="text-xs mt-1 text-gray-500">
+                    File selected: {formData.profilePic.name}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Button Section with Back and Submit Buttons */}
             <div className="flex justify-between space-x-4">
-              <button type="button" onClick={() => setCurrentStep(2)} className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
                 Back
               </button>
-              <button type="button" onClick={handleStep3Submit} disabled={!validateStep3()} className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${validateStep3() ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}>
+              <button
+                type="button"
+                onClick={handleStep3Submit}
+                disabled={!validateStep3()}
+                className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${validateStep3() ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+              >
                 Submit
               </button>
             </div>
@@ -1007,7 +1268,6 @@ const UnifiedUserRegistration = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins bg-gray-100 lg:bg-white">
-
       {/* ✅ Full-screen resume spinner — shown while we check for an incomplete registration */}
       {resuming && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
@@ -1028,8 +1288,9 @@ const UnifiedUserRegistration = () => {
       )}
 
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white mx-auto">
-        <div className={`w-full max-w-md ${currentStep !== 1 && currentStep !== 1.5 ? 'max-w-xl' : ''} flex flex-col justify-center min-h-screen lg:min-h-full`}>
-
+        <div
+          className={`w-full max-w-md ${currentStep !== 1 && currentStep !== 1.5 ? "max-w-xl" : ""} flex flex-col justify-center min-h-screen lg:min-h-full`}
+        >
           {errorMessage && (
             <div className="mb-4 p-4 bg-red-100 text-red-800 border border-red-400 rounded">
               {errorMessage}
@@ -1052,7 +1313,9 @@ const UnifiedUserRegistration = () => {
                   try {
                     const idToken = credentialResponse.credential;
 
-                    const res = await axios.post("/api/users/google-auth", { idToken });
+                    const res = await axios.post("/api/users/google-auth", {
+                      idToken,
+                    });
 
                     localStorage.setItem("userToken", res.data.token);
 
@@ -1071,18 +1334,21 @@ const UnifiedUserRegistration = () => {
 
                     // ✅ FIX: Google users must complete age gate before reaching step 2
                     setShowAgeGateModal(true);
-
                   } catch (error) {
                     console.error(error);
-                    setErrorMessage(error.response?.data?.message || "Google Sign-In failed.");
+                    setErrorMessage(
+                      error.response?.data?.message || "Google Sign-In failed.",
+                    );
                   }
                 }}
               />
 
-
               <p className="text-center text-gray-500 font-medium text-base">
                 Already have an account?{" "}
-                <Link to="/user/login" className="text-blue-500 hover:underline">
+                <Link
+                  to="/user/login"
+                  className="text-blue-500 hover:underline"
+                >
                   Login
                 </Link>
               </p>

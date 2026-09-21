@@ -8,6 +8,7 @@ import {
   FaDollarSign,
   FaCalendarAlt,
   FaChevronDown,
+  FaRupeeSign,
 } from "react-icons/fa";
 import DashboardCharts from "./Analytics/DashboardCharts";
 import InternshipTypeChart from "./Analytics/InternshipTypeChart";
@@ -436,8 +437,9 @@ const Dashboard = () => {
           count={data.internshipsCount}
           color="bg-yellow-100"
         />
+        {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
         <Card
-          icon={<FaDollarSign className="h-8 w-8 text-red-600" />}
+          icon={<FaRupeeSign className="h-8 w-8 text-red-600" />}
           title="Total Payments"
           count={data.paymentsCount}
           color="bg-red-100"

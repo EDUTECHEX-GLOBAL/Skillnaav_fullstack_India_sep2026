@@ -794,7 +794,11 @@ const SchoolAdminForgotPassword = ({ onClose }) => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  style={{ ...inputBase, paddingRight: "44px" }}
+                  style={{
+                    ...inputBase,
+                    marginTop: "0px",
+                    paddingRight: "44px",
+                  }}
                 />
                 <button
                   type="button"
@@ -844,6 +848,7 @@ const SchoolAdminForgotPassword = ({ onClose }) => {
                   required
                   style={{
                     ...inputBase,
+                    marginTop: "0px",
                     paddingRight: "44px",
                     borderColor:
                       confirmPassword && confirmPassword !== newPassword

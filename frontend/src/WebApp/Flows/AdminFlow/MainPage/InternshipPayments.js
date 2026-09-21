@@ -202,7 +202,7 @@ const InternshipPayments = () => {
             },
             {
               label: "Total Disbursed",
-              value: `$${totalRevenue.toLocaleString()}`,
+              value: `₹${totalRevenue.toLocaleString()}`,
               color: "text-emerald-700 break-words", // Add the "break-words" for revenue alignment in mobile view - 06-08-2026
             },
             {
@@ -365,7 +365,7 @@ const InternshipPayments = () => {
                   },
                   {
                     label: "Total paid",
-                    value: `$${(selectedInternship.paymentSummary?.totalAmount || 0).toLocaleString()}`,
+                    value: `₹${(selectedInternship.paymentSummary?.totalAmount || 0).toLocaleString()}`,
                     cls: "text-emerald-700",
                   },
                   {
@@ -450,7 +450,7 @@ const InternshipPayments = () => {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-xs font-semibold text-gray-900">
-                            ${p.amount.toLocaleString()}
+                            ₹{p.amount.toLocaleString()}
                           </p>
                           <p className="text-[10px] text-gray-400 mt-0.5">
                             {new Date(p.completedAt).toLocaleDateString(

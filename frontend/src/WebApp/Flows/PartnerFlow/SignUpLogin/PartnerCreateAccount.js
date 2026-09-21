@@ -12,7 +12,9 @@ import { GoogleLogin } from "@react-oauth/google"; // 🔥 NEW
 // Step 1: Account Creation
 const step1ValidationSchema = Yup.object({
   name: Yup.string().required("Full Name is Required"),
-  email: Yup.string().email("Invalid email address").required("Email is Required"),
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is Required"),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .matches(/[A-Z]/, "Must contain an uppercase letter")
@@ -30,7 +32,6 @@ const step2ValidationSchema = Yup.object({
   universityName: Yup.string().required("University/Company Name is Required"),
   institutionId: Yup.string().required("Institutional ID is Required"),
 });
-
 
 const PartnerSignUpFlow = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ const PartnerSignUpFlow = () => {
     const state = location.state;
     if (state?.googleSignup) {
       setIsGoogleSignup(true);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: state.name,
         email: state.email,
@@ -110,14 +111,13 @@ const PartnerSignUpFlow = () => {
         email: values.email.trim(),
       });
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         ...values,
-        otp: ""
+        otp: "",
       }));
       setStep(1.5);
       startResendTimer();
-
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Failed to send OTP.");
     } finally {
@@ -151,7 +151,7 @@ const PartnerSignUpFlow = () => {
       });
 
       if (verify.data.success) {
-        setFormData(prev => ({ ...prev, otp: values.otp }));
+        setFormData((prev) => ({ ...prev, otp: values.otp }));
         setStep(2);
       }
     } catch (error) {
@@ -171,7 +171,7 @@ const PartnerSignUpFlow = () => {
       const res = await axios.post("/api/partners/google-auth", { idToken });
 
       // Pre-fill name and email from Google, save token for the complete-profile call
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: res.data.name,
         email: res.data.email,
@@ -185,20 +185,23 @@ const PartnerSignUpFlow = () => {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("adminApproved", res.data.adminApproved);
         localStorage.setItem("partnerId", res.data._id);
-        localStorage.setItem("partnerInfo", JSON.stringify({
-          _id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-          profileImage: res.data.profileImage,
-          isGoogleUser: res.data.isGoogleUser,
-          universityName: res.data.universityName,
-          institutionId: res.data.institutionId,
-          isPremium: res.data.isPremium ?? false,
-          planType: res.data.planType ?? "Freemium",
-          premiumExpiration: res.data.premiumExpiration ?? null,
-          adminApproved: res.data.adminApproved,
-          status: res.data.status,
-        }));
+        localStorage.setItem(
+          "partnerInfo",
+          JSON.stringify({
+            _id: res.data._id,
+            name: res.data.name,
+            email: res.data.email,
+            profileImage: res.data.profileImage,
+            isGoogleUser: res.data.isGoogleUser,
+            universityName: res.data.universityName,
+            institutionId: res.data.institutionId,
+            isPremium: res.data.isPremium ?? false,
+            planType: res.data.planType ?? "Freemium",
+            premiumExpiration: res.data.premiumExpiration ?? null,
+            adminApproved: res.data.adminApproved,
+            status: res.data.status,
+          }),
+        );
         localStorage.setItem("loginTime", Date.now().toString());
         navigate("/partner-main-page");
         return;
@@ -206,7 +209,6 @@ const PartnerSignUpFlow = () => {
 
       // 🔥 New Google partner — skip OTP (email already verified by Google), go to Step 2
       setStep(2);
-
     } catch (err) {
       console.error(err);
       setErrorMessage("Google sign-up failed. Please try again.");
@@ -218,10 +220,10 @@ const PartnerSignUpFlow = () => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         profileImageFile: file,
-        profileImageUrl: URL.createObjectURL(file)
+        profileImageUrl: URL.createObjectURL(file),
       }));
     }
   };
@@ -260,31 +262,33 @@ const PartnerSignUpFlow = () => {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${formData.token}`,
             },
-          }
+          },
         );
 
         // Save everything to localStorage after profile is complete
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("adminApproved", response.data.adminApproved);
         localStorage.setItem("partnerId", response.data._id);
-        localStorage.setItem("partnerInfo", JSON.stringify({
-          _id: response.data._id,
-          name: response.data.name,
-          email: response.data.email,
-          profileImage: response.data.profileImage,
-          isGoogleUser: response.data.isGoogleUser,
-          universityName: response.data.universityName,
-          institutionId: response.data.institutionId,
-          isPremium: response.data.isPremium ?? false,
-          planType: response.data.planType ?? "Freemium",
-          premiumExpiration: response.data.premiumExpiration ?? null,
-          adminApproved: response.data.adminApproved,
-          status: response.data.status,
-        }));
+        localStorage.setItem(
+          "partnerInfo",
+          JSON.stringify({
+            _id: response.data._id,
+            name: response.data.name,
+            email: response.data.email,
+            profileImage: response.data.profileImage,
+            isGoogleUser: response.data.isGoogleUser,
+            universityName: response.data.universityName,
+            institutionId: response.data.institutionId,
+            isPremium: response.data.isPremium ?? false,
+            planType: response.data.planType ?? "Freemium",
+            premiumExpiration: response.data.premiumExpiration ?? null,
+            adminApproved: response.data.adminApproved,
+            status: response.data.status,
+          }),
+        );
         localStorage.setItem("loginTime", Date.now().toString());
 
         showRegistrationSuccess();
-
       } else {
         // Normal signup path — call register endpoint with all fields
         finalFormData.append("name", formData.name);
@@ -295,7 +299,7 @@ const PartnerSignUpFlow = () => {
         const response = await axios.post(
           "/api/partners/register",
           finalFormData,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          { headers: { "Content-Type": "multipart/form-data" } },
         );
 
         if (response.status === 201) {
@@ -304,12 +308,14 @@ const PartnerSignUpFlow = () => {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      setErrorMessage(error.response?.data?.message || "Registration failed. Please try again.");
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Registration failed. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
-
 
   // --- RENDERING STEPS ---
 
@@ -319,33 +325,64 @@ const PartnerSignUpFlow = () => {
         return (
           // STEP 1: Account Creation Form
           <Formik
-            initialValues={{ name: formData.name, email: formData.email, password: formData.password, confirmPassword: formData.confirmPassword }}
+            initialValues={{
+              name: formData.name,
+              email: formData.email,
+              password: formData.password,
+              confirmPassword: formData.confirmPassword,
+            }}
             validationSchema={step1ValidationSchema}
             onSubmit={handleStep1Submit}
           >
             {({ isSubmitting }) => (
               <Form className="space-y-4">
-                <Field type="text" name="name" placeholder="Full Name" className="w-full p-3 border border-gray-300 rounded-lg" />
-                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+                <Field
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+                <ErrorMessage
+                  name="name"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
 
-                <Field type="email" name="email" placeholder="Email" className="w-full p-3 border border-gray-300 rounded-lg" />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                <Field
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
 
                 <div className="relative">
                   <Field
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Password"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    className="!mt-0 w-full p-3 border border-gray-300 rounded-lg"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2"
                   >
-                    {showPassword ? (<EyeIcon className="h-5 w-5 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 text-gray-500" />)}
+                    {showPassword ? (
+                      <EyeIcon className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-500" />
+                    )}
                   </button>
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
                 <div className="relative">
@@ -353,16 +390,24 @@ const PartnerSignUpFlow = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm Password"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    className="!mt-0 w-full p-3 border border-gray-300 rounded-lg"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2"
                   >
-                    {showConfirmPassword ? (<EyeIcon className="h-5 w-5 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 text-gray-500" />)}
+                    {showConfirmPassword ? (
+                      <EyeIcon className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-500" />
+                    )}
                   </button>
-                  <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm mt-1" />
+                  <ErrorMessage
+                    name="confirmPassword"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
                 <button
@@ -376,7 +421,9 @@ const PartnerSignUpFlow = () => {
                 {/* 🔥 NEW: Google Sign-Up — shown only on Step 1 */}
                 <div className="flex items-center my-2">
                   <hr className="w-full border-gray-300" />
-                  <span className="px-3 text-gray-500 text-sm whitespace-nowrap">OR sign up with</span>
+                  <span className="px-3 text-gray-500 text-sm whitespace-nowrap">
+                    OR sign up with
+                  </span>
                   <hr className="w-full border-gray-300" />
                 </div>
 
@@ -425,7 +472,9 @@ const PartnerSignUpFlow = () => {
                 {/* RESEND OTP BUTTON */}
                 <div className="mt-4 text-center">
                   {resendTimer > 0 ? (
-                    <p className="text-gray-500 text-sm">Resend available in **{resendTimer}** seconds</p>
+                    <p className="text-gray-500 text-sm">
+                      Resend available in **{resendTimer}** seconds
+                    </p>
                   ) : (
                     <button
                       type="button"
@@ -446,7 +495,10 @@ const PartnerSignUpFlow = () => {
         return (
           // STEP 2 (FINAL): Institutional Info & Profile Picture
           <Formik
-            initialValues={{ universityName: formData.universityName, institutionId: formData.institutionId }}
+            initialValues={{
+              universityName: formData.universityName,
+              institutionId: formData.institutionId,
+            }}
             validationSchema={step2ValidationSchema}
             onSubmit={handleStep2Submit}
           >
@@ -458,50 +510,113 @@ const PartnerSignUpFlow = () => {
 
                 {/* Display Name for context */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700"> Name </label>
-                  <p className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">{formData.name}</p>
+                  <label className="block text-sm font-medium text-gray-700">
+                    {" "}
+                    Name{" "}
+                  </label>
+                  <p className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">
+                    {formData.name}
+                  </p>
                 </div>
 
                 {/* University or Company Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> University or Company name </label>
-                  <Field type="text" name="universityName" placeholder="Tesla Inc" className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200" />
-                  <ErrorMessage name="universityName" component="div" className="text-red-500 text-sm mt-1" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {" "}
+                    University or Company name{" "}
+                  </label>
+                  <Field
+                    type="text"
+                    name="universityName"
+                    placeholder="Tesla Inc"
+                    className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  />
+                  <ErrorMessage
+                    name="universityName"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
                 {/* Institutional ID */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Institutional ID </label>
-                  <Field type="text" name="institutionId" placeholder="XXXXXXXXXX" className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200" />
-                  <ErrorMessage name="institutionId" component="div" className="text-red-500 text-sm mt-1" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {" "}
+                    Institutional ID{" "}
+                  </label>
+                  <Field
+                    type="text"
+                    name="institutionId"
+                    placeholder="XXXXXXXXXX"
+                    className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  />
+                  <ErrorMessage
+                    name="institutionId"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
                 {/* Profile Picture */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Profile picture </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {" "}
+                    Profile picture{" "}
+                  </label>
                   <div className="flex justify-center items-center w-full">
-                    <label htmlFor="profile-picture" className="flex flex-col items-center justify-center w-24 h-24 bg-gray-50 rounded-full shadow-sm cursor-pointer hover:bg-gray-100 transition duration-200">
+                    <label
+                      htmlFor="profile-picture"
+                      className="flex flex-col items-center justify-center w-24 h-24 bg-gray-50 rounded-full shadow-sm cursor-pointer hover:bg-gray-100 transition duration-200"
+                    >
                       {formData.profileImageUrl ? (
-                        <img src={formData.profileImageUrl} alt="Profile Preview" className="w-full h-full object-cover rounded-full" />
+                        <img
+                          src={formData.profileImageUrl}
+                          alt="Profile Preview"
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5v14" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 12h14M12 5v14"
+                          />
                         </svg>
                       )}
-                      <input id="profile-picture" type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                      <input
+                        id="profile-picture"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
                     </label>
                   </div>
-                  {!formData.profileImageFile && <div className="text-red-500 text-sm text-center mt-2">Profile Picture is required.</div>}
+                  {!formData.profileImageFile && (
+                    <div className="text-red-500 text-sm text-center mt-2">
+                      Profile Picture is required.
+                    </div>
+                  )}
                 </div>
 
                 {/* Final Submit Button */}
                 <div>
                   <button
                     type="submit"
-                    className={`w-full py-3 rounded-md font-semibold text-center text-white transition duration-200 disabled:bg-purple-300 ${(values.universityName && values.institutionId && formData.profileImageFile)
-                      ? "bg-purple-400 hover:bg-purple-700"
-                      : "bg-purple-100 cursor-not-allowed"
-                      }`}
+                    className={`w-full py-3 rounded-md font-semibold text-center text-white transition duration-200 disabled:bg-purple-300 ${
+                      values.universityName &&
+                      values.institutionId &&
+                      formData.profileImageFile
+                        ? "bg-purple-400 hover:bg-purple-700"
+                        : "bg-purple-100 cursor-not-allowed"
+                    }`}
                     disabled={isSubmitting || !formData.profileImageFile}
                   >
                     Complete Registration
@@ -517,7 +632,6 @@ const PartnerSignUpFlow = () => {
     }
   };
 
-
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
       {showSuccessModal && (
@@ -531,11 +645,15 @@ const PartnerSignUpFlow = () => {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">
               ✓
             </div>
-            <h2 id="registration-success-title" className="mt-4 text-xl font-semibold text-gray-900">
+            <h2
+              id="registration-success-title"
+              className="mt-4 text-xl font-semibold text-gray-900"
+            >
               Registration successful!
             </h2>
             <p className="mt-2 text-gray-600">
-              Your account has been created. You will now be redirected to login.
+              Your account has been created. You will now be redirected to
+              login.
             </p>
             <button
               type="button"
@@ -549,14 +667,22 @@ const PartnerSignUpFlow = () => {
       )}
       {/* Image Side */}
       <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
-        <img src={partner2Image} alt="Create Account" className="w-full h-full object-contain max-w-[830px] max-h-[900px] p-6 ml-6 shadow-lg" />
+        <img
+          src={partner2Image}
+          alt="Create Account"
+          className="w-full h-full object-contain max-w-[830px] max-h-[900px] p-6 ml-6 shadow-lg"
+        />
       </div>
 
       {/* Form Side */}
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-2xl font-semibold mb-6 text-center">
-            {step === 1 ? "Create an Account" : step === 1.5 ? "Verify OTP" : "Finalize Profile"}
+            {step === 1
+              ? "Create an Account"
+              : step === 1.5
+                ? "Verify OTP"
+                : "Finalize Profile"}
           </h1>
 
           {/* Error Message Display */}
@@ -568,8 +694,16 @@ const PartnerSignUpFlow = () => {
 
           {/* Step Progress Indicator */}
           <div className="flex justify-between mb-6 w-1/2 mx-auto">
-            <div className={`p-2 rounded-full ${step >= 1 ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-500'}`}>1</div>
-            <div className={`p-2 rounded-full ${step >= 2 ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-500'}`}>2</div>
+            <div
+              className={`p-2 rounded-full ${step >= 1 ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-500"}`}
+            >
+              1
+            </div>
+            <div
+              className={`p-2 rounded-full ${step >= 2 ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-500"}`}
+            >
+              2
+            </div>
           </div>
 
           {/* Render Current Step Content */}

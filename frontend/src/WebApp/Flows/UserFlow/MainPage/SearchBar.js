@@ -3,7 +3,13 @@ import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import axios from "../../../../api/axiosInstance";
-import { FaMapMarkerAlt, FaClock, FaDollarSign, FaHeart } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaClock,
+  FaDollarSign,
+  FaHeart,
+  FaRupeeSign,
+} from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { format } from "date-fns";
 import ApplyCards from "./ApplyCards";
@@ -466,7 +472,8 @@ const SearchBar = () => {
                             : "—"}
                         </p>
                         <div className="flex items-center gap-2 text-gray-600 text-sm md:text-base leading-none mt-2">
-                          <FaDollarSign className="text-gray-600 w-4 h-4 flex-shrink-0" />
+                          {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
+                          <FaRupeeSign className="text-gray-600 w-4 h-4 flex-shrink-0" />
                           <span className="leading-none">
                             {job.internshipType === "STIPEND"
                               ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`

@@ -10,6 +10,7 @@ import {
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
+  FaRupeeSign,
 } from "react-icons/fa";
 import { AiOutlineStar, AiOutlineLike, AiOutlineDislike } from "react-icons/ai";
 
@@ -225,7 +226,8 @@ const InternshipDetailsModal = ({ internship, onClose }) => {
             {/* Pay / Stipend */}
             <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-orange-50 to-yellow-50/50 rounded-xl border border-orange-100/50 hover:shadow-sm transition-shadow">
               <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                <FaDollarSign className="text-orange-600 text-lg" />
+                {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
+                <FaRupeeSign className="text-orange-600 text-lg" />
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-orange-600/70 uppercase tracking-wider mb-0.5">
@@ -965,7 +967,8 @@ const Internships = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <FaDollarSign className="text-gray-400 shrink-0" />
+                    {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
+                    <FaRupeeSign className="text-gray-400 shrink-0" />
                     <span>{item.pay || "Unpaid / Free"}</span>
                   </div>
                   <div className="flex items-center gap-2">

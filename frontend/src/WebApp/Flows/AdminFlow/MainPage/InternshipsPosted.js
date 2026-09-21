@@ -9,6 +9,7 @@ import {
   FaDollarSign,
   FaCommentDots,
   FaSpinner,
+  FaRupeeSign,
 } from "react-icons/fa";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { format } from "date-fns";
@@ -113,7 +114,8 @@ const InternshipDetails = ({ internship, onClose }) => (
             <div className="p-5 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <FaDollarSign className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-xl p-2" />
+                  {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
+                  <FaRupeeSign className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-xl p-2" />
                   <div>
                     <p className="text-sm font-medium text-gray-600">
                       Compensation
@@ -695,7 +697,8 @@ const PartnerManagement = () => {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-xl border border-yellow-200/50">
-                  <FaDollarSign className="w-4 h-4 text-yellow-600 shrink-0" />
+                  {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
+                  <FaRupeeSign className="w-4 h-4 text-yellow-600 shrink-0" />
                   <span className="truncate flex-1">
                     {internship.internshipType === "STIPEND"
                       ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}/mo`

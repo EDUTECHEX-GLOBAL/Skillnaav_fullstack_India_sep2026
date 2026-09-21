@@ -8,6 +8,7 @@ import {
   faDollarSign,
   faBookmark,
   faBriefcase,
+  faIndianRupee,
 } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 
@@ -15,10 +16,13 @@ const SavedJobs = () => {
   const { savedJobs, removeJob, getSavedJobs } = useTabContext();
   const [selectedJob, setSelectedJob] = useState(null);
   const [removingId, setRemovingId] = useState(null);
-  const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo"))) || {};
+  const userInfo =
+    JSON.parse(localStorage.getItem("studentInfo")) ||
+    JSON.parse(localStorage.getItem("userInfo")) ||
+    {};
   const userId = userInfo?._id;
 
-  const validSavedJobs = savedJobs?.filter(job => job?.jobId?._id) || [];
+  const validSavedJobs = savedJobs?.filter((job) => job?.jobId?._id) || [];
 
   useEffect(() => {
     if (userId) {
@@ -33,12 +37,13 @@ const SavedJobs = () => {
   };
 
   const getCompensationText = (job) => {
+    // change $ to ₹ - 15-09-2026
     if (job?.internshipType === "STIPEND") {
-      return `$${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase()}`;
+      return `₹${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase()}`;
     } else if (job?.internshipType === "FREE") {
       return "Unpaid";
     } else if (job?.internshipType === "PAID") {
-      return `Student Pays: $${job?.compensationDetails?.amount}`;
+      return `Student Pays: ₹${job?.compensationDetails?.amount}`;
     }
     return "N/A";
   };
@@ -358,7 +363,9 @@ const SavedJobs = () => {
                         src={job.jobId.imgUrl}
                         alt="Company Logo"
                         className="sj-logo"
-                        onError={(e) => { e.target.style.display = "none"; }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
                       />
                     ) : (
                       <div className="sj-logo-fallback">
@@ -372,7 +379,14 @@ const SavedJobs = () => {
                       <p className="sj-company" title={job.jobId?.companyName}>
                         {job.jobId?.companyName || "Unknown Company"}
                       </p>
-                      <p className="sj-company" style={{ fontSize: '11px', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                      <p
+                        className="sj-company"
+                        style={{
+                          fontSize: "11px",
+                          marginTop: "4px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         ID: {job.jobId?._id}
                       </p>
                     </div>
@@ -386,7 +400,8 @@ const SavedJobs = () => {
                         className="sj-info-text"
                         title={`${job.jobId?.location} • ${job.jobId?.type}`}
                       >
-                        {job.jobId?.location || "Unknown Location"} • {job.jobId?.type || "N/A"}
+                        {job.jobId?.location || "Unknown Location"} •{" "}
+                        {job.jobId?.type || "N/A"}
                       </span>
                     </div>
                     <div className="sj-info-row">
@@ -399,8 +414,12 @@ const SavedJobs = () => {
                       </span>
                     </div>
                     <div className="sj-info-row">
-                      <FontAwesomeIcon icon={faDollarSign} />
-                      <span className="sj-info-text" title={getCompensationText(job.jobId)}>
+                      {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
+                      <FontAwesomeIcon icon={faIndianRupee} />
+                      <span
+                        className="sj-info-text"
+                        title={getCompensationText(job.jobId)}
+                      >
                         {getCompensationText(job.jobId)}
                       </span>
                     </div>
@@ -438,7 +457,7 @@ const SavedJobs = () => {
                     </button>
                   </div>
                 </div>
-              ) : null
+              ) : null,
             )}
           </div>
         ) : (

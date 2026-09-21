@@ -5,6 +5,7 @@ import {
   FaDollarSign,
   FaHeadset,
   FaMapMarkerAlt,
+  FaRupeeSign,
   FaTrash,
 } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -509,6 +510,7 @@ const ApplyCards = ({ job, onBack }) => {
       }
 
       if (planType !== "Premium Plus" && planType !== "Premium Basic") {
+        console.log("check toast"); //18-09-2026
         toast.error(
           "You must generate and complete the assessment before applying.",
         );
@@ -734,7 +736,8 @@ const ApplyCards = ({ job, onBack }) => {
             </div>
 
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
-              <FaDollarSign className="mr-2" />
+              {/* <FaDollarSign className="mr-2" /> change from dollar to rupee 15-09-2026*/}
+              <FaRupeeSign className="mr-2" />
               <p>
                 {job.compensationDetails?.pdfExtractedCompensation
                   ? job.compensationDetails.pdfExtractedCompensation
@@ -1224,7 +1227,8 @@ const ApplyCards = ({ job, onBack }) => {
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
           About the job
         </h3>
-        <p className="text-gray-600 leading-relaxed">
+        {/* Add this "whitespace-pre-wrap break-words" for good alignment of description - 15-09-2026 */}
+        <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">
           {job.jobDescription || "No description available"}
         </p>
       </div>

@@ -6,6 +6,7 @@ import {
   faDollarSign,
   faHeart,
   faGlobe,
+  faIndianRupee,
 } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
@@ -37,7 +38,7 @@ const getSavedLimitByPlan = (planType) => {
 
 const Home = () => {
   const [assistantPreviewVisible, setAssistantPreviewVisible] = useState(
-    () => window.__skillnaavAssistantPreviewVisible ?? true
+    () => window.__skillnaavAssistantPreviewVisible ?? true,
   );
   const [assistantExpanded, setAssistantExpanded] = useState(false);
   useEffect(() => {
@@ -45,8 +46,15 @@ const Home = () => {
       setAssistantPreviewVisible(event.detail.visible);
       setAssistantExpanded(!!event.detail.expanded);
     };
-    window.addEventListener("skillnaav-assistant-preview", updateAssistantPreview);
-    return () => window.removeEventListener("skillnaav-assistant-preview", updateAssistantPreview);
+    window.addEventListener(
+      "skillnaav-assistant-preview",
+      updateAssistantPreview,
+    );
+    return () =>
+      window.removeEventListener(
+        "skillnaav-assistant-preview",
+        updateAssistantPreview,
+      );
   }, []);
   const { savedJobs, saveJob, removeJob, handleSelectTab } = useTabContext();
 
@@ -400,8 +408,9 @@ const Home = () => {
                           : "—"}
                       </p>
                       <div className="flex items-center gap-2 text-sm md:text-base leading-none">
+                        {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
                         <FontAwesomeIcon
-                          icon={faDollarSign}
+                          icon={faIndianRupee}
                           className="text-gray-600 w-4 h-4 flex-shrink-0"
                         />
                         <span className="leading-none">
@@ -477,7 +486,9 @@ const Home = () => {
       )}
 
       {/* Skillnaav analysis FAB */}
-      <div className={`fixed right-6 z-50 transition-all duration-300 ${!assistantPreviewVisible ? "bottom-28" : assistantExpanded ? "bottom-[390px]" : "bottom-[300px]"}`}>
+      <div
+        className={`fixed right-6 z-50 transition-all duration-300 ${!assistantPreviewVisible ? "bottom-28" : assistantExpanded ? "bottom-[390px]" : "bottom-[300px]"}`}
+      >
         <button
           onClick={() => navigate("/skillnaav-analysis")}
           className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
