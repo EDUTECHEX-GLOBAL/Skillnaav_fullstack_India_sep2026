@@ -62,7 +62,7 @@ const VerifyCertificate = () => {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-1">Valid Certificate</h2>
-              <p className="text-green-600 font-medium mb-8">This certificate is officially verified by Skillnaav.</p>
+              <p className="text-green-600 font-medium mb-8">This certificate is officially verified by Edutechex.</p>
               
               <div className="bg-gray-50 rounded-xl p-6 text-left space-y-4">
                 <div>

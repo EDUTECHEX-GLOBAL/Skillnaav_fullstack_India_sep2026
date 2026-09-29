@@ -33,7 +33,7 @@ const handleGenerate = async () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Skillnaav_CV.pdf`;
+    link.download = `Edutechex_CV.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -60,7 +60,7 @@ const handleGenerate = async () => {
               </div>
               <div>
                 <h2 className="text-white font-bold text-lg leading-tight">Generate Your CV</h2>
-                <p className="text-indigo-200 text-xs">Skillnaav-branded PDF resume</p>
+                <p className="text-indigo-200 text-xs">Edutechex-branded PDF resume</p>
               </div>
             </div>
             <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
@@ -76,13 +76,13 @@ const handleGenerate = async () => {
           {/* Preview card */}
           <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 flex gap-4 items-start">
             <div className="w-12 h-16 bg-indigo-700 rounded-lg flex-shrink-0 flex items-end justify-center pb-1.5 shadow-sm">
-              <span className="text-white text-[8px] font-bold">skillnaav</span>
+              <span className="text-white text-[8px] font-bold">edutechex</span>
             </div>
             <div>
               <p className="font-semibold text-slate-800 text-sm">What you'll get</p>
               <ul className="text-slate-500 text-xs mt-1.5 space-y-1">
                 {[
-                  "Clean A4 PDF with Skillnaav branding",
+                  "Clean A4 PDF with Edutechex branding",
                   "All your profile sections included",
                   "Professional layout, ready to share",
                   "Skill badges, project links, contact info",

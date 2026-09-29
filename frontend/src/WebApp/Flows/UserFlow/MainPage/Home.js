@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMapMarkerAlt,
   faClock,
-  faDollarSign,
+  faIndianRupeeSign,
   faHeart,
   faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
@@ -11,10 +11,10 @@ import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "../../../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
+import Edutechexlogo from "../../../../assets/edutechex_logo_white (1).png";
 import { format } from "date-fns";
 
-const Homeimage = "/Home-Image.png";
+const Homeimage = "/Home-Image-Edutechex.png";
 
 const MAX_LIMITS = {
   Free: 5,
@@ -97,7 +97,7 @@ const Home = () => {
     const link = document.createElement("link");
     link.rel = "preload";
     link.as = "image";
-    link.href = "/Home-Image.png";
+    link.href = "/Home-Image-Edutechex.png";
     link.setAttribute("fetchpriority", "high");
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
@@ -389,7 +389,7 @@ const Home = () => {
                       </p>
                       <div className="flex items-center gap-2 text-sm md:text-base leading-none">
                         <FontAwesomeIcon
-                          icon={faDollarSign}
+                          icon={faIndianRupeeSign}
                           className="text-gray-600 w-4 h-4 flex-shrink-0"
                         />
                         <span className="leading-none">
@@ -398,7 +398,7 @@ const Home = () => {
                             : job.internshipType === "FREE"
                               ? "Unpaid / Free"
                               : job.internshipType === "PAID"
-                                ? `Student Pays: ${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
+                                ? `Student Pays: ₹{job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
                                 : "N/A"}
                         </span>
                       </div>
@@ -464,15 +464,15 @@ const Home = () => {
         </>
       )}
 
-      {/* Skillnaav analysis FAB */}
+      {/* Edutechex analysis FAB */}
       <div className="fixed bottom-28 right-6 z-50">
         <button
-          onClick={() => navigate("/skillnaav-analysis")}
+          onClick={() => navigate("/edutechex-analysis")}
           className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
         >
           <img
-            src={Skillnaavlogo}
-            alt="Skillnaav Analysis"
+            src={Edutechexlogo}
+            alt="Edutechex Analysis"
             className="w-12 h-12"
           />
         </button>

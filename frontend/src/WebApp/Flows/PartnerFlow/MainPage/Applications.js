@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMapMarkerAlt,
   faClock,
-  faDollarSign,
+  faIndianRupeeSign,
   faEye,
   faStar,
   faDownload,
@@ -1283,7 +1283,7 @@ const InternshipList = () => {
                 : internship.internshipType === "FREE"
                   ? "Unpaid / Free"
                   : internship.internshipType === "PAID"
-                    ? `Student Pays: ${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
+                    ? `Student Pays: ₹{internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
                     : "N/A";
 
             const isPaidInternship =
@@ -1427,7 +1427,7 @@ const InternshipList = () => {
                     </span>
                     <span className="flex items-center gap-1.5">
                       <FontAwesomeIcon
-                        icon={faDollarSign}
+                        icon={faIndianRupeeSign}
                         className="text-gray-400"
                       />
                       {compensationText}

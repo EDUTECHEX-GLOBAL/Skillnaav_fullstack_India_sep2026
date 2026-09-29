@@ -5,7 +5,7 @@ import axios from "../../../../api/axiosInstance";
 import defaultCompanyLogo from "../../../../assets/default-company-logo.png";
 
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
-
+import { IN_STATES } from "../../../../constants/locations";
 const SuccessModal = ({ onOk }) => (
   <div
     className="fixed inset-0 z-[9999] flex items-center justify-center"
@@ -62,7 +62,7 @@ const SuccessModal = ({ onOk }) => (
         className="w-full py-3 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700 active:scale-95 transition-all"
         style={{ fontFamily: "'Poppins', sans-serif" }}
       >
-        OK — View My Posts
+        OK - View My Posts
       </button>
     </div>
     <style>{`
@@ -81,76 +81,6 @@ const SuccessModal = ({ onOk }) => (
     `}</style>
   </div>
 );
-
-const US_STATES = [
-  "Alabama",
-  "Alaska",
-  "Arizona",
-  "Arkansas",
-  "California",
-  "Colorado",
-  "Connecticut",
-  "Delaware",
-  "District of Columbia",
-  "Florida",
-  "Georgia",
-  "Hawaii",
-  "Idaho",
-  "Illinois",
-  "Indiana",
-  "Iowa",
-  "Kansas",
-  "Kentucky",
-  "Louisiana",
-  "Maine",
-  "Maryland",
-  "Massachusetts",
-  "Michigan",
-  "Minnesota",
-  "Mississippi",
-  "Missouri",
-  "Montana",
-  "Nebraska",
-  "Nevada",
-  "New Hampshire",
-  "New Jersey",
-  "New Mexico",
-  "New York",
-  "North Carolina",
-  "North Dakota",
-  "Ohio",
-  "Oklahoma",
-  "Oregon",
-  "Pennsylvania",
-  "Rhode Island",
-  "South Carolina",
-  "South Dakota",
-  "Tennessee",
-  "Texas",
-  "Utah",
-  "Vermont",
-  "Virginia",
-  "Washington",
-  "West Virginia",
-  "Wisconsin",
-  "Wyoming",
-];
-
-const CA_PROVINCES = [
-  "Alberta",
-  "British Columbia",
-  "Manitoba",
-  "New Brunswick",
-  "Newfoundland and Labrador",
-  "Northwest Territories",
-  "Nova Scotia",
-  "Nunavut",
-  "Ontario",
-  "Prince Edward Island",
-  "Quebec",
-  "Saskatchewan",
-  "Yukon",
-];
 
 const PostAJob = () => {
   const { saveJob, handleSelectTab } = useTabContext();
@@ -172,7 +102,10 @@ const PostAJob = () => {
       name: "Advanced Robotics & Human-Machine Collaboration",
     },
     { id: "renewable-energy", name: "Renewable Energy & Grid Innovation" },
-    { id: "architecture-built-environment", name: "Architecture & Built Environment" },
+    {
+      id: "architecture-built-environment",
+      name: "Architecture & Built Environment",
+    },
   ];
 
   const [formData, setFormData] = useState({
@@ -180,7 +113,7 @@ const PostAJob = () => {
     companyName: "",
     sector: "",
     city: "",
-    country: "",
+    country: "India",
     state: "",
     jobType: "Internship",
     jobDescription: "",
@@ -213,9 +146,9 @@ const PostAJob = () => {
   const [freemiumAlert, setFreemiumAlert] = useState("");
   const cityDebounceRef = useRef(null);
 
-  const stateList = formData.country === "Canada" ? CA_PROVINCES : US_STATES;
+  const stateList = formData.country === "India" ? IN_STATES : [];
   const stateLabel =
-    formData.country === "Canada" ? "Province / Territory" : "State";
+    formData.country === "India" ? "State / Union Territory" : "State";
   const [qualInput, setQualInput] = useState("");
 
   useEffect(() => {
@@ -236,12 +169,7 @@ const PostAJob = () => {
         return;
       }
       try {
-        const countryIds =
-          formData.country === "Canada"
-            ? "CA"
-            : formData.country === "United States"
-              ? "US"
-              : "US,CA";
+        const countryIds = formData.country === "India" ? "IN" : "IN";
 
         const resp = await axios.get("/api/cities", {
           params: {
@@ -382,7 +310,7 @@ const PostAJob = () => {
       companyName: "",
       sector: "",
       city: "",
-      country: "",
+      country: "India",
       state: "",
       jobType: "Internship",
       jobDescription: "",
@@ -496,7 +424,7 @@ const PostAJob = () => {
     "!mt-0 w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-white";
 
   return (
-    <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8 mb-40">
+    <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">
         Post an Internship
       </h2>
@@ -548,7 +476,7 @@ const PostAJob = () => {
             required
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select a Sector
             </option>
             {topSectors.map((s) => (
@@ -571,7 +499,7 @@ const PostAJob = () => {
             required
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select Classification
             </option>
             <option value="Basic">Basic</option>
@@ -585,7 +513,7 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Location
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div className="flex flex-col gap-1">
               <label htmlFor="country" className="block text-gray-700 text-sm">
                 Country *
@@ -605,15 +533,15 @@ const PostAJob = () => {
                 required
                 className={locationInputCls}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select Country
                 </option>
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
+                <option value="India">India</option>
               </select>
             </div>
 
             <div className="flex flex-col gap-1">
+              {/* add custom style modal for select tag for states - 07-09-2026 */}
               <label htmlFor="state" className="block text-gray-700 text-sm">
                 {stateLabel} *
               </label>
@@ -625,7 +553,7 @@ const PostAJob = () => {
                 required
                 className={locationInputCls}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select {stateLabel}
                 </option>
                 {stateList.map((s) => (
@@ -698,7 +626,11 @@ const PostAJob = () => {
             value={formData.startDate}
             onChange={handleChange}
             required
-            min={new Date().toISOString().split("T")[0]}
+            min={(() => {
+              const d = new Date();
+              d.setMonth(d.getMonth() + 1);
+              return d.toISOString().split("T")[0];
+            })()}
             className={inputCls}
             style={{ marginTop: "0px" }}
           />
@@ -716,7 +648,11 @@ const PostAJob = () => {
             value={formData.endDateOrDuration}
             onChange={handleChange}
             required
-            min={formData.startDate || new Date().toISOString().split("T")[0]}
+            min={(() => {
+              const base = formData.startDate ? new Date(formData.startDate) : new Date();
+              base.setMonth(base.getMonth() + 1);
+              return base.toISOString().split("T")[0];
+            })()}
             className={inputCls}
             style={{ marginTop: "0px" }}
           />
@@ -751,7 +687,7 @@ const PostAJob = () => {
             required
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select Mode
             </option>
             <option value="Online">Online</option>
@@ -781,10 +717,11 @@ const PostAJob = () => {
                   className="ml-1 text-teal-500 hover:text-red-500 leading-none"
                   aria-label={`Remove ${q}`}
                 >
-                  ×
+                  &times;
                 </button>
               </span>
             ))}
+            {/*Add "!mt-0" for alignment - 15-09-2026 */}
             <input
               id="qualInput"
               type="text"
@@ -801,7 +738,7 @@ const PostAJob = () => {
                   ? "Type a skill and press Enter or Add..."
                   : "Add another..."
               }
-              className="flex-1 min-w-[160px] outline-none bg-transparent text-sm py-1 px-1"
+              className="!mt-0 flex-1 min-w-[160px] outline-none bg-transparent text-sm py-1 px-1"
             />
             <button
               type="button"
@@ -812,7 +749,7 @@ const PostAJob = () => {
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            Press Enter or click Add. Click × to remove a skill.
+            Press Enter or click Add. Click &times; to remove a skill.
           </p>
         </div>
 
@@ -875,13 +812,13 @@ const PostAJob = () => {
           />
         </div>
 
-        {/* Internship Type — select (Free/Stipend) + Paid radio */}
+        {/* Internship Type - select (Free/Stipend) + Paid radio */}
         <div>
           <label className="block text-gray-700 font-medium mb-3">
             Internship Type
           </label>
 
-          {/* Hidden input for form validation — fires if no type is selected */}
+          {/* Hidden input for form validation - fires if no type is selected */}
           <input
             type="text"
             value={formData.internshipType}
@@ -907,7 +844,7 @@ const PostAJob = () => {
             name="internshipType"
             className={inputCls}
           >
-            <option value="" disabled>
+            <option value="" disabled hidden>
               Select Internship Type
             </option>
             <option value="FREE">Free</option>
@@ -992,7 +929,7 @@ const PostAJob = () => {
           )}
         </div>
 
-        {/* Compensation Details — shown only for STIPEND or PAID */}
+        {/* Compensation Details - shown only for STIPEND or PAID */}
         {(formData.internshipType === "STIPEND" ||
           formData.internshipType === "PAID") && (
           <div className="space-y-4">
@@ -1025,18 +962,14 @@ const PostAJob = () => {
                 required
                 className={inputCls}
               >
-                <option value="" disabled>
+                <option value="" disabled hidden>
                   Select Currency
                 </option>
-                <option value="USD">USD</option>
-                <option value="CAD">CAD</option>
-                <option value="EUR">EUR</option>
                 <option value="INR">INR</option>
-                <option value="GBP">GBP</option>
               </select>
             </div>
 
-            {/* Frequency is always One Time — hidden */}
+            {/* Frequency is always One Time - hidden */}
             <input
               type="hidden"
               name="compensationDetails.frequency"

@@ -59,10 +59,10 @@ export default function Contact() {
           </h1>
           <p className="text-white text-lg mb-6 text-center">
             <a
-              href="mailto:info@skillnaav.com"
+              href="mailto:info@edutechex.com"
               className="text-white font-medium"
             >
-              Email to: info@skillnaav.com
+              Email to: info@edutechex.com
             </a>
           </p>
         </div>

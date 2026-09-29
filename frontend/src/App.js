@@ -6,8 +6,8 @@ import "@fontsource/inter/700.css";
 import PageLoader from "./components/PageLoader";
 import FeedbackModal from "./components/FeedbackModal/FeedbackModal";
 import FeedbackProvider from "./context/FeedbackContext";
-import GlobalSkillnaavFavicon from "./components/GlobalSkillnaavFavicon";
-import SkillnaavTabBrandingLayout from "./components/SkillnaavTabBrandingLayout";
+import GlobalEdutechexFavicon from "./components/GlobalEdutechexFavicon";
+import EdutechexTabBrandingLayout from "./components/EdutechexTabBrandingLayout";
 
 // ---------- LAZY IMPORTS ----------
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -29,7 +29,7 @@ const UserMainPage = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/UserMai
 const UserSupportPage = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/support/UserSupportPage"));
 const UserforgotPassword = lazy(() => import("./WebApp/Flows/UserFlow/SignUpLogin/UserforgotPassword"));
 
-const SkillnaavAnalysis = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/SkillnaavAnalysis"));
+const EdutechexAnalysis = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/EdutechexAnalysis"));
 
 const PartnerFlow = lazy(() => import("./WebApp/Flows/PartnerFlow/PartnerFlow"));
 const PartnerCreateAccount = lazy(() => import("./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerCreateAccount"));
@@ -59,7 +59,7 @@ function App() {
   return (
     <FeedbackProvider>
      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <GlobalSkillnaavFavicon />
+        <GlobalEdutechexFavicon />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Website */}
@@ -82,7 +82,7 @@ function App() {
             <Route path="/user-forgot-password" element={<UserforgotPassword />} />
            
 
-            <Route path="/skillnaav-analysis" element={<SkillnaavAnalysis />} />
+            <Route path="/edutechex-analysis" element={<EdutechexAnalysis />} />
 
             {/* Partner */}
             <Route path="/partner" element={<PartnerFlow />} />
@@ -93,7 +93,7 @@ function App() {
             <Route path="/partner-support" element={<PartnerSupportPage />} />
             <Route path="/partner-forgot-password" element={<PartnerforgotPassword />} />
 
-            <Route element={<SkillnaavTabBrandingLayout />}>
+            <Route element={<EdutechexTabBrandingLayout />}>
               {/* Admin */}
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin-login" element={<Login />} />

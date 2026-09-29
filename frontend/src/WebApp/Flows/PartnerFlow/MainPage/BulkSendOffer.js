@@ -114,7 +114,7 @@ const BulkSendOffer = ({ selectedStudents: rawStudents, internshipId, onCancel, 
           {selectedStudents.length !== 1 ? "s" : ""}
         </p>
         <p className="text-xs text-blue-500 mt-0.5">
-          Offer PDF will include SkillNaav + your company logo automatically.
+          Offer PDF will include Edutechex + your company logo automatically.
         </p>
       </div>
 

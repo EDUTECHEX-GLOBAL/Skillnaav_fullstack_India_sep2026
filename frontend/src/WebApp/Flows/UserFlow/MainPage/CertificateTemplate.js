@@ -192,7 +192,7 @@ const CertificateTemplate = ({
             }}
           >
             Certificate ID: 0d443aeb-10dc-4891-a98c-9bf28ddb31f1<br />
-            Verify at: https://www.skillnaav.com/verify/0d443aeb-10dc-4891...<br />
+            Verify at: https://www.edutechex.com/verify/0d443aeb-10dc-4891...<br />
             Issued: May 28, 2026
           </div>
         </div>

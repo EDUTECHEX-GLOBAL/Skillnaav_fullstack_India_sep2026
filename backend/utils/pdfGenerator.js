@@ -27,7 +27,7 @@ const axios       = require("axios");
 // Logo removed
 
 const fs2 = require('fs');
-const Edutechex_LOGO_BUF = fs2.readFileSync('C:\\Users\\dell\\Desktop\\skillnaav-fullstack\\frontend\\src\\assets\\Edutech-logo.png');
+const Edutechex_LOGO_BUF = fs2.readFileSync('C:\\Users\\dell\\Desktop\\skillnaav-fullstack\\frontend\\src\\assets\\edutechex_logo_white (1).png');
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {

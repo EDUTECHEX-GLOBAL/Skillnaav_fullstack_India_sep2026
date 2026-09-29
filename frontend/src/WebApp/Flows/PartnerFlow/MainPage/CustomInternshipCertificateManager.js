@@ -26,7 +26,7 @@ import {
   Download,
 } from "lucide-react";
 import CertificateTemplate from "../../UserFlow/MainPage/CertificateTemplate";
-import skillnaavLogo from "../../../../assets/skillnav_logo_white.png";
+import edutechexLogo from "../../../../assets/Edutech-logo.png";
 
 /* ─── animation helpers ─── */
 const fadeUp = {
@@ -829,15 +829,15 @@ const CustomInternshipCertificateManager = () => {
                   <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-1">
-                        Skillnaav Official Logo
+                        Edutechex Official Logo
                       </h3>
                       <p className="text-xs text-slate-500">
-                        Download the Skillnaav logo to add to your custom certificates.
+                        Download the Edutechex logo to add to your custom certificates.
                       </p>
                     </div>
                     <a
-                      href={skillnaavLogo}
-                      download="skillnav_logo_white.png"
+                      href={edutechexLogo}
+                      download="Edutech-logo.png"
                       className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors text-sm font-bold shadow-sm"
                     >
                       <Download size={16} />

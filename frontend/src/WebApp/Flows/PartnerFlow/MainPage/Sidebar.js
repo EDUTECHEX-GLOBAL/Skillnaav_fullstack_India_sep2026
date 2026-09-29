@@ -12,7 +12,7 @@ import {
   faMoneyBillWave,
   faUsers,
   faCertificate,
-  faFileInvoiceDollar,
+  faFileInvoice,
   faTrash,
   faHeadset,
   faFileContract,
@@ -159,7 +159,7 @@ const Sidebar = ({ isOpen, onClose, isDesktopOpen = true }) => {
     {
       id: "internship-payments",
       label: "Internship Payments",
-      icon: faFileInvoiceDollar,
+      icon: faFileInvoice,
     },
     { id: "mock-interviews", label: "Mock Interviews", icon: faComments },
     { id: "bin", label: "Bin", icon: faTrash },

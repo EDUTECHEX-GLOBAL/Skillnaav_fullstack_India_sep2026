@@ -5,7 +5,7 @@ import {
   FaUsers,
   FaUserFriends,
   FaBriefcase,
-  FaDollarSign,
+  FaRupeeSign,
   FaCalendarAlt,
   FaChevronDown,
 } from "react-icons/fa";
@@ -437,7 +437,7 @@ const Dashboard = () => {
           color="bg-yellow-100"
         />
         <Card
-          icon={<FaDollarSign className="h-8 w-8 text-red-600" />}
+          icon={<FaRupeeSign className="h-8 w-8 text-red-600" />}
           title="Total Payments"
           count={data.paymentsCount}
           color="bg-red-100"

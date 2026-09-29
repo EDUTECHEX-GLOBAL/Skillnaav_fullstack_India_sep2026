@@ -2,19 +2,19 @@ import React from "react";
 import { useSelector } from "react-redux";
 
 const Vision = () => {
-  const { skillnaavData } = useSelector((state) => state.root);
+  const { edutechexData } = useSelector((state) => state.root);
 
   // ✅ Also check that visionhead has at least one element
   if (
-    !skillnaavData ||
-    !skillnaavData.visionhead ||
-    !skillnaavData.visionpoint ||
-    skillnaavData.visionhead.length === 0  // <-- ADD THIS CHECK
+    !edutechexData ||
+    !edutechexData.visionhead ||
+    !edutechexData.visionpoint ||
+    edutechexData.visionhead.length === 0  // <-- ADD THIS CHECK
   ) {
     return null;
   }
 
-  const { visionhead, visionpoint } = skillnaavData;
+  const { visionhead, visionpoint } = edutechexData;
 
   return (
     <section

@@ -4,7 +4,7 @@ import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import createAccountImage from "../../../assets-webapp/login-image.png";
+import createAccountImage from "../../../assets-webapp/login-image-edutechex.png";
 import axios from "../../../api/axiosInstance";
 import { Link } from "react-router-dom";
 

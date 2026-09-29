@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SkillNaavLogo from "../assets/skillnaav_logo-250w.png";
+import EdutechexLogo from "../assets/Edutech-logo.png";
 import FacebookIcon from "../assets/facebook-custom.png";
 import TwitterIcon from "../assets/X_custom.png";
 import FeedIcon from "../assets/youtube.png";
@@ -20,10 +20,10 @@ export default function Footer() {
           {/* Footer Logo */}
           <div className="flex items-start justify-center md:justify-start md:col-span-1">
             {/* link to home (valid href) */}
-            <a href="/" aria-label="SkillNaav home">
+            <a href="/" aria-label="Edutechex home">
               <img
-                src={SkillNaavLogo}
-                alt="SkillNaav logo"
+                src={EdutechexLogo}
+                alt="Edutechex logo"
                 width={150}
                 height={50}
               />
@@ -36,10 +36,10 @@ export default function Footer() {
             <p className="mt-2">
               Email:{" "}
               <a
-                href="mailto:info@skillnaav.com"
+                href="mailto:info@edutechex.com"
                 className="text-blue-500 hover:underline"
               >
-                info@skillnaav.com
+                info@edutechex.com
               </a>
             </p>
           </div>
@@ -50,7 +50,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a href="/about" className="hover:text-gray-600">
-                  About SkillNaav
+                  About Edutechex
                 </a>
               </li>
               <li>
@@ -98,46 +98,46 @@ export default function Footer() {
         {/* Social Media Links */}
         <div className="flex justify-center mt-8 space-x-4">
           <a
-            href="https://www.facebook.com/skillnaav"
+            href="https://www.facebook.com/edutechex"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-600 hover:text-gray-800 transition duration-300"
-            aria-label="SkillNaav on Facebook (opens in a new tab)"
+            aria-label="Edutechex on Facebook (opens in a new tab)"
           >
-            <img src={FacebookIcon} alt="Facebook — SkillNaav" width={24} height={24} />
+            <img src={FacebookIcon} alt="Facebook — Edutechex" width={24} height={24} />
           </a>
           <a
-            href="https://twitter.com/skillnaav"
+            href="https://twitter.com/edutechex"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-600 hover:text-gray-800 transition duration-300"
-            aria-label="SkillNaav on X (Twitter) (opens in a new tab)"
+            aria-label="Edutechex on X (Twitter) (opens in a new tab)"
           >
-            <img src={TwitterIcon} alt="X (Twitter) — SkillNaav" width={24} height={24} />
+            <img src={TwitterIcon} alt="X (Twitter) — Edutechex" width={24} height={24} />
           </a>
           <a
-            href="https://www.youtube.com/skillnaav"
+            href="https://www.youtube.com/edutechex"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-600 hover:text-gray-800 transition duration-300"
-            aria-label="SkillNaav on YouTube (opens in a new tab)"
+            aria-label="Edutechex on YouTube (opens in a new tab)"
           >
-            <img src={FeedIcon} alt="YouTube — SkillNaav" width={24} height={24} />
+            <img src={FeedIcon} alt="YouTube — Edutechex" width={24} height={24} />
           </a>
           <a
-            href="https://www.linkedin.com/company/skillnaav"
+            href="https://www.linkedin.com/company/edutechex"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-600 hover:text-gray-800 transition duration-300"
-            aria-label="SkillNaav on LinkedIn (opens in a new tab)"
+            aria-label="Edutechex on LinkedIn (opens in a new tab)"
           >
-            <img src={LinkedinIcon} alt="LinkedIn — SkillNaav" width={24} height={24} />
+            <img src={LinkedinIcon} alt="LinkedIn — Edutechex" width={24} height={24} />
           </a>
         </div>
 
         {/* Copyright Text */}
         <div className="mt-8 text-center text-sm text-gray-800">
-          <p>&copy; 2024 SkillNaav. All Rights Reserved</p>
+          <p>&copy; 2026 Edutechex. All Rights Reserved</p>
           <p>
             <a href="/privacy" className="hover:text-gray-600">
               Privacy Policy

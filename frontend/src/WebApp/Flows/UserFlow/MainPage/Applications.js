@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMapMarkerAlt,
   faClock,
-  faDollarSign,
+  faIndianRupeeSign,
   faBriefcase,
   faFileAlt,
 } from "@fortawesome/free-solid-svg-icons";
@@ -209,7 +209,7 @@ const Applications = () => {
       return `$${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase() || "mo"}`;
     if (job?.internshipType === "FREE") return "Unpaid / Free";
     if (job?.internshipType === "PAID")
-      return `Student Pays: $${job?.compensationDetails?.amount}`;
+      return `Student Pays: ₹${job?.compensationDetails?.amount}`;
     return "N/A";
   };
 
@@ -337,7 +337,7 @@ const Applications = () => {
                       </span>
                     </div>
                     <div className="app-info-row">
-                      <FontAwesomeIcon icon={faDollarSign} />
+                      <FontAwesomeIcon icon={faIndianRupeeSign} />
                       <span className="app-info-text" title={getCompensationText(job)}>
                         {getCompensationText(job)}
                       </span>

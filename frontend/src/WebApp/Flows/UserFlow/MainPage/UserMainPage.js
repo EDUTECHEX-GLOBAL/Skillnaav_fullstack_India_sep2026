@@ -8,6 +8,7 @@ import { TabProvider, useTabContext } from "./UserHomePageContext/HomePageContex
 import axios from "../../../../api/axiosInstance";
 
 import Chatbot from "../../../../components/Chatbot";
+import UserTextChatbot from "../../../../components/UserTextChatbot";
 import UserAgeGateConsent from "../SignUpLogin/UserProfileBuilding/UserAgeGateConsent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
@@ -25,8 +26,7 @@ const UserMainPageContent = () => {
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); // desktop
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
-  // Chatbot widget state (open/closed)
-  const [chatOpen, setChatOpen] = useState(false);
+  const [showTextChat, setShowTextChat] = useState(false);
   const [showReverifyModal, setShowReverifyModal] = useState(false);
   const [reverifySaving, setReverifySaving] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
@@ -41,8 +41,14 @@ const UserMainPageContent = () => {
       setIsMobile(mobile);
       if (mobile) setIsSidebarOpen(false);
     };
+    const openTextChat = () => setShowTextChat(true);
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("open-text-chat", openTextChat);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("open-text-chat", openTextChat);
+    };
   }, []);
 
   useEffect(() => {
@@ -232,41 +238,12 @@ const UserMainPageContent = () => {
         <UserAgeGateConsent onComplete={handleReverifyComplete} saving={reverifySaving} />
       </Modal>
 
-      {/* Chatbot widget (fixed floating toggle + panel) */}
+      {/* Chatbot widget */}
       {selectedTab !== "assessment" && (
-      <div className="fixed bottom-6 right-6 z-50">
-        {!chatOpen && (
-          <button
-            onClick={() => setChatOpen(true)}
-            className="rounded-full shadow-lg transition-transform duration-200 hover:scale-105"
-            aria-label="Open chat"
-          >
-            <img
-              src={chatbotIcon}
-              alt="Chatbot"
-              className="h-16 w-16 rounded-full"
-            />
-          </button>
-        )}
-
-        {chatOpen && (
-          <div className="w-80 h-[450px] bg-white shadow-xl rounded-lg flex flex-col border overflow-hidden">
-            <div className="flex justify-between items-center p-3 bg-blue-600 text-white">
-              <span className="font-semibold">Chat Assistant</span>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="text-white text-xl font-bold leading-none"
-                aria-label="Close chat"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-3 flex-1 overflow-y-auto">
-              <Chatbot />
-            </div>
-          </div>
-        )}
-      </div>
+        <>
+          <Chatbot />
+          {showTextChat && <UserTextChatbot onClose={() => setShowTextChat(false)} />}
+        </>
       )}
     </>
   );

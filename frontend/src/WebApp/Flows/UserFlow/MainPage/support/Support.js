@@ -33,7 +33,7 @@ import {
   FaBookOpen,
   FaInfoCircle,
   FaMapMarkerAlt,
-  FaDollarSign,
+  FaRupeeSign,
   FaGraduationCap,
   FaFile,
   FaFilePdf,
@@ -58,7 +58,7 @@ import {
 } from "react-icons/fa";
 import axios from "../../../../../api/axiosInstance";
 import { useLocation } from "react-router-dom";
-import logo from "../../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../../assets/Edutech-logo.png";
 
 // ── Socket lazy loader ─────────────────────────────────────────────
 let _ioPromise = null;
@@ -299,7 +299,7 @@ const formatCompensation = (internship) => {
     return `${compensation?.amount} ${compensation?.currency} / ${compensation?.frequency?.toLowerCase()}`;
   if (internshipType === "FREE") return "Unpaid / Free";
   if (internshipType === "PAID")
-    return `Student Pays: ${compensation?.amount} ${compensation?.currency}`;
+    return `Student Pays: ₹{compensation?.amount} ${compensation?.currency}`;
   return "N/A";
 };
 
@@ -485,7 +485,7 @@ const InternshipBanner = memo(({ internship }) => {
               </span>
             )}
             <span className="flex items-center gap-1">
-              <FaDollarSign className="w-2.5 h-2.5" />
+              <FaRupeeSign className="w-2.5 h-2.5" />
               {compensation}
             </span>
           </div>
@@ -3494,7 +3494,7 @@ const StudentSupport = ({
         <div className="flex-1 flex justify-center">
           <img
             src={logo}
-            alt="Skillnaav"
+            alt="Edutechex"
             className="h-8 w-auto object-contain"
           />
         </div>

@@ -12,7 +12,7 @@ import {
   faCircleXmark,
   faCircle,
   faMoneyBillWave,
-  faHandHoldingDollar,
+  faHandHoldingHand,
   faGraduationCap,
   faBullseye,
   faGlobe,
@@ -172,7 +172,7 @@ const TypePill = ({ type }) => {
       : type === "STIPEND"
         ? {
             cls: "bg-blue-50 text-blue-700 border-blue-200",
-            icon: faHandHoldingDollar,
+            icon: faHandHoldingHand,
             label: "Stipend",
           }
         : {
@@ -255,7 +255,7 @@ const FormSectionLabel = ({ icon, children }) => (
 );
 
 // ─── DateInput ────────────────────────────────────────────────────────────────
-const DateInput = ({ label, value, onChange }) => {
+const DateInput = ({ label, value, onChange, min }) => {
   const displayVal = value ? String(value).slice(0, 10) : "";
   return (
     <div>
@@ -273,6 +273,7 @@ const DateInput = ({ label, value, onChange }) => {
           type="date"
           value={displayVal}
           onChange={(e) => onChange(e.target.value)}
+          min={min}
           className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm
                      focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent
                      bg-white text-gray-700 cursor-pointer"
@@ -871,6 +872,11 @@ const EditModalBody = ({
             label="Start Date"
             value={si.startDate ? String(si.startDate).slice(0, 10) : ""}
             onChange={(val) => handleDateChange("startDate", val)}
+            min={(() => {
+              const d = new Date();
+              d.setMonth(d.getMonth() + 1);
+              return d.toISOString().split("T")[0];
+            })()}
           />
           <DateInput
             label="End Date"
@@ -881,6 +887,11 @@ const EditModalBody = ({
                 : ""
             }
             onChange={(val) => handleDateChange("endDateOrDuration", val)}
+            min={(() => {
+              const base = si.startDate ? new Date(si.startDate) : new Date();
+              base.setMonth(base.getMonth() + 1);
+              return base.toISOString().split("T")[0];
+            })()}
           />
           <div>
             <label

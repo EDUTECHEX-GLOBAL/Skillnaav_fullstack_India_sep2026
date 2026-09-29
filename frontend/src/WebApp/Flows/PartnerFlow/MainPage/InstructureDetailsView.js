@@ -10,7 +10,7 @@ import {
   faStar,
   faShieldAlt,
   faClock,
-  faDollarSign,
+  faIndianRupeeSign,
   faExclamationTriangle,
   faTrash,
   faExternalLinkAlt,
@@ -422,7 +422,7 @@ export default function InstructureDetailsView({
               </FormSection>
 
               {/* ── Compensation / Payout ── */}
-              <FormSection title="Compensation / Payout" icon={faDollarSign}>
+              <FormSection title="Compensation / Payout" icon={faIndianRupeeSign}>
                 <DetailField label="Rate Type" value={item.rateType} />
                 <DetailField
                   label="Expected Rate"

@@ -16,7 +16,7 @@ function AdminFaqs() {
 
   const fetchFaqData = useCallback(async () => {
     try {
-      const response = await axios.get("/api/skillnaav/get-skillnaav-data");
+      const response = await axios.get("/api/edutechex/get-edutechex-data");
       setFaqData(response.data);
     } catch (error) {
       console.error("Error fetching FAQ data:", error);
@@ -44,7 +44,7 @@ function AdminFaqs() {
     async (faqCardId) => {
       try {
         const response = await axios.delete(
-          `/api/skillnaav/delete-faqcard/${faqCardId}`
+          `/api/edutechex/delete-faqcard/${faqCardId}`
         );
         if (response.data.success) {
           message.success(response.data.message);
@@ -63,7 +63,7 @@ function AdminFaqs() {
     async (values) => {
       try {
         const response = await axios.put(
-          `/api/skillnaav/update-faqcard/${values._id}`,
+          `/api/edutechex/update-faqcard/${values._id}`,
           values
         );
         if (response.data.success) {
@@ -86,7 +86,7 @@ function AdminFaqs() {
   const onFinishAdd = useCallback(
     async (values) => {
       try {
-        const response = await axios.post("/api/skillnaav/add-faqcard", values);
+        const response = await axios.post("/api/edutechex/add-faqcard", values);
         if (response.data.success) {
           message.success(response.data.message);
           setModalVisible((prevState) => ({
@@ -109,7 +109,7 @@ function AdminFaqs() {
     async (values) => {
       try {
         const { _id } = faqData.faq[0];
-        const response = await axios.post("/api/skillnaav/update-faqheading", {
+        const response = await axios.post("/api/edutechex/update-faqheading", {
           _id,
           faqheading: values.faqheading,
           faqsubheading: values.faqsubheading,

@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { FaMapMarkerAlt } from "react-icons/fa";
-import { HiOutlineCurrencyDollar, HiOutlineUsers, HiArrowRight } from "react-icons/hi";
+import { HiOutlineCash, HiOutlineUsers, HiArrowRight } from "react-icons/hi";
 
 const calculatePostedTime = (date) => {
   const diff = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
@@ -72,7 +72,7 @@ const InternshipPaymentCard = ({ internship, onViewPayments }) => {
           <div>
             <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">Total paid</p>
             <div className="flex items-center gap-0.5">
-              <HiOutlineCurrencyDollar className="text-emerald-600 text-sm flex-shrink-0" />
+              <HiOutlineCash className="text-emerald-600 text-sm flex-shrink-0" />
               <span className="text-sm font-medium text-emerald-700">{totalAmount.toLocaleString()}</span>
             </div>
           </div>

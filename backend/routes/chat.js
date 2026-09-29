@@ -13,7 +13,7 @@ const Userwebapp = require("../models/webapp-models/userModel");
 
 // Regex patterns
 const GREET_RX = /^(hi|hello|hey|howdy|good\s*(morning|afternoon|evening)|how\s*are\s*you)\b/i;
-const ALLOWED_RX = /(skill\s*naav|internship|career|resume|cv|job|schedule|partner)/i;
+const ALLOWED_RX = /(edutechex|internship|career|resume|cv|job|schedule|partner)/i;
 
 // POST /api/career-chat
 router.post("/career-chat", async (req, res) => {

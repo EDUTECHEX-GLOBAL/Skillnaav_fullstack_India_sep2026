@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
-const EDUTECHEX_LOGO_PATH = path.resolve(__dirname, "../../frontend/src/assets/Edutech-logo.png");
+const EDUTECHEX_LOGO_PATH = path.resolve(__dirname, "../../frontend/src/assets/edutechex_logo_white (1).png");
 const EDUTECHEX_LOGO_BASE64 = fs.readFileSync(EDUTECHEX_LOGO_PATH).toString("base64");
 
 const AWS_REGION = process.env.AWS_REGION;
@@ -65,8 +65,10 @@ async function generateAndUploadInvoice({
                 justify-content: space-between;
                 align-items: flex-start;
                 margin-bottom: 40px;
-                border-bottom: 2px solid #f3f4f6;
-                padding-bottom: 20px;
+                padding: 20px;
+                background: #1a1a2e;
+                color: #ffffff;
+                border-radius: 8px;
             }
             .logo-placeholder {
                 font-size: 24px;
@@ -77,12 +79,12 @@ async function generateAndUploadInvoice({
             .invoice-title {
                 font-size: 32px;
                 font-weight: 700;
-                color: #111827;
+                color: #ffffff;
                 margin: 0;
             }
             .invoice-meta {
                 text-align: right;
-                color: #6b7280;
+                color: #d1d5db;
                 font-size: 14px;
                 margin-top: 5px;
             }
@@ -165,7 +167,7 @@ async function generateAndUploadInvoice({
         <div class="header">
             <div>
                 <img src="data:image/png;base64,${EDUTECHEX_LOGO_BASE64}" alt="Edutechex Logo" style="height: 40px; margin-bottom: 5px;" />
-                <div style="color: #6b7280; font-size: 12px; margin-top: 6px; line-height: 1.7;">
+                <div style="color: #d1d5db; font-size: 12px; margin-top: 6px; line-height: 1.7;">
                     edutechex.com<br/>
                     edutechex@gmail.com
                 </div>
@@ -203,7 +205,7 @@ async function generateAndUploadInvoice({
                         <strong>${description || (planType + ' — Edutechex Premium Subscription')}</strong><br/>
                     <span style="color: #6b7280; font-size: 13px;">${descriptionDetail || 'Internship platform premium access: unlimited applications, AI career tools, resume builder, mock interviews &amp; mentorship'}</span>
                     </td>
-                    <td class="amount-col">$${amount.toFixed(2)}</td>
+                    <td class="amount-col">₹${amount.toFixed(2)}</td>
                 </tr>
             </tbody>
         </table>
@@ -212,11 +214,11 @@ async function generateAndUploadInvoice({
             <div class="total-box">
                 <div class="total-line">
                     <span>Subtotal</span>
-                    <span>$${amount.toFixed(2)}</span>
+                    <span>₹${amount.toFixed(2)}</span>
                 </div>
                 <div class="total-line total-final">
                     <span>Total Paid</span>
-                    <span>$${amount.toFixed(2)}</span>
+                    <span>₹${amount.toFixed(2)}</span>
                 </div>
             </div>
         </div>

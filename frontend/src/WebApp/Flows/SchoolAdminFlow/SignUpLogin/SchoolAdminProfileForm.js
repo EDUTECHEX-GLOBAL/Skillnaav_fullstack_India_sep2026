@@ -93,7 +93,7 @@ const SchoolAdminProfileForm = () => {
         className="bg-white shadow-xl rounded-xl w-full max-w-4xl p-8"
       >
         <h2 className="text-3xl font-bold text-blue-700 mb-8 text-center">
-          School Profile Details (Canada)
+          School Profile Details (India)
         </h2>
 
         {/* Institution Details */}
@@ -205,8 +205,8 @@ const SchoolAdminProfileForm = () => {
                 required
               >
                 <option value="">Select Country</option>
-                <option value="Canada">Canada</option>
-                <option value="USA">USA</option>
+                <option value="India">India</option>
+                
               </select>
             </div>
 

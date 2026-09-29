@@ -38,7 +38,7 @@ export default function AdminFeedbackList({ flow: initialFlowProp } = {}) {
   function humanizeKey(key) {
     if (!key) return "";
     return key
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/([a-z])([A-Z])/g, "₹1 ₹2")
       .replace(/[_-]+/g, " ")
       .toLowerCase()
       .trim()

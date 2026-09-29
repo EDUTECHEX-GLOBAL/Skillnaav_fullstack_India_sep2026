@@ -6,9 +6,9 @@ import axios from "../../../../api/axiosInstance";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import loginImage from "../../../../assets-webapp/login-image.png";
+import loginImage from "../../../../assets-webapp/login-image-edutechex.png";
 import { GoogleLogin } from "@react-oauth/google";
-import { US_STATES, CA_PROVINCES } from "../../../../constants/locations";
+import { IN_STATES } from "../../../../constants/locations";
 import UserAgeGateConsent from "./UserProfileBuilding/UserAgeGateConsent";
 
 
@@ -577,23 +577,23 @@ const UnifiedUserRegistration = () => {
 
   // --- Location/City Logic (from UserProfileForm.js) ---
   const stateList =
-    formData.country === "Canada"
-      ? CA_PROVINCES
-      : formData.country === "United States"
-        ? US_STATES
+    formData.country === "India"
+      ? IN_STATES
+      : formData.country === "India"
+        ? IN_STATES
         : [];
 
   const stateLabel =
-    formData.country === "Canada"
+    formData.country === "India"
       ? "Province / Territory"
-      : formData.country === "United States"
+      : formData.country === "India"
         ? "State"
         : "State / Province";
 
   const zipLabel =
-    formData.country === "Canada"
+    formData.country === "India"
       ? "Postal Code"
-      : formData.country === "United States"
+      : formData.country === "India"
         ? "ZIP Code"
         : "ZIP / Postal Code";
 
@@ -866,8 +866,7 @@ const UnifiedUserRegistration = () => {
                   <label className="block text-sm font-medium text-gray-700">Country *</label>
                   <select name="country" value={formData.country} onChange={(e) => handleCountryChange(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
                     <option value="">Select</option>
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
+                    <option value="India">India</option>
                   </select>
                 </div>
                 {/* State / Province */}
@@ -899,7 +898,7 @@ const UnifiedUserRegistration = () => {
                 {/* ZIP / Postal Code */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">{zipLabel} *</label>
-                  <input type="text" name="zip" value={formData.zip} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder={formData.country === "Canada" ? "e.g., K1A 0B1" : "e.g., 94105"} autoComplete="postal-code" required />
+                  <input type="text" name="zip" value={formData.zip} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder={formData.country === "India" ? "e.g., K1A 0B1" : "e.g., 94105"} autoComplete="postal-code" required />
                 </div>
                 {/* Full Address */}
                 <div className="md:col-span-2 md:col-start-1">
@@ -1031,7 +1030,7 @@ const UnifiedUserRegistration = () => {
         <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-purple-50">
           <img
             src={loginImage}
-            alt="Skillnaav Login Illustration"
+            alt="Edutechex Login Illustration"
             className="w-full h-full object-cover rounded-lg"
           />
         </div>

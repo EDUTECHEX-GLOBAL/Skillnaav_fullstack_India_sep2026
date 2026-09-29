@@ -5,7 +5,7 @@ import {
   faHeart,
   faMapMarkerAlt,
   faClock,
-  faDollarSign,
+  faIndianRupeeSign,
   faBookmark,
   faBriefcase,
 } from "@fortawesome/free-solid-svg-icons";
@@ -38,7 +38,7 @@ const SavedJobs = () => {
     } else if (job?.internshipType === "FREE") {
       return "Unpaid";
     } else if (job?.internshipType === "PAID") {
-      return `Student Pays: $${job?.compensationDetails?.amount}`;
+      return `Student Pays: ₹${job?.compensationDetails?.amount}`;
     }
     return "N/A";
   };
@@ -399,7 +399,7 @@ const SavedJobs = () => {
                       </span>
                     </div>
                     <div className="sj-info-row">
-                      <FontAwesomeIcon icon={faDollarSign} />
+                      <FontAwesomeIcon icon={faIndianRupeeSign} />
                       <span className="sj-info-text" title={getCompensationText(job.jobId)}>
                         {getCompensationText(job.jobId)}
                       </span>

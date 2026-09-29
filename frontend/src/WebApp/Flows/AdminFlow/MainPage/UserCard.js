@@ -234,7 +234,7 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
     // Generated date
     const today = new Date().toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" });
     doc.setFont("helvetica", "bold"); doc.setFontSize(7); setTxt(C.accent);
-    doc.text("SKILLNAAV ADMIN PORTAL", PW - MX, 18, { align: "right" });
+    doc.text("EDUTECHEX ADMIN PORTAL", PW - MX, 18, { align: "right" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setTxt(C.lightGrey);
     doc.text(`Generated: ${today}`, PW - MX, 10, { align: "right" });
 
@@ -372,7 +372,7 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
     doc.text("This document is confidential and intended for administrative use only.",
       PW / 2, footerY, { align: "center" });
     doc.setFont("helvetica", "bold"); setTxt(C.navy);
-    doc.text(`Skillnaav · Student Application Profile · ${today}`,
+    doc.text(`Edutechex · Student Application Profile · ${today}`,
       PW / 2, footerY + 4, { align: "center" });
     doc.setFont("helvetica", "normal"); doc.setFontSize(7); setTxt(C.midGrey);
     doc.text("Page 1", PW - MX, footerY + 4, { align: "right" });

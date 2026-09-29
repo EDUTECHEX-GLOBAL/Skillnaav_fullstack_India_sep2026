@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "../../../../api/axiosInstance";
 import {
   FaChevronDown,
-  FaDollarSign,
+  FaRupeeSign,
   FaHeadset,
   FaMapMarkerAlt,
   FaTrash,
@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import SkillAnalysis from "./SkillnaavAnalysis";
+import SkillAnalysis from "./EdutechexAnalysis";
 import ProctoredAssessment from "./AssessmentModal";
 
 const MAX_LIMITS = {
@@ -597,7 +597,7 @@ const ApplyCards = ({ job, onBack }) => {
             </div>
 
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
-              <FaDollarSign className="mr-2" />
+              <FaRupeeSign className="mr-2" />
               <p>
                 {job.compensationDetails?.pdfExtractedCompensation
                   ? job.compensationDetails.pdfExtractedCompensation
@@ -608,7 +608,7 @@ const ApplyCards = ({ job, onBack }) => {
                   : job.internshipType === "FREE"
                   ? "Unpaid / Free"
                   : job.internshipType === "PAID"
-                  ? `Student Pays: ${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}`.trim()
+                  ? `Student Pays: ₹{job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}`.trim()
                   : "N/A"}
               </p>
             </div>

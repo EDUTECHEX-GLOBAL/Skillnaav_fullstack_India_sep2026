@@ -621,7 +621,7 @@ const EditModal = ({ modal, onSave, onClose, saving }) => {
                   </button>
                   {(fieldDefs[modal.type] || []).map(key => (
                     <div key={key}>
-                      <label className={lc}>{key.replace(/([A-Z])/g," $1").replace(/^./,s=>s.toUpperCase())}</label>
+                      <label className={lc}>{key.replace(/([A-Z])/g," ₹1").replace(/^./,s=>s.toUpperCase())}</label>
                       {key === "description" ? (
                         <textarea className={`${ic} min-h-[60px] resize-none`}
                           value={item[key]||""} onChange={e => updateItem(i,key,e.target.value)} />

@@ -4,13 +4,13 @@ import {
   FaEye,
   FaCog,
   FaUsers,
-  FaDollarSign,
+  FaRupeeSign,
   FaQuestionCircle,
   FaEnvelope,
   FaSpinner,
   FaBars,
 } from "react-icons/fa";
-import SkillnaavLogo from "../../assets/skillnaav_logo-250w.png";
+import EdutechexLogo from "../../assets/Edutech-logo.png";
 
 // Lazy-loaded components
 const AdminDiscover = lazy(() => import("./AdminDiscover"));
@@ -39,7 +39,7 @@ const Admin = () => {
       { label: "Vision", component: <AdminVision />, icon: <FaEye /> },
       { label: "Features", component: <AdminFeatures />, icon: <FaCog /> },
       { label: "Team", component: <AdminTeam />, icon: <FaUsers /> },
-      { label: "Pricing", component: <AdminPricing />, icon: <FaDollarSign /> },
+      { label: "Pricing", component: <AdminPricing />, icon: <FaRupeeSign /> },
       { label: "FAQs", component: <AdminFaqs />, icon: <FaQuestionCircle /> },
       { label: "Contact", component: <AdminContact />, icon: <FaEnvelope /> },
     ],
@@ -51,7 +51,7 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    const session = localStorage.getItem("skillnaavAdminSession");
+    const session = localStorage.getItem("edutechexAdminSession");
 
     if (!session) {
       window.location.href = "/admin-login";
@@ -68,7 +68,7 @@ const Admin = () => {
       // Invalid session shape; clear it below.
     }
 
-    localStorage.removeItem("skillnaavAdminSession");
+    localStorage.removeItem("edutechexAdminSession");
     window.location.href = "/admin-login";
   }, []);
 
@@ -83,8 +83,8 @@ const Admin = () => {
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           <div className="flex items-center">
             <img
-              src={SkillnaavLogo}
-              alt="Skillnaav Logo"
+              src={EdutechexLogo}
+              alt="Edutechex Logo"
               className="w-32 h-auto md:w-40 md:h-auto mr-3"
             />
             <span className="text-gray-800 text-lg md:text-xl font-semibold">
@@ -93,7 +93,7 @@ const Admin = () => {
           </div>
           <span
             onClick={() => {
-              localStorage.removeItem("skillnaavAdminSession");
+              localStorage.removeItem("edutechexAdminSession");
               window.location.href = "/admin-login";
             }}
             className="text-gray-800 text-lg md:text-xl font-semibold cursor-pointer hover:underline"

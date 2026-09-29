@@ -6,10 +6,12 @@ const path = require("path");
 
 const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
   try {
-    let logoBuffer = null;
+    let logoPath = null;
     const logoFileName = 'Edutech-logo.png'; 
+    const resolvedLogoPath = path.resolve(__dirname, `../../frontend/src/assets/${logoFileName}`);
     try {
-      logoBuffer = fs.readFileSync(path.resolve(__dirname, `../../frontend/src/assets/${logoFileName}`));
+      fs.accessSync(resolvedLogoPath, fs.constants.R_OK);
+      logoPath = resolvedLogoPath;
     } catch (e) {
       console.error("Could not load logo for email:", e);
     }
@@ -19,9 +21,8 @@ const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
       <div style="background-color: #f3f4f6; padding: 20px 10px;">
         <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
           
-          <!-- Header -->
           <header style="text-align: center; padding: 25px 20px 15px; background-color: #ffffff;">
-            ${logoBuffer ? `<img src="data:image/png;base64,${logoBuffer.toString('base64')}" alt="Edutechex Logo" style="width: 120px; max-width: 100%; height: auto;" />` : '<h1 style="color: #1a202c; margin: 0;">Edutechex</h1>'}
+            ${logoPath ? `<img src="cid:edutechex_logo" alt="Edutechex Logo" style="width: 120px; max-width: 100%; height: auto;" />` : '<h1 style="color: #1a1a2e; margin: 0;">Edutechex</h1>'}
           </header>
 
           <!-- Gradient Line -->
@@ -43,6 +44,15 @@ const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
     `;
 
     const finalAttachments = [...attachments];
+
+    // Add logo as inline CID attachment so Gmail and other clients render it
+    if (logoPath) {
+      finalAttachments.push({
+        filename: logoFileName,
+        path: logoPath,
+        cid: 'edutechex_logo',
+      });
+    }
 
     const mailOptions = {
       from: `"Edutechex Support" <${process.env.EMAIL_FROM}>`,

@@ -1,19 +1,19 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-export const SKILLNAAV_TAB_TITLE = "Skill Naav - Navigate Your Skills";
-const FAVICON_VERSION = "20260401";
+export const EDUTECHEX_TAB_TITLE = "Edutechex - Navigate Your Skills";
+const FAVICON_VERSION = "20260929";
 const buildAssetPath = (fileName) =>
   `${process.env.PUBLIC_URL}/${fileName}?v=${FAVICON_VERSION}`;
 
-export const SKILLNAAV_FAVICON_PATH = buildAssetPath("favicon-32x32.png");
-export const SKILLNAAV_FAVICON_16_PATH = buildAssetPath("favicon-16x16.png");
-export const SKILLNAAV_FAVICON_32_PATH = buildAssetPath("favicon-32x32.png");
-export const SKILLNAAV_FAVICON_192_PATH = buildAssetPath("favicon-192x192.png");
-export const SKILLNAAV_FAVICON_512_PATH = buildAssetPath("favicon-512x512.png");
-export const SKILLNAAV_APPLE_TOUCH_ICON_PATH = buildAssetPath("apple-touch-icon.png");
-export const SKILLNAAV_SHORTCUT_ICON_PATH = buildAssetPath("favicon.ico");
-const MANAGED_FAVICON_ATTR = "data-skillnaav-favicon";
+export const EDUTECHEX_FAVICON_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_FAVICON_16_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_FAVICON_32_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_FAVICON_192_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_FAVICON_512_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_APPLE_TOUCH_ICON_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_SHORTCUT_ICON_PATH = buildAssetPath("edutechex-favicon.png");
+const MANAGED_FAVICON_ATTR = "data-edutechex-favicon";
 
 const FAVICON_LINKS = [
   {
@@ -21,41 +21,41 @@ const FAVICON_LINKS = [
     rel: "icon",
     type: "image/png",
     sizes: "16x16",
-    href: SKILLNAAV_FAVICON_16_PATH,
+    href: EDUTECHEX_FAVICON_16_PATH,
   },
   {
     key: "icon-32",
     rel: "icon",
     type: "image/png",
     sizes: "32x32",
-    href: SKILLNAAV_FAVICON_32_PATH,
+    href: EDUTECHEX_FAVICON_32_PATH,
   },
   {
     key: "icon-192",
     rel: "icon",
     type: "image/png",
     sizes: "192x192",
-    href: SKILLNAAV_FAVICON_192_PATH,
+    href: EDUTECHEX_FAVICON_192_PATH,
   },
   {
     key: "icon-512",
     rel: "icon",
     type: "image/png",
     sizes: "512x512",
-    href: SKILLNAAV_FAVICON_512_PATH,
+    href: EDUTECHEX_FAVICON_512_PATH,
   },
   {
     key: "shortcut-icon",
     rel: "shortcut icon",
     type: "image/x-icon",
-    href: SKILLNAAV_SHORTCUT_ICON_PATH,
+    href: EDUTECHEX_SHORTCUT_ICON_PATH,
   },
   {
     key: "apple-touch-icon",
     rel: "apple-touch-icon",
     type: "image/png",
     sizes: "180x180",
-    href: SKILLNAAV_APPLE_TOUCH_ICON_PATH,
+    href: EDUTECHEX_APPLE_TOUCH_ICON_PATH,
   },
 ];
 
@@ -114,7 +114,7 @@ const linkMatchesExpectedConfig = (link) => {
   });
 };
 
-export const applySkillnaavFavicon = () => {
+export const applyEdutechexFavicon = () => {
   document.head
     .querySelectorAll("link[rel]")
     .forEach((link) => {
@@ -128,19 +128,19 @@ export const applySkillnaavFavicon = () => {
   });
 };
 
-export const getSkillnaavPageTitle = (pageTitle) =>
-  pageTitle ? `${pageTitle} | Skill Naav` : SKILLNAAV_TAB_TITLE;
+export const getEdutechexPageTitle = (pageTitle) =>
+  pageTitle ? `${pageTitle} | Edutechex` : EDUTECHEX_TAB_TITLE;
 
-export const useSkillnaavFavicon = () => {
+export const useEdutechexFavicon = () => {
   const location = useLocation();
 
   useEffect(() => {
-    applySkillnaavFavicon();
+    applyEdutechexFavicon();
   }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
     const restoreFavicon = () => {
-      applySkillnaavFavicon();
+      applyEdutechexFavicon();
     };
 
     const handleVisibilityChange = () => {
@@ -208,13 +208,13 @@ export const useSkillnaavFavicon = () => {
   }, []);
 };
 
-const useSkillnaavTabBranding = (pageTitle) => {
+const useEdutechexTabBranding = (pageTitle) => {
   const location = useLocation();
 
   useEffect(() => {
-    document.title = getSkillnaavPageTitle(pageTitle);
-    applySkillnaavFavicon();
+    document.title = getEdutechexPageTitle(pageTitle);
+    applyEdutechexFavicon();
   }, [location.pathname, location.search, location.hash, pageTitle]);
 };
 
-export default useSkillnaavTabBranding;
+export default useEdutechexTabBranding;

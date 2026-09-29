@@ -8,7 +8,7 @@ import {
   AiOutlineLeft,
   AiOutlineRight,
 } from "react-icons/ai";
-import { HiOutlineCurrencyDollar } from "react-icons/hi";
+import { HiOutlineCash } from "react-icons/hi";
 import UserCard from "./UserCard";
 import InternshipPaymentCard from "./InternshipPaymentCard";
 
@@ -180,7 +180,7 @@ const InternshipPayments = () => {
         {/* Page header */}
         <div className="flex items-center gap-3 mb-7">
           <div className="w-9 h-9 bg-emerald-700 rounded-lg flex items-center justify-center flex-shrink-0">
-            <HiOutlineCurrencyDollar className="text-white text-lg" />
+            <HiOutlineCash className="text-white text-lg" />
           </div>
           <div>
             <h1 className="text-lg font-semibold text-gray-900 leading-tight">
@@ -335,7 +335,7 @@ const InternshipPayments = () => {
               <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <HiOutlineCurrencyDollar className="text-white text-sm" />
+                    <HiOutlineCash className="text-white text-sm" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900 leading-tight">

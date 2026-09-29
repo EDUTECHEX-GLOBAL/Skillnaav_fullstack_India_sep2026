@@ -109,7 +109,7 @@ const PendingApprovalCard = ({ userInfo }) => {
 
       <p style={{ margin: 0, fontSize: '12px', color: '#9ca3af' }}>
         Approval usually takes 1–2 business days. Questions?{' '}
-        <a href="mailto:support@skillnaav.com" style={{ color: '#7c3aed', textDecoration: 'none', fontWeight: '600' }}>
+        <a href="mailto:support@edutechex.com" style={{ color: '#7c3aed', textDecoration: 'none', fontWeight: '600' }}>
           Contact support
         </a>
       </p>

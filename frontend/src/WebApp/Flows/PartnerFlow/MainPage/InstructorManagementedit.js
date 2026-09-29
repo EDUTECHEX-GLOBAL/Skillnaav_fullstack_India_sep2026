@@ -10,7 +10,7 @@ import {
   faStar,
   faShieldAlt,
   faClock,
-  faDollarSign,
+  faIndianRupeeSign,
   faClipboardList,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
@@ -25,20 +25,13 @@ const labelCls =
 
 const dayOpts = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-  "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
-  "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
-  "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
-  "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah",
-  "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
-];
-
-const CA_PROVINCES = [
-  "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
-  "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
-  "Quebec", "Saskatchewan", "Yukon",
+const IN_STATES = [
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+  "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa",
+  "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
+  "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+  "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim",
+  "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
 const TIMEZONES_US_MX = [
@@ -149,7 +142,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
   const itemId = useMemo(() => item?._id || item?.id, [item]);
 
-  const initialCountry = item?.country === "Canada" ? "Canada" : "United States";
+  const initialCountry = item?.country === "India" ? "India" : "India";
   const [country, setCountry] = useState(initialCountry);
   const [stateProv, setStateProv] = useState(item?.state || "");
   const [city, setCity] = useState(item?.city || "");
@@ -157,24 +150,20 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const [address1, setAddress1] = useState(item?.address1 || "");
   const [address2, setAddress2] = useState(item?.address2 || "");
 
-  const [currency, setCurrency] = useState(
-    item?.currency || (initialCountry === "Canada" ? "CAD" : "USD")
-  );
+  const [currency, setCurrency] = useState(item?.currency || "INR");
 
   useEffect(() => {
     setCurrency((c) => {
-      if (country === "Canada" && c === "USD") return "CAD";
-      if (country === "United States" && c === "CAD") return "USD";
+      if (country === "India" && !c) return "INR";
       return c;
     });
   }, [country]);
 
   const [payoutMethod, setPayoutMethod] = useState(() => {
-    const us = ["ACH (US Bank)", "Zelle", "PayPal"];
-    const ca = ["EFT (CA Bank)", "Interac e-Transfer", "PayPal"];
+    const inMethods = ["Bank Transfer (NEFT/RTGS)", "UPI", "Razorpay"];
     const m = item?.payoutMethod;
-    if (initialCountry === "Canada") return ca.includes(m) ? m : "EFT (CA Bank)";
-    return us.includes(m) ? m : "ACH (US Bank)";
+    if (initialCountry === "India") return inMethods.includes(m) ? m : "Bank Transfer (NEFT/RTGS)";
+    return inMethods.includes(m) ? m : "Bank Transfer (NEFT/RTGS)";
   });
 
   useEffect(() => {
@@ -184,10 +173,10 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   }, []);
 
   useEffect(() => {
-    const us = ["ACH (US Bank)", "Zelle", "PayPal"];
-    const ca = ["EFT (CA Bank)", "Interac e-Transfer", "PayPal"];
-    if (country === "Canada" && !ca.includes(payoutMethod)) setPayoutMethod("EFT (CA Bank)");
-    else if (country === "United States" && !us.includes(payoutMethod)) setPayoutMethod("ACH (US Bank)");
+    const inMethods = ["Bank Transfer (NEFT/RTGS)", "UPI", "Razorpay"];
+    if (country === "India" && !inMethods.includes(payoutMethod)) {
+      setPayoutMethod("Bank Transfer (NEFT/RTGS)");
+    }
   }, [country, payoutMethod]);
 
   const [availStart, setAvailStart] = useState(item?.availableStart || "");
@@ -210,23 +199,19 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const prefStartRefs = useRef([]);
   const prefEndRefs = useRef([]);
 
-  const stateList = country === "Canada" ? CA_PROVINCES : US_STATES;
-  const stateLabel = country === "Canada" ? "Province / Territory" : "State";
-  const postalLabel = country === "Canada" ? "Postal Code" : "ZIP Code";
-  const phonePlaceholder = country === "Canada" ? "+1 (416) 555-1234" : "+1 (555) 555-1234";
-  const cityPlaceholder = country === "Canada" ? "e.g., Toronto" : "e.g., San Jose";
-  const address1Placeholder = "Street address, suite, unit";
+  const stateList = IN_STATES;
+  const stateLabel = "State / Union Territory";
+  const postalLabel = "PIN Code";
+  const phonePlaceholder = "+91 98765 43210";
+  const cityPlaceholder = "e.g., Mumbai";
+  const address1Placeholder = "Flat, house no., street address";
 
   const payIdPlaceholder =
-    payoutMethod === "ACH (US Bank)"
-      ? "Routing & last-4 (e.g., 111000025 | ****1234)"
-      : payoutMethod === "Zelle"
-        ? "Zelle email or phone"
-        : payoutMethod === "EFT (CA Bank)"
-          ? "Transit|Institution|Account (e.g., 12345|004|0012345)"
-          : payoutMethod === "Interac e-Transfer"
-            ? "Email or mobile number"
-            : "PayPal email";
+    payoutMethod === "Bank Transfer (NEFT/RTGS)"
+      ? "Account No. & IFSC (e.g., 123456789 | SBIN0000123)"
+      : payoutMethod === "UPI"
+        ? "UPI ID (e.g., name@okicici)"
+        : "Razorpay email / ID";
 
   const toCSV = (arr) =>
     Array.isArray(arr) ? arr.join(", ") : typeof arr === "string" ? arr : "";
@@ -552,8 +537,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                     setAddress2("");
                   }}
                 >
-                  <option>United States</option>
-                  <option>Canada</option>
+                  <option>India</option>
                 </select>
               </Field>
 
@@ -595,7 +579,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   className={inputCls}
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder={country === "Canada" ? "M5V 3L9" : "95113"}
+                  placeholder="400001"
                 />
               </Field>
 
@@ -909,7 +893,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
             {/* ── Compensation / Payout ── */}
             <div className={currentStep === 4 ? 'block animate-fade-in' : 'hidden'}>
-                      <FormSection title="Compensation / Payout" icon={faDollarSign}>
+                      <FormSection title="Compensation / Payout" icon={faIndianRupeeSign}>
               <Field label="Rate Type">
                 <select
                   name="rateType"
@@ -941,6 +925,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                 >
+                  <option>INR</option>
                   <option>USD</option>
                   <option>CAD</option>
                   <option>EUR</option>
@@ -954,17 +939,11 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   value={payoutMethod}
                   onChange={(e) => setPayoutMethod(e.target.value)}
                 >
-                  {country === "Canada" ? (
+                  {country === "India" && (
                     <>
-                      <option>EFT (CA Bank)</option>
-                      <option>Interac e-Transfer</option>
-                      <option>PayPal</option>
-                    </>
-                  ) : (
-                    <>
-                      <option>ACH (US Bank)</option>
-                      <option>Zelle</option>
-                      <option>PayPal</option>
+                      <option>Bank Transfer (NEFT/RTGS)</option>
+                      <option>UPI</option>
+                      <option>Razorpay</option>
                     </>
                   )}
                 </select>

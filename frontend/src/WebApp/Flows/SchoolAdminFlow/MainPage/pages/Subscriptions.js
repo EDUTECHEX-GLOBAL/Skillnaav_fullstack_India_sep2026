@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+// import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "../../../../../api/axiosInstance";
@@ -9,7 +9,7 @@ const PAYPAL_CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID;
 const plans = [
   {
     title: "Free Plan",
-    price: "$0",
+    price: "₹0",
     credits: "50 Student Credits",
     features: ["Basic Dashboard Access", "Limited Email Support"],
     button: "Choose Free Plan",
@@ -23,7 +23,7 @@ const plans = [
   },
   {
     title: "Standard Plan",
-    price: "$10",
+    price: "₹899",
     credits: "500 Student Credits",
     features: ["Full Dashboard Access", "Priority Email Support"],
     button: "Choose Standard Plan",
@@ -38,7 +38,7 @@ const plans = [
   },
   {
     title: "Premium Plan",
-    price: "$25",
+    price: "₹1999",
     credits: "2000 Student Credits",
     features: [
       "Full Dashboard Access",
@@ -75,8 +75,21 @@ const plans = [
 const SubscriptionPlans = () => {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState(null);
+  const [sdkReady, setSdkReady] = useState(false);
 
   useEffect(() => {
+    // Load Razorpay SDK
+    if (!window.Razorpay) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => setSdkReady(true);
+      script.onerror = () => toast.error("Failed to load Razorpay SDK.");
+      document.body.appendChild(script);
+    } else {
+      setSdkReady(true);
+    }
+
     const fetchCurrentPlan = async () => {
       try {
         const token = localStorage.getItem("schoolAdminToken");
@@ -108,41 +121,80 @@ const SubscriptionPlans = () => {
     }
   };
 
- const handlePaidPlanActivation = async (planTitle, orderId) => {
-  try {
-    const token = localStorage.getItem("schoolAdminToken");
+  const handlePaidPlanActivation = async (planTitle) => {
+    if (!sdkReady) {
+      toast.error("Razorpay is still loading. Please wait.");
+      return;
+    }
 
-    await axios.post(
-      "/api/school-admin/payments/subscribe",
-      {
-        plan: planTitle,
-        orderId,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const token = localStorage.getItem("schoolAdminToken");
+
+      // 1. Create Razorpay order
+      const { data: orderData } = await axios.post(
+        "/api/school-admin/payments/razorpay/order",
+        { plan: planTitle },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!orderData.success) {
+        throw new Error(orderData.message || "Failed to create order");
       }
-    );
 
-    toast.success(`✅ ${planTitle} activated successfully!`);
-    setCurrentPlan(planTitle);
-  } catch (err) {
-    console.error("Paid Plan activation error:", err);
-  }
-};
+      // 2. Open Razorpay Checkout
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Edutech School Admin",
+        description: `${planTitle} Subscription`,
+        order_id: orderData.id,
+        handler: async function (response) {
+          try {
+            // 3. Verify Payment
+            const { data: verifyData } = await axios.post(
+              "/api/school-admin/payments/razorpay/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan: planTitle,
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (verifyData.success) {
+              toast.success(`✅ ${planTitle} activated successfully!`);
+              setCurrentPlan(planTitle);
+              setSelectedPlanForPayment(null);
+            } else {
+              toast.error(verifyData.message || "Payment verification failed.");
+            }
+          } catch (err) {
+            console.error("Payment verification error:", err);
+            toast.error("Payment verification error. Please contact support.");
+          }
+        },
+        theme: { color: "#4f46e5" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (response) {
+        toast.error(response.error.description || "Payment failed");
+      });
+      rzp.open();
+    } catch (err) {
+      console.error("Paid Plan activation error:", err);
+      toast.error(err.message || "Unable to start payment. Please try again.");
+    }
+  };
 
   const handleContactSales = () => {
     toast.info("📞 Please contact sales at support@example.com");
   };
 
-  if (!PAYPAL_CLIENT_ID) {
-    console.error("❌ Missing PayPal Client ID. Check .env file.");
-    return <p className="text-red-600 text-center">PayPal is not configured.</p>;
-  }
-
   return (
-    <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID }}>
+    <>
       <div className="min-h-screen bg-white py-12 px-6">
         <ToastContainer position="top-center" autoClose={3000} />
 
@@ -228,32 +280,12 @@ const SubscriptionPlans = () => {
                   </button>
                 ) : plan.title === "Standard Plan" ? (
                   selectedPlanForPayment === "Standard Plan" ? (
-                    <PayPalButtons
-                      style={{
-                        layout: "vertical",
-                      }}
-                      createOrder={(data, actions) => {
-                        return actions.order.create({
-                          purchase_units: [
-                            {
-                              amount: {
-                                value: "10.00",
-                                currency_code: "USD",
-                              },
-                              description: "500 Student Credits",
-                            },
-                          ],
-                        });
-                      }}
-                      onApprove={async (data, actions) => {
-                        const order = await actions.order.capture();
-                        await handlePaidPlanActivation("Standard Plan", order.id);
-                      }}
-                      onError={(err) => {
-                        console.error("PayPal error:", err);
-                        toast.error("❌ Payment failed. Please try again.");
-                      }}
-                    />
+                    <button
+                      onClick={() => handlePaidPlanActivation("Standard Plan")}
+                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${plan.buttonColor}`}
+                    >
+                      Pay with Razorpay
+                    </button>
                   ) : (
                     <button
                       onClick={() => setSelectedPlanForPayment("Standard Plan")}
@@ -271,32 +303,12 @@ const SubscriptionPlans = () => {
                   )
                 ) : plan.title === "Premium Plan" ? (
                   selectedPlanForPayment === "Premium Plan" ? (
-                    <PayPalButtons
-                      style={{
-                        layout: "vertical",
-                      }}
-                      createOrder={(data, actions) => {
-                        return actions.order.create({
-                          purchase_units: [
-                            {
-                              amount: {
-                                value: "25.00",
-                                currency_code: "USD",
-                              },
-                              description: "2000 Student Credits",
-                            },
-                          ],
-                        });
-                      }}
-                      onApprove={async (data, actions) => {
-                        const order = await actions.order.capture();
-                        await handlePaidPlanActivation("Premium Plan", order.id);
-                      }}
-                      onError={(err) => {
-                        console.error("PayPal error:", err);
-                        toast.error("❌ Payment failed. Please try again.");
-                      }}
-                    />
+                    <button
+                      onClick={() => handlePaidPlanActivation("Premium Plan")}
+                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${plan.buttonColor}`}
+                    >
+                      Pay with Razorpay
+                    </button>
                   ) : (
                     <button
                       onClick={() => setSelectedPlanForPayment("Premium Plan")}
@@ -325,7 +337,7 @@ const SubscriptionPlans = () => {
           ))}
         </div>
       </div>
-    </PayPalScriptProvider>
+    </>
   );
 };
 

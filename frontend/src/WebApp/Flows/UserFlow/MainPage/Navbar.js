@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt, faBell, faBars, faCrown } from "@fortawesome/free-solid-svg-icons";
-import logo from "../../../../assets-webapp/skillnaav_final_logo.svg";
+import logo from "../../../../assets/Edutech-logo.png";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
@@ -166,7 +166,7 @@ const Navbar = ({ onToggleSidebar }) => {
           <button onClick={onToggleSidebar} className="text-gray-700 md:hidden">
             <FontAwesomeIcon icon={faBars} className="text-xl" />
           </button>
-          <img src={logo} alt="Skillnaav Logo" className="h-10" />
+          <img src={logo} alt="Edutechex Logo" className="h-10" />
         </div>
 
         <div className="relative flex items-center space-x-5">

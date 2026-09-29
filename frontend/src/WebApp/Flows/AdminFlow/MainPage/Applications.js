@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../../../api/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapMarkerAlt, faClock, faDollarSign, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faMapMarkerAlt, faClock, faIndianRupeeSign, faUsers } from "@fortawesome/free-solid-svg-icons";
 
 const Applications = () => {
   const [internships, setInternships] = useState([]);
@@ -106,13 +106,13 @@ const Applications = () => {
                   {internship.endDateOrDuration || "N/A"}
                 </p>
                 <p className="flex items-center">
-                  <FontAwesomeIcon icon={faDollarSign} className="mr-2 w-4" />
+                  <FontAwesomeIcon icon={faIndianRupeeSign} className="mr-2 w-4" />
                   {internship.internshipType === "STIPEND"
                     ? `${internship.compensationDetails?.amount || 'N/A'} ${internship.compensationDetails?.currency || ''} per ${internship.compensationDetails?.frequency?.toLowerCase() || 'month'}`
                     : internship.internshipType === "FREE"
                     ? "Unpaid / Free"
                     : internship.internshipType === "PAID"
-                    ? `Student Pays: ${internship.compensationDetails?.amount || 'N/A'} ${internship.compensationDetails?.currency || ''}`
+                    ? `Student Pays: ₹{internship.compensationDetails?.amount || 'N/A'} ${internship.compensationDetails?.currency || ''}`
                     : "N/A"}
                 </p>
                 <p className="flex items-center font-medium">
