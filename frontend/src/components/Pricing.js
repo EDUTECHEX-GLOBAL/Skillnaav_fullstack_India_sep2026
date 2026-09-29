@@ -5,13 +5,13 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function Pricing() {
   const navigate = useNavigate(); // Initialize navigate function
-  const { edutechexData } = useSelector((state) => state.root);
+  const { skillnaavData } = useSelector((state) => state.root);
 
-  if (!edutechexData) {
-    return <div>Loading...</div>; // Add loading state if edutechexData is null
+  if (!skillnaavData) {
+    return <div>Loading...</div>; // Add loading state if skillnaavData is null
   }
 
-  const { pricing, pricingcard } = edutechexData;
+  const { pricing, pricingcard } = skillnaavData;
 
   if (
     !pricing ||

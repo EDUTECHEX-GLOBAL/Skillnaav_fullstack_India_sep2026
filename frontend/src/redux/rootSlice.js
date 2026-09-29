@@ -4,7 +4,7 @@ const rootSlice = createSlice({
   name: "root",
   initialState: {
     loading: false,
-    edutechexData: null,
+    skillnaavData: null,
     reloadData: false,
     compImageUrls: [],
   },
@@ -15,8 +15,8 @@ const rootSlice = createSlice({
     HideLoading: (state) => {
       state.loading = false;
     },
-    SetEdutechexData: (state, action) => {
-      state.edutechexData = action.payload;
+    SetSkillNaavData: (state, action) => {
+      state.skillnaavData = action.payload;
     },
     ReloadData: (state, action) => {
       state.reloadData = action.payload;
@@ -30,7 +30,7 @@ const rootSlice = createSlice({
 export const {
   ShowLoading,
   HideLoading,
-  SetEdutechexData,
+  SetSkillNaavData,
   ReloadData,
   UpdateCompImageUrls,
 } = rootSlice.actions;

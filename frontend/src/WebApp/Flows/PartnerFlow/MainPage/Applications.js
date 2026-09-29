@@ -19,7 +19,6 @@ import {
   faChevronDown,
   faChevronUp,
   faUserCheck,
-  faIndianRupee,
 } from "@fortawesome/free-solid-svg-icons";
 import Modal from "./Modal";
 import ScheduleForm from "./ScheduleForm";
@@ -1427,9 +1426,8 @@ const InternshipList = () => {
                         : "—"}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
                       <FontAwesomeIcon
-                        icon={faIndianRupee}
+                        icon={faDollarSign}
                         className="text-gray-400"
                       />
                       {compensationText}

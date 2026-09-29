@@ -69,6 +69,6 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 =======
-# prod-edutechex
+# prod-skillnaav
 >>>>>>> ea6fe69826c521f65174ca7ea353a5471837cc66
-# edutechex-complete-frontend
+# skillnaav-complete-frontend

@@ -58,7 +58,7 @@ import {
 } from "react-icons/fa";
 import axios from "../../../../../api/axiosInstance";
 import { useLocation } from "react-router-dom";
-import logo from "../../../../../assets/Edutech-logo.png";
+import logo from "../../../../../assets-webapp/skillnaav_final_logo.svg";
 
 // ── Socket lazy loader ─────────────────────────────────────────────
 let _ioPromise = null;
@@ -3494,7 +3494,7 @@ const StudentSupport = ({
         <div className="flex-1 flex justify-center">
           <img
             src={logo}
-            alt="Edutechex"
+            alt="Skillnaav"
             className="h-8 w-auto object-contain"
           />
         </div>

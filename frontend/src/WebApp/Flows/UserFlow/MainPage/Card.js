@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  FaMapMarkerAlt,
-  FaClock,
-  FaDollarSign,
-  FaHeart,
-  FaRupeeSign,
-} from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock, FaDollarSign, FaHeart } from "react-icons/fa";
 import axios from "../../../../api/axiosInstance";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
@@ -300,8 +294,7 @@ const JobCard = ({
                       : "—"}
                   </p>
                   <p className="flex items-center text-sm text-gray-500">
-                    {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
-                    <FaRupeeSign className="mr-2 text-gray-400 flex-shrink-0" />
+                    <FaDollarSign className="mr-2 text-gray-400 flex-shrink-0" />
                     {job.internshipType === "STIPEND"
                       ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
                       : job.internshipType === "FREE"

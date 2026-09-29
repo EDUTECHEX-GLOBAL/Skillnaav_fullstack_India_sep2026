@@ -9,12 +9,11 @@ import {
   FaDollarSign,
   FaCommentDots,
   FaSpinner,
-  FaRupeeSign,
 } from "react-icons/fa";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { format } from "date-fns";
 
-import Edutechexlogo from "../../../../assets/Edutech-logo.png";
+import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
 import AdminChatModal from "./AdminChatModal";
 
 Modal.setAppElement("#root");
@@ -72,7 +71,7 @@ const InternshipDetails = ({ internship, onClose }) => (
         </div>
         <div className="mt-6 flex items-start gap-6">
           <img
-            src={internship.imgUrl || Edutechexlogo}
+            src={internship.imgUrl || Skillnaavlogo}
             alt={internship.companyName}
             className="w-20 h-20 rounded-2xl object-cover shadow-2xl ring-4 ring-white/50"
           />
@@ -114,8 +113,7 @@ const InternshipDetails = ({ internship, onClose }) => (
             <div className="p-5 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
-                  <FaRupeeSign className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-xl p-2" />
+                  <FaDollarSign className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-xl p-2" />
                   <div>
                     <p className="text-sm font-medium text-gray-600">
                       Compensation
@@ -652,7 +650,7 @@ const PartnerManagement = () => {
               <div className="p-5 pt-12 border-b border-gray-100">
                 <div className="flex items-start gap-3 mb-3">
                   <img
-                    src={internship.imgUrl || Edutechexlogo}
+                    src={internship.imgUrl || Skillnaavlogo}
                     alt={internship.companyName}
                     className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-white/50"
                   />
@@ -697,8 +695,7 @@ const PartnerManagement = () => {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-xl border border-yellow-200/50">
-                  {/*Change faDollarSign to faRupeesign - 15-09-2026 */}
-                  <FaRupeeSign className="w-4 h-4 text-yellow-600 shrink-0" />
+                  <FaDollarSign className="w-4 h-4 text-yellow-600 shrink-0" />
                   <span className="truncate flex-1">
                     {internship.internshipType === "STIPEND"
                       ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}/mo`

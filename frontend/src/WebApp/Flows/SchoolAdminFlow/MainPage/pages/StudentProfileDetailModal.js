@@ -48,7 +48,7 @@ const CATEGORIES = [
       country:            'Country',
       city:               'City',
       state:              'State',
-      postalCode:         'PIN Code',
+      postalCode:         'Postal Code',
       preferredLocations: 'Preferred Job Locations',
     },
   },

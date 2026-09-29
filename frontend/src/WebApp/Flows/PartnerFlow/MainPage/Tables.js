@@ -288,7 +288,7 @@ const downloadAssessmentResultPDF = async ({
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text("Edutechex Assessment Answer Paper", marginX, y);
+  doc.text("SkillNaav Assessment Answer Paper", marginX, y);
   y += 10;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -432,7 +432,7 @@ const downloadAssessmentResultPDF = async ({
   doc.setFontSize(9);
   for (let page = 1; page <= pageCount; page += 1) {
     doc.setPage(page);
-    doc.text("Generated from Edutechex partner dashboard.", marginX, 286);
+    doc.text("Generated from SkillNaav partner dashboard.", marginX, 286);
     doc.text(`Page ${page} of ${pageCount}`, 194, 286, { align: "right" });
   }
 
@@ -565,7 +565,7 @@ const AtsScorePill = ({ score }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const AiReasoningPanel = ({ reasoning }) => {
   const [open, setOpen] = useState(false);
-  if (!reasoning) return null;
+  if (!reasoning || reasoning.claude_evaluated === false) return null;
 
   const {
     shortlist,
@@ -926,7 +926,7 @@ export const ShortlistedTable = ({
 
   useEffect(() => {
     const handleGoogleConnected = (event) => {
-      if (event.data?.type !== "edutechex-google-calendar-connected") return;
+      if (event.data?.type !== "skillnaav-google-calendar-connected") return;
       setGoogleAuthUrl("");
       setGoogleConnected(true);
     };
@@ -1526,8 +1526,8 @@ export const ShortlistedTable = ({
                             <AtsScorePill score={student.ats_score_pct} />
                           </Td>
                           <Td>
-                            {/* AI reasoning panel */}
-                            {student.ai_reasoning ? (
+                            {/* AI reasoning panel — only visible for borderline Claude-evaluated candidates */}
+                            {student.ai_reasoning?.claude_evaluated ? (
                               <AiReasoningPanel
                                 reasoning={student.ai_reasoning}
                               />
@@ -2342,7 +2342,7 @@ export const ShortlistedTable = ({
                 Your Google Calendar connection has expired. You must reconnect it to automatically generate Google Meet links.
               </p>
               <button
-                onClick={() => window.open(googleAuthUrl, "edutechex-google-calendar", "width=520,height=700")}
+                onClick={() => window.open(googleAuthUrl, "skillnaav-google-calendar", "width=520,height=700")}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition"
               >
                 Connect Google Calendar

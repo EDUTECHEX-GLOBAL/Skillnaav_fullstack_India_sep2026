@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "../../../../api/axiosInstance";
-import { FaPaperclip, FaPaperPlane, FaSpinner, FaTimes, FaRobot } from "react-icons/fa";
+import { FaPaperclip, FaPaperPlane, FaSpinner, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import LogoTile from "../../../../assets/Edutech-logo.png";
 
 // ✅ SECURITY: No Python URL here. Calls go through Node backend (authenticated).
 // Node proxy is mounted at /api/ai — same pattern as Recommendations.jsx
@@ -265,20 +264,13 @@ const SkillAnalysis = ({ job, onClose }) => {
       {/*Remove max-w-3xl - 07-08-2026 */}
       <div className="relative w-full bg-white shadow-lg rounded-lg overflow-hidden">
         {/* Header with Close Button */}
-        <div className="bg-blue-600 p-6 relative flex items-center">
-          <img 
-            src={LogoTile} 
-            alt="AI Skill Analysis" 
-            className="w-12 h-12 rounded-full mr-4 object-cover shadow-sm bg-white p-1"
-          />
-          <div>
-            <h2 className="text-2xl font-bold text-white">
-              💬 AI Skill Analysis Chat
-            </h2>
-            <p className="text-sm text-blue-200">
-              Upload your resume and analyze your skills for the job.
-            </p>
-          </div>
+        <div className="bg-blue-600 p-6 relative">
+          <h2 className="text-2xl font-bold text-white">
+            💬 AI Skill Analysis Chat
+          </h2>
+          <p className="text-sm text-blue-200">
+            Upload your resume and analyze your skills for the job.
+          </p>
 
           <button
             onClick={() => {
@@ -302,14 +294,12 @@ const SkillAnalysis = ({ job, onClose }) => {
               } mb-4`}
             >
               <div
-                className={`p-4 max-w-md rounded-lg text-sm flex gap-2 ${
+                className={`p-4 max-w-md rounded-lg text-sm ${
                   msg.sender === "user"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 text-gray-800"
                 }`}
               >
-                {msg.sender === "ai" && <FaRobot className="text-gray-600 text-xl flex-shrink-0 mt-1" />}
-                <div>
                 {msg.text.split("\n").map((line, idx) => (
                   <p
                     key={idx}
@@ -318,7 +308,6 @@ const SkillAnalysis = ({ job, onClose }) => {
                     {line.replace(/\*\*/g, "")}
                   </p>
                 ))}
-                </div>
               </div>
             </div>
           ))}

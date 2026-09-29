@@ -313,7 +313,7 @@ const CertificateApprovals = () => {
                     <textarea
                       value={adminRemarks}
                       onChange={(e) => setAdminRemarks(e.target.value)}
-                      placeholder="e.g. Edutechex logo is missing or incorrect size."
+                      placeholder="e.g. SkillNaav logo is missing or incorrect size."
                       className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none resize-none h-24 bg-slate-50"
                     />
                   </div>

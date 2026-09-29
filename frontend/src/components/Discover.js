@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 const Gradient = "/Gradient.webp";
 
 const Discover = () => {
-  const { edutechexData } = useSelector((state) => state.root);
+  const { skillnaavData } = useSelector((state) => state.root);
 
   const handleButtonClick = () => {
     window.open("/choose-role", "_blank");
@@ -32,8 +32,8 @@ useEffect(() => {
   return () => document.head.removeChild(link);
 }, []);
   // ✅ Extract data — will be null/undefined until API loads
-  const discover = edutechexData?.discover?.[0];
-  const discovercompimg = edutechexData?.discovercompimg || [];
+  const discover = skillnaavData?.discover?.[0];
+  const discovercompimg = skillnaavData?.discovercompimg || [];
   const {
     discoverheading,
     discoversubheading,

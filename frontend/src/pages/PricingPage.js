@@ -6,47 +6,47 @@ import Footer from "../components/Footer";
 import { Helmet } from "react-helmet";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "../api/axiosInstance";
-import { SetEdutechexData, HideLoading } from "../redux/rootSlice";
+import { SetSkillNaavData, HideLoading } from "../redux/rootSlice";
 
 function PricingPage() {
   const dispatch = useDispatch();
-  const { edutechexData } = useSelector((state) => state.root);
+  const { skillnaavData } = useSelector((state) => state.root);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("/api/edutechex/get-edutechex-data");
-        dispatch(SetEdutechexData(response.data));
+        const response = await axios.get("/api/skillnaav/get-skillnaav-data");
+        dispatch(SetSkillNaavData(response.data));
       } catch (err) {
-        console.error("Failed to load edutechex data on PricingPage:", err);
+        console.error("Failed to load skillnaav data on PricingPage:", err);
       } finally {
         dispatch(HideLoading());
       }
     };
 
-    if (!edutechexData || Object.keys(edutechexData).length === 0) {
+    if (!skillnaavData || Object.keys(skillnaavData).length === 0) {
       fetchData();
     } else {
       dispatch(HideLoading());
     }
-  }, [edutechexData, dispatch]);
+  }, [skillnaavData, dispatch]);
 
   return (
     <>
       <Helmet>
-  <title>Pricing - Edutechex</title>
+  <title>Pricing - Skill Naav</title>
 
   <meta
     name="description"
-    content="Explore Edutechex pricing plans for students, institutions, and partners. Compare affordable plans for internship discovery, career growth, and skill management."
+    content="Explore Skill Naav pricing plans for students, institutions, and partners. Compare affordable plans for internship discovery, career growth, and skill management."
   />
 
-  <link rel="canonical" href="https://www.edutechex.com/pricing" />
+  <link rel="canonical" href="https://www.skillnaav.com/pricing" />
 </Helmet>
       <Navbar />
       <div className="pt-20 px-[20px] lg:px-20 mx-auto">
   <p className="text-gray-600 mb-6">
-    Compare Edutechex pricing plans for students, institutions,
+    Compare Skill Naav pricing plans for students, institutions,
     and partners with flexible options for career growth,
     internship access, and platform tools.
   </p>

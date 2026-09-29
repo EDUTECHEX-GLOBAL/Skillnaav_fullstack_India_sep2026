@@ -14,7 +14,7 @@ const CreateMeetingLink = ({ internshipId, meetingLink, onMeetingLinkCreated, di
 
   useEffect(() => {
     const handleGoogleConnected = (event) => {
-      if (event.data?.type !== 'edutechex-google-calendar-connected') return;
+      if (event.data?.type !== 'skillnaav-google-calendar-connected') return;
       setGoogleAuthUrl('');
       setError('');
       setGoogleConnected(true);
@@ -164,7 +164,7 @@ const CreateMeetingLink = ({ internshipId, meetingLink, onMeetingLinkCreated, di
       {googleAuthUrl && (
         <button
           type="button"
-          onClick={() => window.open(googleAuthUrl, 'edutechex-google-calendar', 'width=520,height=700')}
+          onClick={() => window.open(googleAuthUrl, 'skillnaav-google-calendar', 'width=520,height=700')}
           className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
         >
           Connect Google Calendar

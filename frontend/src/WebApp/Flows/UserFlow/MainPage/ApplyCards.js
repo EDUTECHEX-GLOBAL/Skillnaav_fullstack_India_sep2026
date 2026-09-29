@@ -5,14 +5,13 @@ import {
   FaDollarSign,
   FaHeadset,
   FaMapMarkerAlt,
-  FaRupeeSign,
   FaTrash,
 } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import SkillAnalysis from "./EdutechexAnalysis";
+import SkillAnalysis from "./SkillnaavAnalysis";
 import ProctoredAssessment from "./AssessmentModal";
 
 const MAX_LIMITS = {
@@ -44,8 +43,7 @@ const getUserToken = () => {
   }
 };
 
-const isActiveTicket = (ticket) =>
-  ticket.status !== "resolved" && ticket.status !== "closed";
+const isActiveTicket = (ticket) => ticket.status !== "resolved" && ticket.status !== "closed";
 
 const openInNewTab = (url) => {
   const win = window.open(url, "_blank", "noopener,noreferrer");
@@ -54,27 +52,9 @@ const openInNewTab = (url) => {
 
 const getStatusStyle = (status) => {
   const value = status?.toLowerCase();
-  if (value === "open")
-    return {
-      bg: "#dcfce7",
-      text: "#166534",
-      dot: "#22c55e",
-      border: "#86efac",
-    };
-  if (value === "in-progress")
-    return {
-      bg: "#fef9c3",
-      text: "#854d0e",
-      dot: "#eab308",
-      border: "#fde047",
-    };
-  if (value === "resolved")
-    return {
-      bg: "#f3e8ff",
-      text: "#6b21a8",
-      dot: "#a855f7",
-      border: "#d8b4fe",
-    };
+  if (value === "open") return { bg: "#dcfce7", text: "#166534", dot: "#22c55e", border: "#86efac" };
+  if (value === "in-progress") return { bg: "#fef9c3", text: "#854d0e", dot: "#eab308", border: "#fde047" };
+  if (value === "resolved") return { bg: "#f3e8ff", text: "#6b21a8", dot: "#a855f7", border: "#d8b4fe" };
   return { bg: "#f1f5f9", text: "#475569", dot: "#94a3b8", border: "#cbd5e1" };
 };
 
@@ -147,9 +127,7 @@ const TicketBadge = ({ ticket, index, onClick }) => {
             borderRadius: "50%",
             background: statusStyle.dot,
             flexShrink: 0,
-            animation: active
-              ? "ticketPulse 1.5s ease-in-out infinite"
-              : "none",
+            animation: active ? "ticketPulse 1.5s ease-in-out infinite" : "none",
           }}
         />
         {ticket.status}
@@ -201,14 +179,7 @@ const DropdownTicketRow = ({ ticket, index, onClick, onClose }) => {
       </span>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 12,
-            fontWeight: 700,
-            color: active ? "#166534" : "#475569",
-          }}
-        >
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: active ? "#166534" : "#475569" }}>
           #{ticket._id?.slice(-6)}
         </p>
         {ticket.lastMessage && (
@@ -244,15 +215,7 @@ const DropdownTicketRow = ({ ticket, index, onClick, onClose }) => {
           flexShrink: 0,
         }}
       >
-        <span
-          style={{
-            width: 5,
-            height: 5,
-            borderRadius: "50%",
-            background: statusStyle.dot,
-            flexShrink: 0,
-          }}
-        />
+        <span style={{ width: 5, height: 5, borderRadius: "50%", background: statusStyle.dot, flexShrink: 0 }} />
         {ticket.status}
       </span>
     </div>
@@ -272,9 +235,6 @@ const ApplyCards = ({ job, onBack }) => {
   const [loadingAssessment, setLoadingAssessment] = useState(false);
   const [assessment, setAssessment] = useState(null);
   const [showAssessmentModal, setShowAssessmentModal] = useState(false);
-  //01-09-2026
-  const [assessmentCompleted, setAssessmentCompleted] = useState(false);
-
   const [existingResumes, setExistingResumes] = useState([]);
   const [selectedResumeUrl, setSelectedResumeUrl] = useState(null);
   const [showResumeDropdown, setShowResumeDropdown] = useState(false);
@@ -300,9 +260,7 @@ const ApplyCards = ({ job, onBack }) => {
       const userInfo = parseStoredJson("studentInfo", "userInfo");
       const studentId = userInfo?._id;
       const token = getUserToken();
-      setSchoolAdminId(
-        userInfo?.schoolAdminId || userInfo?.schoolAdmin || null,
-      );
+      setSchoolAdminId(userInfo?.schoolAdminId || userInfo?.schoolAdmin || null);
 
       if (!studentId) return;
 
@@ -310,31 +268,21 @@ const ApplyCards = ({ job, onBack }) => {
         let freshPlan = userInfo?.planType || "Free";
         if (token) {
           try {
-            const { data: profileData } = await axios.get(
-              "/api/users/profile",
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              },
-            );
+            const { data: profileData } = await axios.get("/api/users/profile", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             freshPlan = profileData.planType || freshPlan;
-            localStorage.setItem(
-              "studentInfo",
-              JSON.stringify({ ...userInfo, planType: freshPlan }),
-            );
+            localStorage.setItem("studentInfo", JSON.stringify({ ...userInfo, planType: freshPlan }));
           } catch {
             // Fall back to the locally stored plan type.
           }
         }
         setPlanType(freshPlan);
 
-        const { data: appliedData } = await axios.get(
-          `/api/applications/check-applied/${studentId}/${job._id}`,
-        );
+        const { data: appliedData } = await axios.get(`/api/applications/check-applied/${studentId}/${job._id}`);
         setIsApplied(appliedData.isApplied);
 
-        const { data: countData } = await axios.get(
-          `/api/applications/count/${studentId}`,
-        );
+        const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
         setApplicationCount(countData.count);
       } catch (error) {
         console.error("Error fetching application data:", error);
@@ -368,9 +316,7 @@ const ApplyCards = ({ job, onBack }) => {
       if (!studentId) return;
 
       try {
-        const { data } = await axios.get(
-          `/api/assessments/${studentId}/${job._id}`,
-        );
+        const { data } = await axios.get(`/api/assessments/${studentId}/${job._id}`);
         if (data?.assessment) setAssessment(data.assessment);
       } catch (error) {
         if (error.response?.status !== 404) {
@@ -381,47 +327,6 @@ const ApplyCards = ({ job, onBack }) => {
 
     fetchAssessment();
   }, [job._id]);
-  //01-09-2026
-  useEffect(() => {
-    const checkAssessmentSubmission = async () => {
-      if (!assessment?._id) return;
-
-      const userInfo = parseStoredJson("studentInfo", "userInfo");
-      const studentId = userInfo?._id;
-
-      if (!studentId) return;
-
-      try {
-        const { data } = await axios.get(
-          `/api/assessments/submission/${studentId}/${assessment._id}`,
-        );
-
-        if (data?.submission) {
-          setAssessmentCompleted(true);
-        }
-      } catch (error) {
-        // No submission means assessment is not completed yet
-        setAssessmentCompleted(false);
-      }
-    };
-
-    checkAssessmentSubmission();
-  }, [assessment?._id]);
-  //01-09-2026
-  useEffect(() => {
-    const handleAssessmentCompleted = () => {
-      setAssessmentCompleted(true);
-    };
-
-    window.addEventListener("assessmentCompleted", handleAssessmentCompleted);
-
-    return () => {
-      window.removeEventListener(
-        "assessmentCompleted",
-        handleAssessmentCompleted,
-      );
-    };
-  }, []);
 
   const checkExistingTickets = useCallback(async () => {
     const userInfo = parseStoredJson("studentInfo", "userInfo");
@@ -438,14 +343,10 @@ const ApplyCards = ({ job, onBack }) => {
         .filter(
           (ticket) =>
             (ticket.courseName === job.jobTitle ||
-              (job._id &&
-                ticket.internshipId &&
-                ticket.internshipId.toString() === job._id.toString())) &&
-            ticket.category === "Internship Access",
+              (job._id && ticket.internshipId && ticket.internshipId.toString() === job._id.toString())) &&
+            ticket.category === "Internship Access"
         )
-        .sort(
-          (a, b) => (isActiveTicket(a) ? 0 : 1) - (isActiveTicket(b) ? 0 : 1),
-        );
+        .sort((a, b) => (isActiveTicket(a) ? 0 : 1) - (isActiveTicket(b) ? 0 : 1));
       setExistingTickets(matched);
     } catch (error) {
       console.error("Error checking existing tickets:", error);
@@ -469,10 +370,8 @@ const ApplyCards = ({ job, onBack }) => {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
 
-    if (!allowedTypes.includes(file.type))
-      return toast.error("Only PDF, DOC and DOCX files are allowed.");
-    if (file.size > 5 * 1024 * 1024)
-      return toast.error("File size should not exceed 5MB.");
+    if (!allowedTypes.includes(file.type)) return toast.error("Only PDF, DOC and DOCX files are allowed.");
+    if (file.size > 5 * 1024 * 1024) return toast.error("File size should not exceed 5MB.");
 
     setResume(file);
     setSelectedResumeUrl(null);
@@ -495,36 +394,26 @@ const ApplyCards = ({ job, onBack }) => {
 
       if (!studentAssessment) {
         try {
-          const { data } = await axios.get(
-            `/api/assessments/${studentId}/${job._id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
+          const { data } = await axios.get(`/api/assessments/${studentId}/${job._id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           studentAssessment = data.assessment;
           setAssessment(studentAssessment);
         } catch (error) {
-          if (error.response?.status !== 404)
-            console.error("Error fetching assessment:", error);
+          if (error.response?.status !== 404) console.error("Error fetching assessment:", error);
         }
       }
 
-      if (!studentAssessment) {
-        console.log("check toast"); //18-09-2026
-        toast.error(
-          "You must generate and complete the assessment before applying.",
-        );
+      if (planType !== "Premium Plus" && planType !== "Premium Basic") {
+        toast.error("You must generate and complete the assessment before applying.");
         return;
       }
 
       let submission;
       try {
-        const { data } = await axios.get(
-          `/api/assessments/submission/${studentId}/${studentAssessment._id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const { data } = await axios.get(`/api/assessments/submission/${studentId}/${studentAssessment._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         submission = data.submission;
       } catch {
         submission = null;
@@ -542,12 +431,9 @@ const ApplyCards = ({ job, onBack }) => {
     }
 
     try {
-      const { data: countData } = await axios.get(
-        `/api/applications/count/${studentId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const { data: countData } = await axios.get(`/api/applications/count/${studentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const maxApps = MAX_LIMITS[planType]?.applications || 5;
       if (countData.count >= maxApps) {
@@ -577,12 +463,9 @@ const ApplyCards = ({ job, onBack }) => {
 
       if (res.status === 201) {
         setIsApplied(true);
-        const { data } = await axios.get(
-          `/api/applications/count/${studentId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const { data } = await axios.get(`/api/applications/count/${studentId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setApplicationCount(data.count);
       }
     } catch (error) {
@@ -635,11 +518,8 @@ const ApplyCards = ({ job, onBack }) => {
     const deletedResume = existingResumes.find((item) => item._id === resumeId);
     try {
       await axios.delete(`/api/resumes/${resumeId}`);
-      setExistingResumes((prev) =>
-        prev.filter((item) => item._id !== resumeId),
-      );
-      if (deletedResume?.fileUrl === selectedResumeUrl)
-        setSelectedResumeUrl(null);
+      setExistingResumes((prev) => prev.filter((item) => item._id !== resumeId));
+      if (deletedResume?.fileUrl === selectedResumeUrl) setSelectedResumeUrl(null);
       toast.success("Resume deleted successfully");
     } catch (error) {
       console.error(error);
@@ -685,8 +565,7 @@ const ApplyCards = ({ job, onBack }) => {
   const hiddenCount = hiddenBadges.length;
   const maxAppsDisplay = MAX_LIMITS[planType]?.applications || 5;
   const selectedResumeName =
-    existingResumes.find((item) => item.fileUrl === selectedResumeUrl)
-      ?.fileName || "No resume selected";
+    existingResumes.find((item) => item.fileUrl === selectedResumeUrl)?.fileName || "No resume selected";
 
   return (
     <div className="relative bg-white rounded-lg shadow-lg max-w-full mx-auto p-4 sm:p-6 lg:p-8 xl:p-12 overflow-auto">
@@ -697,20 +576,12 @@ const ApplyCards = ({ job, onBack }) => {
       <div className="flex flex-col md:flex-row items-start justify-between mb-4">
         <div className="flex items-start mb-4 md:mb-0">
           {job.imgUrl && (
-            <img
-              src={job.imgUrl}
-              alt="company-logo"
-              className="rounded-full w-12 h-12 mr-4"
-            />
+            <img src={job.imgUrl} alt="company-logo" className="rounded-full w-12 h-12 mr-4" />
           )}
           <div>
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
-              {job.jobTitle}
-            </h2>
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">{job.jobTitle}</h2>
             <p className="text-gray-500">{job.companyName}</p>
-            <p className="text-gray-400 text-sm mt-1 whitespace-nowrap">
-              ID: {job._id}
-            </p>
+            <p className="text-gray-400 text-sm mt-1 whitespace-nowrap">ID: {job._id}</p>
 
             <div className="text-gray-500 mt-2 text-sm md:text-base flex items-center">
               <FaMapMarkerAlt className="mr-2" />
@@ -720,47 +591,32 @@ const ApplyCards = ({ job, onBack }) => {
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <p className="flex items-center">
                 <FontAwesomeIcon icon={faClock} className="mr-2" />
-                {isNaN(Date.parse(job.startDate))
-                  ? job.startDate || "Date unknown"
-                  : format(new Date(job.startDate), "dd MMM yyyy")}{" "}
-                -{" "}
-                {job.endDateOrDuration || job.duration
-                  ? isNaN(Date.parse(job.endDateOrDuration || job.duration))
-                    ? job.endDateOrDuration || job.duration
-                    : format(
-                        new Date(job.endDateOrDuration || job.duration),
-                        "dd MMM yyyy",
-                      )
-                  : "-"}
+                {isNaN(Date.parse(job.startDate)) ? (job.startDate || "Date unknown") : format(new Date(job.startDate), "dd MMM yyyy")} -{" "}
+                {(job.endDateOrDuration || job.duration) ? (isNaN(Date.parse(job.endDateOrDuration || job.duration)) ? (job.endDateOrDuration || job.duration) : format(new Date(job.endDateOrDuration || job.duration), "dd MMM yyyy")) : "-"}
               </p>
             </div>
 
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
-              {/* <FaDollarSign className="mr-2" /> change from dollar to rupee 15-09-2026*/}
-              <FaRupeeSign className="mr-2" />
+              <FaDollarSign className="mr-2" />
               <p>
                 {job.compensationDetails?.pdfExtractedCompensation
                   ? job.compensationDetails.pdfExtractedCompensation
                   : job.internshipType === "STIPEND"
-                    ? `${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}${
-                        job.compensationDetails?.frequency
-                          ? ` per ${job.compensationDetails.frequency.toLowerCase()}`
-                          : ""
-                      }`.trim()
-                    : job.internshipType === "FREE"
-                      ? "Unpaid / Free"
-                      : job.internshipType === "PAID"
-                        ? `Student Pays: ${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}`.trim()
-                        : "N/A"}
+                  ? `${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}${
+                      job.compensationDetails?.frequency ? ` per ${job.compensationDetails.frequency.toLowerCase()}` : ""
+                    }`.trim()
+                  : job.internshipType === "FREE"
+                  ? "Unpaid / Free"
+                  : job.internshipType === "PAID"
+                  ? `Student Pays: ${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}`.trim()
+                  : "N/A"}
               </p>
             </div>
 
             <div className="mt-4">
               {existingResumes.length > 0 && (
                 <div className="mb-3">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">
-                    Select Existing Resume
-                  </p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Select Existing Resume</p>
                   <div className="relative w-full">
                     <button
                       type="button"
@@ -770,11 +626,7 @@ const ApplyCards = ({ job, onBack }) => {
                         isApplied ? "cursor-not-allowed bg-gray-100" : ""
                       }`}
                     >
-                      <span>
-                        {selectedResumeUrl
-                          ? selectedResumeName
-                          : "-- Choose Resume --"}
-                      </span>
+                      <span>{selectedResumeUrl ? selectedResumeName : "-- Choose Resume --"}</span>
                       <FaChevronDown />
                     </button>
 
@@ -823,13 +675,9 @@ const ApplyCards = ({ job, onBack }) => {
                 </div>
               )}
 
-              <p className="text-sm text-gray-500 mt-1">
-                {existingResumes.length}/5 resumes used
-              </p>
+              <p className="text-sm text-gray-500 mt-1">{existingResumes.length}/5 resumes used</p>
               {existingResumes.length >= 5 && (
-                <p className="text-red-500 text-sm mt-1">
-                  Maximum 5 resumes allowed. Delete one to upload another.
-                </p>
+                <p className="text-red-500 text-sm mt-1">Maximum 5 resumes allowed. Delete one to upload another.</p>
               )}
 
               <div className="mt-3">
@@ -839,38 +687,25 @@ const ApplyCards = ({ job, onBack }) => {
                   disabled={isApplied || existingResumes.length >= 5}
                   onChange={handleFileChange}
                   className={`block w-full text-sm ${
-                    isApplied || existingResumes.length >= 5
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-500"
+                    isApplied || existingResumes.length >= 5 ? "text-gray-400 cursor-not-allowed" : "text-gray-500"
                   }`}
                 />
 
                 {resume && (
-                  <button
-                    type="button"
-                    onClick={() => setResume(null)}
-                    className="text-red-500 text-sm hover:underline mt-2"
-                  >
+                  <button type="button" onClick={() => setResume(null)} className="text-red-500 text-sm hover:underline mt-2">
                     Remove uploaded resume
                   </button>
                 )}
 
                 {selectedResumeUrl && (
-                  <p className="text-gray-500 text-sm mt-2">
-                    File upload disabled because a saved resume is selected.
-                  </p>
+                  <p className="text-gray-500 text-sm mt-2">File upload disabled because a saved resume is selected.</p>
                 )}
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                <p className="text-sm font-semibold text-gray-700">
-                  Resume that will be submitted
-                </p>
+                <p className="text-sm font-semibold text-gray-700">Resume that will be submitted</p>
                 <p className="text-blue-700 mt-1 font-medium">
-                  {resume?.name ||
-                    (selectedResumeUrl
-                      ? selectedResumeName
-                      : "No resume selected")}
+                  {resume?.name || (selectedResumeUrl ? selectedResumeName : "No resume selected")}
                 </p>
               </div>
             </div>
@@ -881,16 +716,10 @@ const ApplyCards = ({ job, onBack }) => {
                   onClick={handleApply}
                   disabled={isApplied || isUploading}
                   className={`text-white px-4 py-2 rounded-full font-semibold ${
-                    isApplied
-                      ? "bg-green-500"
-                      : "bg-purple-500 hover:bg-purple-600"
+                    isApplied ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"
                   }`}
                 >
-                  {isApplied
-                    ? "Applied"
-                    : isUploading
-                      ? "Uploading..."
-                      : "Apply now"}
+                  {isApplied ? "Applied" : isUploading ? "Uploading..." : "Apply now"}
                 </button>
               ) : (
                 <div className="text-red-600 font-semibold p-2 border border-red-400 rounded">
@@ -898,10 +727,7 @@ const ApplyCards = ({ job, onBack }) => {
                 </div>
               )}
 
-              <button
-                onClick={handleSkillAnalysis}
-                className="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-full font-semibold"
-              >
+              <button onClick={handleSkillAnalysis} className="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-full font-semibold">
                 Skill Analysis
               </button>
 
@@ -913,26 +739,10 @@ const ApplyCards = ({ job, onBack }) => {
                   }}
                   disabled={loadingAssessment}
                   className={`px-4 py-2 rounded-full font-semibold ${
-                    assessmentCompleted
-                      ? "bg-indigo-500 hover:bg-indigo-600 text-white"
-                      : assessment
-                        ? "bg-green-500 hover:bg-green-600 text-white"
-                        : "bg-orange-500 hover:bg-orange-600 text-white"
+                    assessment ? "bg-green-500 hover:bg-green-600 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"
                   }`}
                 >
-                  {/* {assessment
-                    ? "Take Assessment"
-                    : loadingAssessment
-                      ? "Generating..."
-                      : "Generate Assessment"} */}
-                  {/* 01-09-2026 */}
-                  {!assessment
-                    ? loadingAssessment
-                      ? "Generating..."
-                      : "Generate Assessment"
-                    : assessmentCompleted
-                      ? "View Result"
-                      : "Take Assessment"}
+                  {assessment ? "Take Assessment" : loadingAssessment ? "Generating..." : "Generate Assessment"}
                 </button>
               )}
 
@@ -940,9 +750,7 @@ const ApplyCards = ({ job, onBack }) => {
                 onClick={handleRaiseTicketClick}
                 disabled={checkingTicket}
                 className={`flex items-center gap-2 text-white px-4 py-2 rounded-full font-semibold transition-all ${
-                  checkingTicket
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-rose-500 hover:bg-rose-600"
+                  checkingTicket ? "bg-gray-400 cursor-not-allowed" : "bg-rose-500 hover:bg-rose-600"
                 }`}
               >
                 <FaHeadset className="text-sm" />
@@ -979,15 +787,7 @@ const ApplyCards = ({ job, onBack }) => {
                       }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: "#166534",
-                          margin: 0,
-                          lineHeight: 1.4,
-                        }}
-                      >
+                      <p style={{ fontSize: 12, fontWeight: 700, color: "#166534", margin: 0, lineHeight: 1.4 }}>
                         Ticket #{latestActive._id?.slice(-6)} is active
                       </p>
                       <p
@@ -1001,62 +801,20 @@ const ApplyCards = ({ job, onBack }) => {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        Status:{" "}
-                        <span
-                          style={{
-                            fontWeight: 600,
-                            textTransform: "capitalize",
-                          }}
-                        >
-                          {latestActive.status}
-                        </span>
+                        Status: <span style={{ fontWeight: 600, textTransform: "capitalize" }}>{latestActive.status}</span>
                         {latestActive.lastMessage && (
-                          <>
-                            {" "}
-                            - "{latestActive.lastMessage.substring(0, 35)}
-                            {latestActive.lastMessage.length > 35 ? "..." : ""}"
-                          </>
+                          <> - "{latestActive.lastMessage.substring(0, 35)}{latestActive.lastMessage.length > 35 ? "..." : ""}"</>
                         )}
                       </p>
                     </div>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: "#166534",
-                        fontWeight: 600,
-                        flexShrink: 0,
-                      }}
-                    >
-                      View
-                    </span>
+                    <span style={{ fontSize: 11, color: "#166534", fontWeight: 600, flexShrink: 0 }}>View</span>
                   </div>
                 )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: "#9ca3af",
-                      fontWeight: 500,
-                      marginRight: 2,
-                    }}
-                  >
-                    All tickets:
-                  </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginRight: 2 }}>All tickets:</span>
                   {visibleBadges.map((ticket, index) => (
-                    <TicketBadge
-                      key={ticket._id}
-                      ticket={ticket}
-                      index={index}
-                      onClick={handleBadgeClick}
-                    />
+                    <TicketBadge key={ticket._id} ticket={ticket} index={index} onClick={handleBadgeClick} />
                   ))}
                   {hiddenCount > 0 && (
                     <div ref={dropdownRef} style={{ position: "relative" }}>
@@ -1105,8 +863,7 @@ const ApplyCards = ({ job, onBack }) => {
                               letterSpacing: "0.05em",
                             }}
                           >
-                            {hiddenCount} more ticket
-                            {hiddenCount > 1 ? "s" : ""}
+                            {hiddenCount} more ticket{hiddenCount > 1 ? "s" : ""}
                           </div>
                           <div style={{ padding: "6px" }}>
                             {hiddenBadges.map((ticket, index) => (
@@ -1144,13 +901,8 @@ const ApplyCards = ({ job, onBack }) => {
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg text-center">
               <h2 className="text-xl font-semibold mb-2">Resume Required</h2>
-              <p className="text-gray-600">
-                Please upload or select your resume before applying.
-              </p>
-              <button
-                onClick={() => setShowResumePopup(false)}
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
+              <p className="text-gray-600">Please upload or select your resume before applying.</p>
+              <button onClick={() => setShowResumePopup(false)} className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
                 Close
               </button>
             </div>
@@ -1160,21 +912,12 @@ const ApplyCards = ({ job, onBack }) => {
         {showLimitPopup && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Application Limit Reached
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-800">Application Limit Reached</h2>
               <p className="text-gray-600 mt-2">
-                You have reached the maximum of{" "}
-                {maxAppsDisplay === Infinity ? "unlimited" : maxAppsDisplay}{" "}
-                applications allowed under your plan ({planType}).
+                You have reached the maximum of {maxAppsDisplay === Infinity ? "unlimited" : maxAppsDisplay} applications allowed under your plan ({planType}).
               </p>
-              <p className="text-gray-600 mt-1">
-                Upgrade your plan to apply for more internships.
-              </p>
-              <button
-                className="bg-purple-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-purple-600"
-                onClick={() => setShowLimitPopup(false)}
-              >
+              <p className="text-gray-600 mt-1">Upgrade your plan to apply for more internships.</p>
+              <button className="bg-purple-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-purple-600" onClick={() => setShowLimitPopup(false)}>
                 Close
               </button>
             </div>
@@ -1184,12 +927,9 @@ const ApplyCards = ({ job, onBack }) => {
         {resumeToDelete && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Delete Resume
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-800">Delete Resume</h2>
               <p className="text-gray-600 mt-2 mb-6">
-                Are you sure you want to delete this resume? This action cannot
-                be undone.
+                Are you sure you want to delete this resume? This action cannot be undone.
               </p>
               <div className="flex justify-center gap-4">
                 <button
@@ -1212,37 +952,25 @@ const ApplyCards = ({ job, onBack }) => {
         {showSkillAnalysis && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full overflow-hidden">
-              <SkillAnalysis
-                job={job}
-                onClose={() => setShowSkillAnalysis(false)}
-              />
+              <SkillAnalysis job={job} onClose={() => setShowSkillAnalysis(false)} />
             </div>
           </div>
         )}
+
       </div>
 
       <hr className="my-4" />
 
       <div className="mb-6">
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          About the job
-        </h3>
-        {/* Add this "whitespace-pre-wrap break-words" for good alignment of description - 15-09-2026 */}
-        <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">
-          {job.jobDescription || "No description available"}
-        </p>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">About the job</h3>
+        <p className="text-gray-600 leading-relaxed">{job.jobDescription || "No description available"}</p>
       </div>
 
       <div>
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Skills required
-        </h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Skills required</h3>
         <div className="flex flex-wrap gap-2">
           {(job.qualifications || []).map((qualification, index) => (
-            <span
-              key={index}
-              className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
-            >
+            <span key={index} className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full">
               {qualification}
             </span>
           ))}
@@ -1250,14 +978,12 @@ const ApplyCards = ({ job, onBack }) => {
       </div>
 
       <div className="mt-6">
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Contact Information
-        </h3>
-        <div className="bg-gray-50 border rounded-lg p-3 md:p-4 text-sm md:text-base text-gray-700">
-          {job.contactInfo?.name || "Not provided"}
-          {job.contactInfo?.email ? `, ${job.contactInfo.email}` : ""}
-          {job.contactInfo?.phone ? `, ${job.contactInfo.phone}` : ""}
-        </div>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Contact Information</h3>
+          <div className="bg-gray-50 border rounded-lg p-3 md:p-4 text-sm md:text-base text-gray-700">
+            {job.contactInfo?.name || "Not provided"}
+            {job.contactInfo?.email ? `, ${job.contactInfo.email}` : ""}
+            {job.contactInfo?.phone ? `, ${job.contactInfo.phone}` : ""}
+          </div>
       </div>
 
       {showAssessmentModal && assessment && (

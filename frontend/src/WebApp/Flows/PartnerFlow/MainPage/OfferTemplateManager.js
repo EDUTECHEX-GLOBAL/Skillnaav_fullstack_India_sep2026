@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../../../../api/axiosInstance";
 import { toast } from "react-toastify";
-import edutechexLogo from "../../../../assets/edutechex_logo-250w.png";
+import skillnaavLogo from "../../../../assets/skillnaav_logo-250w.png";
 
 const PartnerLogoManager = () => {
   const [currentLogoUrl, setCurrentLogoUrl] = useState(null);
@@ -117,14 +117,14 @@ const PartnerLogoManager = () => {
       </h2>
 
       <p className="text-sm text-gray-500 mb-6">
-        Your logo appears alongside the Edutechex logo on every offer letter PDF.
+        Your logo appears alongside the SkillNaav logo on every offer letter PDF.
       </p>
 
       {/* Preview Header */}
       <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-100 rounded-xl mb-6">
         <img
-  src={edutechexLogo}
-  alt="Edutechex Logo"
+  src={skillnaavLogo}
+  alt="SkillNaav Logo"
   className="h-10 w-auto object-contain bg-white border rounded-lg p-1"
 />
 

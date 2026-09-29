@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+import logo from "../../../../../assets-webapp/skillnaav_final_logo.svg";
 import StudentSupport from "./Support";
 
 const UserSupportPage = () => {

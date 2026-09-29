@@ -16,7 +16,7 @@ const SchoolAdminProfileForm = () => {
     city: "",
     province: "",
     postalCode: "",
-    country: "India",
+    country: "",
     website: "",
     contactPerson: "",
     contactEmail: "",
@@ -93,7 +93,7 @@ const SchoolAdminProfileForm = () => {
         className="bg-white shadow-xl rounded-xl w-full max-w-4xl p-8"
       >
         <h2 className="text-3xl font-bold text-blue-700 mb-8 text-center">
-          School Profile Details (India)
+          School Profile Details (Canada)
         </h2>
 
         {/* Institution Details */}
@@ -168,11 +168,11 @@ const SchoolAdminProfileForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
               <input
                 type="text"
                 name="province"
-                placeholder="State (e.g., Telangana)"
+                placeholder="Province (e.g., Ontario)"
                 value={formData.province}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md"
@@ -181,15 +181,15 @@ const SchoolAdminProfileForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
               <input
                 type="text"
                 name="postalCode"
-                placeholder="PIN Code (e.g., 500001)"
+                placeholder="Postal Code (e.g., M5V 2T6)"
                 value={formData.postalCode}
                 onChange={handleChange}
-                pattern="^[1-9][0-9]{5}$"
-                title="Format: 6 digits (e.g. 500001)"
+                pattern="[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d"
+                title="Format: A1A 1A1"
                 className="w-full p-3 border border-gray-300 rounded-md"
                 required
               />
@@ -205,7 +205,8 @@ const SchoolAdminProfileForm = () => {
                 required
               >
                 <option value="">Select Country</option>
-                <option value="India">India</option>
+                <option value="Canada">Canada</option>
+                <option value="USA">USA</option>
               </select>
             </div>
 
@@ -241,18 +242,18 @@ const SchoolAdminProfileForm = () => {
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">Language of Instruction</h3>
           <div className="w-full md:w-1/2">
-              <select
-                name="languageOfInstruction"
-                value={formData.languageOfInstruction}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-                required
-              >
-                <option value="">Select Language</option>
-                <option value="English">English</option>
-                <option value="Hindi">Hindi</option>
-                <option value="Bilingual">Bilingual (English/Hindi)</option>
-              </select>
+            <select
+              name="languageOfInstruction"
+              value={formData.languageOfInstruction}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-md"
+              required
+            >
+              <option value="">Select Language</option>
+              <option value="English">English</option>
+              <option value="French">French</option>
+              <option value="Bilingual">Bilingual (English/French)</option>
+            </select>
           </div>
         </div>
 
@@ -291,7 +292,7 @@ const SchoolAdminProfileForm = () => {
               <input
                 type="tel"
                 name="contactPhone"
-                placeholder="+91 XXXXX XXXXX"
+                placeholder="Contact Phone"
                 value={formData.contactPhone}
                 onChange={(e) => {
                   const numericOnly = e.target.value.replace(/\D/g, "");

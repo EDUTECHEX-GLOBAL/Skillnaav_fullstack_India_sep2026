@@ -7,9 +7,9 @@ export const userFlowQuestions = [
   { id: "performance", type: "rating", label: "5) How responsive/fast did the site feel (1-5)?" },
   { id: "featureUsed", type: "select", label: "6) Feature used most today", options: ["Search","Save","Apply","Profile","Other"] },
   { id: "confusing", type: "text", label: "7) Anything confusing or broken? (short)" },
-  { id: "nps", type: "scale", min: 0, max: 10, label: "8) How likely are you to recommend Edutechex? (0-10)", default: 8 },
+  { id: "nps", type: "scale", min: 0, max: 10, label: "8) How likely are you to recommend Skillnaav? (0-10)", default: 8 },
   { id: "suggestions", type: "textarea", label: "9) Suggestions to improve internship discovery", rows: 3 },
-  { id: "followUp", type: "yesno", label: "10) Would you like follow-up from Edutechex?" },
+  { id: "followUp", type: "yesno", label: "10) Would you like follow-up from Skillnaav?" },
   { id: "contactEmail", type: "text", label: "If yes, email:", placeholder: "you@example.com" }
 ];
 

@@ -1,5 +1,5 @@
 import React from "react";
-import edutechexlogo from "../assets/Edutech-logo.png";
+import skillnaavlogo from "../assets/skillnaav_logo-250w.png";
 
 const TryforFree = () => {
   const handleOptionClick = (path) => {
@@ -21,9 +21,9 @@ const TryforFree = () => {
       }}
     >
       <img
-        src={edutechexlogo}
+        src={skillnaavlogo}
         style={{ width: "210px", height: "auto" }}
-        alt="Edutechex Logo"
+        alt="SkillNaav Logo"
       />
 
       <h1

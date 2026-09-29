@@ -49,7 +49,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import io from "socket.io-client";
-import logo from "../../../../../assets/Edutech-logo.png";
+import logo from "../../../../../assets-webapp/skillnaav_final_logo.svg";
 
 const BASE_URL = process.env.REACT_APP_API_BASE || "http://localhost:5000";
 const STUDENT_API = `${BASE_URL}/api/support/school-admin`;
@@ -1941,7 +1941,7 @@ const SchoolAdminSupport = () => {
         <div className="flex-1 flex justify-center">
           <img
             src={logo}
-            alt="Edutechex"
+            alt="Skillnaav"
             className="h-8 w-auto object-contain"
           />
         </div>

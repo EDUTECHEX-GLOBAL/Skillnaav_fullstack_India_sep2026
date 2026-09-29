@@ -186,7 +186,7 @@ export const PlatformConfigSettings = () => {
       const url = window.URL.createObjectURL(new Blob([response.data], { type: "text/csv" }));
       const link = document.createElement("a");
       link.href = url;
-      link.download = `edutechex-users-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `skillnaav-users-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -232,7 +232,7 @@ export const PlatformConfigSettings = () => {
             </div>
             <div>
               <h4 className="font-semibold text-gray-800">Platform Controls</h4>
-              <p className="text-sm text-gray-500">Changes take effect across Edutechex immediately</p>
+              <p className="text-sm text-gray-500">Changes take effect across SkillNaav immediately</p>
             </div>
           </div>
           <div className="flex items-center gap-4">

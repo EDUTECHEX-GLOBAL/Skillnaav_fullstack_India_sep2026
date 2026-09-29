@@ -20,7 +20,7 @@ function AdminPricing() {
 
   const fetchPricingData = async () => {
     try {
-      const response = await axios.get("/api/edutechex/get-edutechex-data");
+      const response = await axios.get("/api/skillnaav/get-skillnaav-data");
       setPricingData(response.data); // Assuming response.data has pricing and pricingcard
     } catch (error) {
       console.error("Error fetching pricing data:", error);
@@ -50,7 +50,7 @@ function AdminPricing() {
   const onDelete = async (pricingCardId) => {
     try {
       const response = await axios.delete(
-        `/api/edutechex/delete-pricingcard/${pricingCardId}`
+        `/api/skillnaav/delete-pricingcard/${pricingCardId}`
       );
       if (response.data.success) {
         message.success(response.data.message);
@@ -66,7 +66,7 @@ function AdminPricing() {
   const onFinishEdit = async (values) => {
     try {
       const response = await axios.put(
-        `/api/edutechex/update-pricingcard/${values._id}`,
+        `/api/skillnaav/update-pricingcard/${values._id}`,
         values
       );
 
@@ -85,7 +85,7 @@ function AdminPricing() {
   const onFinishAdd = async (values) => {
     try {
       const response = await axios.post(
-        "/api/edutechex/add-pricingcard",
+        "/api/skillnaav/add-pricingcard",
         values
       );
       if (response.data.success) {
@@ -104,7 +104,7 @@ function AdminPricing() {
   const onFinishEditHeading = async (values) => {
     try {
       const { _id } = pricing[0];
-      const response = await axios.post("/api/edutechex/update-priceheading", {
+      const response = await axios.post("/api/skillnaav/update-priceheading", {
         _id,
         priceheading: values.priceheading,
       });

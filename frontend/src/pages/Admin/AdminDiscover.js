@@ -15,38 +15,38 @@ const AdminDiscover = () => {
   const [compImageUrls, setCompImageUrls] = useState([]);
   const [, setUploading] = useState(false);
   const dispatch = useDispatch();
-  const [edutechexData, setEdutechexData] = useState(null);
+  const [skillnaavData, setSkillnaavData] = useState(null);
 
-  const fetchEdutechexData = async () => {
+  const fetchSkillnaavData = async () => {
     try {
-      const response = await axios.get("/api/edutechex/get-edutechex-data");
-      setEdutechexData(response.data);
+      const response = await axios.get("/api/skillnaav/get-skillnaav-data");
+      setSkillnaavData(response.data);
     } catch (error) {
-      console.error("Error fetching edutechex data:", error);
+      console.error("Error fetching skillnaav data:", error);
     }
   };
 
   useEffect(() => {
-    fetchEdutechexData();
+    fetchSkillnaavData();
   }, []);
 
   useEffect(() => {
     if (
-      edutechexData &&
-      edutechexData.discover &&
-      edutechexData.discover.length > 0
+      skillnaavData &&
+      skillnaavData.discover &&
+      skillnaavData.discover.length > 0
     ) {
-      const discover = edutechexData.discover[0];
+      const discover = skillnaavData.discover[0];
       setDiscoverImgUrl(discover.imgUrl || "");
       setCompImageUrls(discover.compImageUrls || []);
     }
-  }, [edutechexData]);
+  }, [skillnaavData]);
 
   const onFinish = async (values) => {
     try {
       dispatch(ShowLoading());
       const response = await axios.put(
-        `/api/edutechex/update-discover/${edutechexData.discover[0]._id}`,
+        `/api/skillnaav/update-discover/${skillnaavData.discover[0]._id}`,
         {
           ...values,
           imgUrl: discoverImgUrl,
@@ -71,7 +71,9 @@ const AdminDiscover = () => {
     formData.append("image", file);
     setUploading(true);
     try {
-      const { data } = await axios.post("/api/upload/discover-image", formData);
+      const { data } = await axios.post("/api/upload/discover-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (data.success) {
         setDiscoverImgUrl(data.imageUrl);
         message.success("Discover image uploaded successfully");
@@ -96,12 +98,14 @@ const AdminDiscover = () => {
     formData.append("image", file);
     setUploading(true);
     try {
-      const { data } = await axios.post("/api/upload/company-image", formData);
+      const { data } = await axios.post("/api/upload/company-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       if (data.success) {
         const updatedUrls = [...compImageUrls, data.imageUrl];
         setCompImageUrls(updatedUrls);
-        await axios.post("/api/edutechex/add-discover-comp-img", {
+        await axios.post("/api/skillnaav/add-discover-comp-img", {
           imageUrl: data.imageUrl,
         });
         message.success("Company image uploaded successfully");
@@ -119,7 +123,7 @@ const AdminDiscover = () => {
   const handleImageRemove = async (urlToRemove) => {
     try {
       const response = await axios.delete(
-        `/api/edutechex/delete-discover-comp-img/${encodeURIComponent(
+        `/api/skillnaav/delete-discover-comp-img/${encodeURIComponent(
           urlToRemove
         )}`
       );
@@ -138,9 +142,9 @@ const AdminDiscover = () => {
   };
 
   if (
-    !edutechexData ||
-    !edutechexData.discover ||
-    edutechexData.discover.length === 0
+    !skillnaavData ||
+    !skillnaavData.discover ||
+    skillnaavData.discover.length === 0
   ) {
     return (
       <div className="flex justify-center items-center h-full min-h-[50vh]">
@@ -149,8 +153,8 @@ const AdminDiscover = () => {
     );
   }
 
-  const discover = edutechexData.discover[0];
-  const discovercompimg = edutechexData.discovercompimg || [];
+  const discover = skillnaavData.discover[0];
+  const discovercompimg = skillnaavData.discovercompimg || [];
 
   return (
     <div className="p-8 bg-gray-100 rounded-lg shadow-md max-w-3xl mx-auto my-12 font-roboto">

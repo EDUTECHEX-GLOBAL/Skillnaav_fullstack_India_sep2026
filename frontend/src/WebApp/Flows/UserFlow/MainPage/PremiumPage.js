@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "../../../../api/axiosInstance";
 
-
+// FIX 1: Server-side price map mirrored on frontend for display only.
+// The server derives the real price from planType — this is only for UI rendering.
+const PLAN_PRICES = {
+  "Free": 0,
+  "Premium Basic": 2.99,
+  "Premium Plus": 6.99,
+};
 
 function PremiumPage() {
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
@@ -9,7 +15,8 @@ function PremiumPage() {
   const [planType, setPlanType] = useState("Free");
   const [premiumExpiration, setPremiumExpiration] = useState(null);
   const [sdkReady, setSdkReady] = useState(false);
-
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
+  const [selectedPlanType, setSelectedPlanType] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   // FIX 2: Separate loading state for initial data fetch
   const [isFetching, setIsFetching] = useState(true);
@@ -61,86 +68,75 @@ function PremiumPage() {
     fetchPremiumStatus();
   }, []);
 
-  // ─── Load Razorpay SDK ───
+  // ─── Load PayPal SDK ───
   useEffect(() => {
-    if (!process.env.REACT_APP_RAZORPAY_KEY_ID) {
-      setAlert({ show: true, message: "Razorpay Key ID not set. Please check your .env file.", type: "error" });
+    if (!process.env.REACT_APP_PAYPAL_CLIENT_ID) {
+      setAlert({ show: true, message: "PayPal Client ID not set. Please check your .env file.", type: "error" });
       return;
     }
-    if (window.Razorpay) { setSdkReady(true); return; }
+    if (window.paypal) { setSdkReady(true); return; }
 
     const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.REACT_APP_PAYPAL_CLIENT_ID}&currency=USD`;
     script.async = true;
     script.onload = () => setSdkReady(true);
     script.onerror = () => {
-      setAlert({ show: true, message: "Failed to load Razorpay SDK.", type: "error" });
+      setAlert({ show: true, message: "Failed to load PayPal SDK. Check your Client ID.", type: "error" });
     };
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, []);
 
-  // Razorpay handler in handlePayment
+  // ─── Render PayPal Buttons ───
+  useEffect(() => {
+    if (selectedPlanIndex === null || !selectedPlanType || !sdkReady) return;
 
-  const showAlert = (message, type) => {
-    setAlert({ show: true, message, type });
-    setTimeout(() => setAlert({ show: false, message: "", type: "" }), 6000);
-  };
+    const containerId = `paypal-button-container-${selectedPlanIndex}`;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
 
-  // FIX 3: Free plan directly triggers handleFreePlan
-  const handleFreePlan = async () => {
-    showAlert("You are on the Free plan. No payment needed!", "success");
-  };
+    window.paypal
+      .Buttons({
+        createOrder: async () => {
+          try {
+            const token = localStorage.getItem("userToken");
+            // FIX 5: Only send planType — server derives amount and duration
+            const orderRes = await axios.post(
+              "/api/payments/paypal/order",
+              { planType: selectedPlanType },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            return orderRes.data.id;
+          } catch (err) {
+            console.error("Create order failed:", err);
+            showAlert("Unable to create PayPal order.", "error");
+            throw err;
+          }
+        },
 
-  const handlePayment = async (planTypeStr, index) => {
-    // FIX 6: Free plan bypasses Razorpay entirely
-    if (planTypeStr === "Free") { handleFreePlan(); return; }
-
-    if (!sdkReady) {
-      showAlert("Razorpay is still loading. Try again shortly.", "error");
-      return;
-    }
-    const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo")));
-    if (!userInfo?._id) {
-      showAlert("User session not found. Please log in again.", "error");
-      return;
-    }
-    
-    setIsProcessing(true);
-    try {
-      const token = localStorage.getItem("userToken");
-      const orderRes = await axios.post(
-        "/api/payments/razorpay/order",
-        { planType: planTypeStr },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-        amount: orderRes.data.amount,
-        currency: orderRes.data.currency,
-        name: "Edutechex",
-        description: `Upgrade to ${planTypeStr}`,
-        order_id: orderRes.data.id,
-        handler: async function (response) {
+        onApprove: async (data, actions) => {
           setIsProcessing(true);
           try {
+            const token = localStorage.getItem("userToken");
+            // FIX 5: Only send orderID and planType — server derives everything else
             const verifyRes = await axios.post(
-              "/api/payments/razorpay/verify",
+              "/api/payments/paypal/verify",
               {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                planType: planTypeStr,
+                orderID: data.orderID,
+                planType: selectedPlanType,
               },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (verifyRes.data.success) {
               showAlert("Payment verified successfully! Check your email for a receipt.", "success");
+
+              // Clear stale billing history so UI will refetch on next open
               setPaymentHistory([]);
               setShowHistory(false);
 
+              const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo"))) || {};
               const updatedUser = {
                 ...userInfo,
                 isPremium: true,
@@ -152,40 +148,72 @@ function PremiumPage() {
               setIsPremium(true);
               setPlanType(updatedUser.planType);
               setPremiumExpiration(updatedUser.premiumExpiration);
+              setSelectedPlanIndex(null);
+              setSelectedPlanType(null);
               setExpiryWarning(false);
               window.dispatchEvent(new Event("userInfoUpdated"));
             } else {
               showAlert("Payment verification failed. Please contact support.", "error");
             }
           } catch (err) {
+            const issue =
+              err.response?.data?.details?.details?.[0]?.issue ||
+              err.response?.data?.details?.[0]?.issue;
+
+            if (issue === "INSTRUMENT_DECLINED") {
+              setIsProcessing(false);
+              showAlert("Your card was declined. Please try a different payment method.", "error");
+              return actions.restart();
+            }
+
             console.error("Verify failed:", err);
             showAlert("Payment failed. Please try again or contact support.", "error");
           } finally {
             setIsProcessing(false);
           }
         },
-        prefill: {
-          name: userInfo.name || "",
-          email: userInfo.email || "",
-          contact: userInfo.phone || "",
-        },
-        theme: {
-          color: "#4f46e5", // Indigo-600 to match Edutechex theme
-        },
-      };
 
-      const rzp1 = new window.Razorpay(options);
-      rzp1.on("payment.failed", function (response) {
-        console.error("Razorpay payment failed:", response.error);
-        showAlert("Payment failed: " + response.error.description, "error");
-      });
-      rzp1.open();
-    } catch (err) {
-      console.error("Create order failed:", err);
-      showAlert("Unable to create Razorpay order.", "error");
-    } finally {
-      setIsProcessing(false);
+        onError: (err) => {
+          console.error("PayPal button error:", err);
+          showAlert("PayPal encountered an error. Please try again.", "error");
+          setIsProcessing(false);
+        },
+
+        onCancel: () => {
+          showAlert("Payment cancelled.", "error");
+          setSelectedPlanIndex(null);
+          setSelectedPlanType(null);
+        },
+      })
+      .render(`#${containerId}`);
+  }, [selectedPlanIndex, selectedPlanType, sdkReady]);
+
+  const showAlert = (message, type) => {
+    setAlert({ show: true, message, type });
+    setTimeout(() => setAlert({ show: false, message: "", type: "" }), 6000);
+  };
+
+  // FIX 3: Free plan no longer goes through PayPal
+  const handleFreePlan = async () => {
+    showAlert("You are on the Free plan. No payment needed!", "success");
+  };
+
+  const handlePayment = (planTypeStr, index) => {
+    // FIX 6: Free plan bypasses PayPal entirely
+    if (planTypeStr === "Free") { handleFreePlan(); return; }
+
+    if (!sdkReady) {
+      showAlert("PayPal is still loading. Try again shortly.", "error");
+      return;
     }
+    const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo")));
+    if (!userInfo?._id) {
+      showAlert("User session not found. Please log in again.", "error");
+      return;
+    }
+    // FIX 5: Store only planType — no amount passed to server from here
+    setSelectedPlanIndex(index);
+    setSelectedPlanType(planTypeStr);
   };
 
   // FIX 3: Fetch payment history
@@ -214,7 +242,7 @@ function PremiumPage() {
     {
       plantype: "Free",
       plantypesubhead: "Basic access to explore internships",
-      price: "₹0",
+      price: "$0",
       duration: "30",
       durationLabel: "30 days",
       pricebtn: "Start Free",
@@ -225,7 +253,7 @@ function PremiumPage() {
     {
       plantype: "Premium Basic",
       plantypesubhead: "Tools for active internship seekers",
-      price: "₹249",
+      price: "$2.99",
       duration: "2",
       durationLabel: "2 days",
       pricebtn: "Subscribe",
@@ -236,7 +264,7 @@ function PremiumPage() {
     {
       plantype: "Premium Plus",
       plantypesubhead: "Everything you need to succeed",
-      price: "₹599",
+      price: "$6.99",
       duration: "7",
       durationLabel: "7 days",
       pricebtn: "Subscribe",
@@ -410,25 +438,18 @@ function PremiumPage() {
               <button
                 onClick={() => handlePayment(card.plantype, index)}
                 disabled={(isCurrentActivePlan && card.plantype === "Free") || isProcessing}
-                className={`mt-8 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                  (isCurrentActivePlan && card.plantype === "Free") || card.plantype === "Free"
-                    ? `opacity-60 cursor-not-allowed ${theme.btn}`
-                    : "bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md"
+                className={`mt-8 py-3 rounded-lg font-semibold transition-all ${theme.btn} ${
+                  (isCurrentActivePlan && card.plantype === "Free") ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
                 {isCurrentActivePlan 
                   ? (card.plantype === "Free" ? "✓ Subscribed" : "Subscribe Again") 
-                  : (card.plantype === "Free" ? card.pricebtn : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                      </svg>
-                      Pay with Razorpay
-                    </>
-                  ))}
+                  : card.pricebtn}
               </button>
 
-
+              {selectedPlanIndex === index && (
+                <div id={`paypal-button-container-${index}`} className="mt-4"></div>
+              )}
             </div>
           );
         })}
@@ -474,7 +495,7 @@ function PremiumPage() {
                       <tr key={p._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-3 text-gray-700">{formatDate(p.createdAt)}</td>
                         <td className="px-5 py-3 text-gray-900 font-medium">{p.planType}</td>
-                        <td className="px-5 py-3 text-gray-700">₹{Number(p.amount).toFixed(2)}</td>
+                        <td className="px-5 py-3 text-gray-700">${Number(p.amount).toFixed(2)}</td>
                         <td className="px-5 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(p.status)}`}>
                             {p.status}

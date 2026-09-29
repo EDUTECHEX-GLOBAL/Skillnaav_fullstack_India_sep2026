@@ -8,7 +8,6 @@ import { TabProvider, useTabContext } from "./UserHomePageContext/HomePageContex
 import axios from "../../../../api/axiosInstance";
 
 import Chatbot from "../../../../components/Chatbot";
-import UserTextChatbot from "../../../../components/UserTextChatbot";
 import UserAgeGateConsent from "../SignUpLogin/UserProfileBuilding/UserAgeGateConsent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
@@ -26,12 +25,8 @@ const UserMainPageContent = () => {
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); // desktop
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
-  // Chatbot widget state
-  const [activeChat, setActiveChat] = useState(null); // 'text' | 'video' | null
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [assistantBubblePosition, setAssistantBubblePosition] = useState(null);
-  const [assistantBubbleHidden, setAssistantBubbleHidden] = useState(false);
-  const assistantBubbleDragRef = useRef(null);
+  // Chatbot widget state (open/closed)
+  const [chatOpen, setChatOpen] = useState(false);
   const [showReverifyModal, setShowReverifyModal] = useState(false);
   const [reverifySaving, setReverifySaving] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
@@ -49,39 +44,6 @@ const UserMainPageContent = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Let other floating controls move out of the assistant preview's space.
-  useEffect(() => {
-    const previewVisible = !assistantBubbleHidden;
-    window.__edutechexAssistantPreviewVisible = previewVisible;
-    window.dispatchEvent(new CustomEvent("edutechex-assistant-preview", { detail: { visible: previewVisible } }));
-  }, [assistantBubbleHidden]);
-
-  const startAssistantBubbleDrag = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    assistantBubbleDragRef.current = {
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top,
-      moved: false,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const moveAssistantBubble = (event) => {
-    if (!assistantBubbleDragRef.current) return;
-    const drag = assistantBubbleDragRef.current;
-    drag.moved = true;
-    setAssistantBubblePosition({
-      x: Math.min(Math.max(12, event.clientX - drag.offsetX), window.innerWidth - 255),
-      y: Math.min(Math.max(12, event.clientY - drag.offsetY), window.innerHeight - 205),
-    });
-  };
-
-  const openVideoAssistant = () => {
-    const wasDragged = assistantBubbleDragRef.current?.moved;
-    assistantBubbleDragRef.current = null;
-    if (!wasDragged) setActiveChat('video');
-  };
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -151,14 +113,6 @@ const UserMainPageContent = () => {
     setPopupDismissed(true);
     clearTimeout(popupTimerRef.current);
   };
-
-  useEffect(() => {
-    const handleOpenTextChat = () => {
-      setActiveChat('text');
-    };
-    window.addEventListener('open-text-chat', handleOpenTextChat);
-    return () => window.removeEventListener('open-text-chat', handleOpenTextChat);
-  }, []);
 
   const handleToggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleCloseSidebar = () => setIsSidebarOpen(false);
@@ -274,24 +228,45 @@ const UserMainPageContent = () => {
       )}
 
       {/* Reverify Modal */}
-      {showReverifyModal && (
-        <UserAgeGateConsent 
-          open={showReverifyModal} 
-          mode="REVERIFY_OVER18" 
-          onComplete={handleReverifyComplete} 
-          saving={reverifySaving} 
-          userEmail={userInfo?.email}
-        />
-      )}
+      <Modal open={showReverifyModal} footer={null} closable={false} centered>
+        <UserAgeGateConsent onComplete={handleReverifyComplete} saving={reverifySaving} />
+      </Modal>
 
-      {/* Unified AI Video Assistant Widget */}
-      {selectedTab !== "assessment" && !assistantBubbleHidden && (
-        <Chatbot />
-      )}
+      {/* Chatbot widget (fixed floating toggle + panel) */}
+      {selectedTab !== "assessment" && (
+      <div className="fixed bottom-6 right-6 z-50">
+        {!chatOpen && (
+          <button
+            onClick={() => setChatOpen(true)}
+            className="rounded-full shadow-lg transition-transform duration-200 hover:scale-105"
+            aria-label="Open chat"
+          >
+            <img
+              src={chatbotIcon}
+              alt="Chatbot"
+              className="h-16 w-16 rounded-full"
+            />
+          </button>
+        )}
 
-      {/* Text Chatbot */}
-      {activeChat === 'text' && (
-        <UserTextChatbot onClose={() => setActiveChat(null)} />
+        {chatOpen && (
+          <div className="w-80 h-[450px] bg-white shadow-xl rounded-lg flex flex-col border overflow-hidden">
+            <div className="flex justify-between items-center p-3 bg-blue-600 text-white">
+              <span className="font-semibold">Chat Assistant</span>
+              <button
+                onClick={() => setChatOpen(false)}
+                className="text-white text-xl font-bold leading-none"
+                aria-label="Close chat"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-3 flex-1 overflow-y-auto">
+              <Chatbot />
+            </div>
+          </div>
+        )}
+      </div>
       )}
     </>
   );

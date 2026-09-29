@@ -50,19 +50,14 @@ const SchoolAdminRegister = () => {
       setErrorMessage("");
       setSuccessMessage("");
 
-      const response = await axios.post(
-        "/api/school-admin/send-verification-code",
-        { email },
-      );
+      const response = await axios.post("/api/school-admin/send-verification-code", { email });
 
       if (response.data.message) {
         setOtpSent(true);
         setSuccessMessage("OTP sent to email.");
       }
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.message || "Failed to send OTP. Try again.",
-      );
+      setErrorMessage(error.response?.data?.message || "Failed to send OTP. Try again.");
     } finally {
       setLoading(false);
     }
@@ -85,9 +80,7 @@ const SchoolAdminRegister = () => {
         navigate("/schooladmin/profile", { state: formData });
       }
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.message || "OTP verification failed.",
-      );
+      setErrorMessage(error.response?.data?.message || "OTP verification failed.");
     } finally {
       setLoading(false);
     }
@@ -164,7 +157,7 @@ const SchoolAdminRegister = () => {
             />
             <button
               type="button"
-              className="absolute top-1/2 right-4 transform  text-gray-500"
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -183,7 +176,7 @@ const SchoolAdminRegister = () => {
             />
             <button
               type="button"
-              className="absolute top-1/2 right-4 transform  text-gray-500"
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500"
               onClick={() => setShowConfirm(!showConfirm)}
             >
               {showConfirm ? <FaEyeSlash size={20} /> : <FaEye size={20} />}

@@ -483,7 +483,7 @@ const StudentAssessment = () => {
       if (!hasGreeted) {
         setIsSpeaking(true);
         const utterance = new SpeechSynthesisUtterance(
-          "Hello, I am Edutechex AI. I will now start your assessment. Good luck!",
+          "Hello, I am SkillNaav AI. I will now start your assessment. Good luck!",
         );
         utterance.rate = 0.85;
         utterance.onend = () => {
@@ -861,7 +861,7 @@ const StudentAssessment = () => {
         <div className="bg-white border-b border-gray-200 shadow-sm text-gray-900 px-6 py-3 flex justify-between items-center lg:pr-[280px]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
-              Edutechex Assessment
+              SkillNaav Assessment
             </p>
             <h1 className="text-xl font-bold">
               Question {currentQ + 1} of {totalQuestions}

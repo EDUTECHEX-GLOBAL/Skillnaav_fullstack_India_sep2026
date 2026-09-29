@@ -6,16 +6,15 @@ import {
   faDollarSign,
   faHeart,
   faGlobe,
-  faIndianRupee,
 } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "../../../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import Edutechexlogo from "../../../../assets/logo-white-tile-1024.png";
+import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
 import { format } from "date-fns";
 
-const Homeimage = "/Home-Image-Edutechex.png";
+const Homeimage = "/Home-Image.png";
 
 const MAX_LIMITS = {
   Free: 5,
@@ -37,25 +36,6 @@ const getSavedLimitByPlan = (planType) => {
 };
 
 const Home = () => {
-  const [assistantPreviewVisible, setAssistantPreviewVisible] = useState(
-    () => window.__edutechexAssistantPreviewVisible ?? true,
-  );
-  const [assistantExpanded, setAssistantExpanded] = useState(false);
-  useEffect(() => {
-    const updateAssistantPreview = (event) => {
-      setAssistantPreviewVisible(event.detail.visible);
-      setAssistantExpanded(!!event.detail.expanded);
-    };
-    window.addEventListener(
-      "edutechex-assistant-preview",
-      updateAssistantPreview,
-    );
-    return () =>
-      window.removeEventListener(
-        "edutechex-assistant-preview",
-        updateAssistantPreview,
-      );
-  }, []);
   const { savedJobs, saveJob, removeJob, handleSelectTab } = useTabContext();
 
   // ─── selectedJob controls which view is shown ───────────────────────────
@@ -117,7 +97,7 @@ const Home = () => {
     const link = document.createElement("link");
     link.rel = "preload";
     link.as = "image";
-    link.href = "/Home-Image-Edutechex.png";
+    link.href = "/Home-Image.png";
     link.setAttribute("fetchpriority", "high");
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
@@ -408,9 +388,8 @@ const Home = () => {
                           : "—"}
                       </p>
                       <div className="flex items-center gap-2 text-sm md:text-base leading-none">
-                        {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
                         <FontAwesomeIcon
-                          icon={faIndianRupee}
+                          icon={faDollarSign}
                           className="text-gray-600 w-4 h-4 flex-shrink-0"
                         />
                         <span className="leading-none">
@@ -485,17 +464,15 @@ const Home = () => {
         </>
       )}
 
-      {/* Edutechex analysis FAB */}
-      <div
-        className={`fixed right-6 z-50 transition-all duration-300 ${!assistantPreviewVisible ? "bottom-28" : assistantExpanded ? "bottom-[390px]" : "bottom-[300px]"}`}
-      >
+      {/* Skillnaav analysis FAB */}
+      <div className="fixed bottom-28 right-6 z-50">
         <button
-          onClick={() => navigate("/edutechex-analysis")}
+          onClick={() => navigate("/skillnaav-analysis")}
           className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
         >
           <img
-            src={Edutechexlogo}
-            alt="Edutechex Analysis"
+            src={Skillnaavlogo}
+            alt="Skillnaav Analysis"
             className="w-12 h-12"
           />
         </button>

@@ -123,7 +123,7 @@ const SendOfferLetter = ({ student, internshipId, onSuccess, onCancel }) => {
             <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center">
               <span className="text-white text-[10px] font-bold">SN</span>
             </div>
-            <span className="text-xs text-indigo-600 font-medium">Edutechex</span>
+            <span className="text-xs text-indigo-600 font-medium">SkillNaav</span>
             <span className="text-gray-300">+</span>
             <span className="text-xs text-gray-600 font-medium">{internship.companyName}</span>
             <span className="ml-auto text-[11px] text-indigo-400">logos on PDF</span>

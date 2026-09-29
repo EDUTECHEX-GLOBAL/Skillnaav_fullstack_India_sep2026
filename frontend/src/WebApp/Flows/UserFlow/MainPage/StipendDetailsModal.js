@@ -6,7 +6,7 @@ const StipendDetailsModal = ({ visible, onClose, onSubmit }) => {
     bankAccountName: "",
     bankAccountNumber: "",
     ifscOrSwift: "",
-    preferredCurrency: "INR",
+    preferredCurrency: "USD",
     notes: ""
   });
 
@@ -60,7 +60,7 @@ const StipendDetailsModal = ({ visible, onClose, onSubmit }) => {
           <input
             name="ifscOrSwift"
             type="text"
-            placeholder="IFSC Code"
+            placeholder="IFSC/SWIFT Code"
             className="w-full px-3 py-2 border rounded"
             value={form.ifscOrSwift}
             onChange={handleChange}
@@ -73,7 +73,10 @@ const StipendDetailsModal = ({ visible, onClose, onSubmit }) => {
             onChange={handleChange}
             required
           >
+            <option value="USD">USD</option>
+            <option value="CAD">CAD</option>
             <option value="INR">INR</option>
+            <option value="EUR">EUR</option>
           </select>
           <textarea
             name="notes"

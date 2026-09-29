@@ -1,10 +1,11 @@
 // OfferLetterCard.jsx
 
-// 1. IMPORT StipendDetailsModal
+// 1. IMPORT StipendDetailsModal 
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import MockInterviewModal from "./MockInterviewModal";
 import axios from "../../../../api/axiosInstance";
 import { toast } from "react-toastify";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 // env-backed bases (correct relative path)
 import { API_BASE, GOOGLE_AUTH_URL } from "../../../../config";
 import CalendarSyncStatus from "./calendarsyncstatus";
@@ -21,7 +22,6 @@ import {
   faCreditCard,
   faCheck,
   faCheckCircle,
-  faIndianRupee,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,6 +38,7 @@ if (API_BASE) {
   axios.defaults.baseURL = API_BASE;
   axios.defaults.withCredentials = true;
 }
+
 
 function formatDateLabel(value) {
   if (!value) return "—";
@@ -57,23 +58,8 @@ function formatEnumLabel(value) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID;
 
 const OfferLetterCard = ({ offer, onStatusChange }) => {
-  const [sdkReady, setSdkReady] = useState(false);
-
-  useEffect(() => {
-    if (!RAZORPAY_KEY_ID) return;
-    if (window.Razorpay) {
-      setSdkReady(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.onload = () => setSdkReady(true);
-    document.body.appendChild(script);
-  }, []);
   const [job, setJob] = useState(null);
   const [loadingJob, setLoadingJob] = useState(true);
   const [errorJob, setErrorJob] = useState(null);
@@ -94,9 +80,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   const rowRefs = useRef({});
   const qualificationRowRef = useRef(null);
   const qualificationMeasureRef = useRef(null);
-  const userInfo =
-    JSON.parse(localStorage.getItem("studentInfo")) ||
-    JSON.parse(localStorage.getItem("userInfo"));
+  const userInfo = (JSON.parse(localStorage.getItem('studentInfo')) || JSON.parse(localStorage.getItem('userInfo')));
   const userPlan = userInfo?.planType;
   const [showCompleteNotice, setShowCompleteNotice] = useState(false);
   const [attendanceData, setAttendanceData] = useState(null);
@@ -104,13 +88,9 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [savingTimeSlot, setSavingTimeSlot] = useState(false);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
-  const [syncPhase, setSyncPhase] = useState("idle"); // 'starting' | 'working' | 'auth' | 'done' | 'error'
-  const [syncSummary, setSyncSummary] = useState({
-    created: 0,
-    updated: 0,
-    deleted: 0,
-  });
-  const [syncErrorMsg, setSyncErrorMsg] = useState("");
+  const [syncPhase, setSyncPhase] = useState('idle'); // 'starting' | 'working' | 'auth' | 'done' | 'error'
+  const [syncSummary, setSyncSummary] = useState({ created: 0, updated: 0, deleted: 0 });
+  const [syncErrorMsg, setSyncErrorMsg] = useState('');
   const [syncTotal, setSyncTotal] = useState(0);
   const [showAuthLinkedModal, setShowAuthLinkedModal] = useState(false);
   const [visibleQualificationCount, setVisibleQualificationCount] = useState(1);
@@ -124,14 +104,12 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
   // ✅ NEW: local mirror for preferred time slot (so UI updates immediately without refresh)
   const [preferredSlotLocal, setPreferredSlotLocal] = useState(
-    offer?.preferredTimeSlot || offer?.selectedTimeSlot || null,
+    offer?.preferredTimeSlot || offer?.selectedTimeSlot || null
   );
   const [previewBatchIndex, setPreviewBatchIndex] = useState(0);
 
   useEffect(() => {
-    setPreferredSlotLocal(
-      offer?.preferredTimeSlot || offer?.selectedTimeSlot || null,
-    );
+    setPreferredSlotLocal(offer?.preferredTimeSlot || offer?.selectedTimeSlot || null);
   }, [offer?.preferredTimeSlot, offer?.selectedTimeSlot]);
 
   // Fetch Attendance to show Schedule Completed badge
@@ -140,12 +118,9 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       const fetchAttendance = async () => {
         try {
           const userToken = localStorage.getItem("userToken");
-          const attRes = await axios.get(
-            `/api/attendance/my/${offer.internshipId}`,
-            {
-              headers: { Authorization: `Bearer ${userToken}` },
-            },
-          );
+          const attRes = await axios.get(`/api/attendance/my/${offer.internshipId}`, {
+            headers: { Authorization: `Bearer ${userToken}` }
+          });
           setAttendanceData(attRes.data);
         } catch (err) {
           // ignore error if attendance is not enabled
@@ -172,21 +147,19 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     const calculateVisibleTags = () => {
       const rowWidth = Math.floor(row.getBoundingClientRect().width);
       const tagNodes = Array.from(
-        measure.querySelectorAll("[data-qualification-tag]"),
+        measure.querySelectorAll("[data-qualification-tag]")
       );
       const countNodes = Array.from(
-        measure.querySelectorAll("[data-qualification-count]"),
+        measure.querySelectorAll("[data-qualification-count]")
       );
 
       if (!rowWidth || tagNodes.length === 0) return;
 
       const tagWidths = tagNodes.map((node) =>
-        Math.ceil(node.getBoundingClientRect().width),
+        Math.ceil(node.getBoundingClientRect().width)
       );
       const countWidthByHidden = countNodes.reduce((map, node) => {
-        const hiddenCount = Number(
-          node.getAttribute("data-qualification-count"),
-        );
+        const hiddenCount = Number(node.getAttribute("data-qualification-count"));
         map[hiddenCount] = Math.ceil(node.getBoundingClientRect().width);
         return map;
       }, {});
@@ -199,11 +172,9 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
           .slice(0, count)
           .reduce((total, width) => total + width, 0);
         const tagGaps = Math.max(count - 1, 0) * gapWidth;
-        const countBadgeWidth =
-          hiddenCount > 0
-            ? (count > 0 ? gapWidth : 0) +
-              (countWidthByHidden[hiddenCount] || 0)
-            : 0;
+        const countBadgeWidth = hiddenCount > 0
+          ? (count > 0 ? gapWidth : 0) + (countWidthByHidden[hiddenCount] || 0)
+          : 0;
         const totalWidth = visibleWidth + tagGaps + countBadgeWidth;
 
         if (totalWidth <= rowWidth || count === 0) {
@@ -213,7 +184,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       }
 
       setVisibleQualificationCount((current) =>
-        current === nextVisibleCount ? current : nextVisibleCount,
+        current === nextVisibleCount ? current : nextVisibleCount
       );
     };
 
@@ -247,7 +218,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
   const resolvePartnerId = useCallback(
     () => job?.partnerId || job?.postedBy || job?.companyId || null,
-    [job],
+    [job]
   );
 
   const fetchInternshipSchedule = useCallback(async () => {
@@ -269,9 +240,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     try {
       const miRes = await axios.get(`/api/mock-interviews/student`, {
         params: { internshipId, studentId: userInfo?._id },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || localStorage.getItem("userToken")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || localStorage.getItem("userToken")}` }
       });
       setMockInterviews(miRes.data || []);
     } catch (e) {
@@ -293,7 +262,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       await axios.patch(
         `/api/offer-letters/${offer._id}/status`,
         { status: "Accepted" },
-        { withCredentials: true, timeout: 15000 },
+        { withCredentials: true, timeout: 15000 }
       );
 
       onStatusChange("Accepted");
@@ -319,8 +288,8 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       console.error("Accept failed:", err);
       toast.error(
         err?.response?.data?.error ||
-          err?.response?.data?.message ||
-          "Failed to accept offer.",
+        err?.response?.data?.message ||
+        "Failed to accept offer."
       );
     } finally {
       setLoading(false);
@@ -334,17 +303,14 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
   // Live progress polling (no backend changes required; updates if /api/google/sync-status exists)
   React.useEffect(() => {
-    if (syncPhase !== "working") return;
+    if (syncPhase !== 'working') return;
 
     let isCancelled = false;
     const interval = setInterval(async () => {
       try {
-        const resp = await axios.get("/api/google/sync-status", {
+        const resp = await axios.get('/api/google/sync-status', {
           withCredentials: true,
-          params: {
-            internshipId: offer?.internshipId,
-            studentEmail: userInfo?.email,
-          },
+          params: { internshipId: offer?.internshipId, studentEmail: userInfo?.email },
         });
         const p = resp?.data?.progress || null;
         if (!p || isCancelled) return;
@@ -355,18 +321,18 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
           updated: Number(p?.updated) || 0,
           deleted: Number(p?.deleted) || 0,
         };
-        if (typeof p?.synced === "number") next.synced = Math.max(0, p.synced);
-        if (typeof p?.total === "number") setSyncTotal(p.total);
+        if (typeof p?.synced === 'number') next.synced = Math.max(0, p.synced);
+        if (typeof p?.total === 'number') setSyncTotal(p.total);
         setSyncSummary((prev) => ({ ...prev, ...next }));
         // ✅ Flip UI phase from polled progress (so we don't depend on the POST reply)
-        if (p.phase === "done") {
-          setSyncPhase("done");
-          toast.success("✅ Schedule synced to Google Calendar");
+        if (p.phase === 'done') {
+          setSyncPhase('done');
+          toast.success('✅ Schedule synced to Google Calendar');
           return;
         }
-        if (p.phase === "error") {
-          setSyncPhase("error");
-          setSyncErrorMsg(p.error || "Sync failed");
+        if (p.phase === 'error') {
+          setSyncPhase('error');
+          setSyncErrorMsg(p.error || 'Sync failed');
           return;
         }
       } catch (_e) {
@@ -380,10 +346,19 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     };
   }, [syncPhase, offer?.internshipId, userInfo?.email]);
 
-  // ✅ Razorpay Configuration
-  if (!RAZORPAY_KEY_ID) {
-    console.error("❌ Razorpay Key ID missing");
+  // ✅ PayPal Configuration
+  if (!process.env.REACT_APP_PAYPAL_CLIENT_ID) {
+    console.error("❌ PayPal Client ID missing");
   }
+
+  const paypalInitialOptions = {
+    "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID,
+    // PayPal requires the SDK currency to match the currency of the order.
+    // Keeping this as USD made CAD (and other non-USD) paid internships fail.
+    currency: String(job?.compensationDetails?.currency || "USD").toUpperCase(),
+    intent: "capture",
+  };
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -428,18 +403,13 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
           startDate: offer.startDate || new Date().toISOString(),
           endDateOrDuration: offer.endDateOrDuration || offer.duration || "",
           duration: offer.duration || "",
-          internshipType:
-            offer.internshipType ||
-            offer.compensationDetails?.type ||
-            "UNKNOWN",
+          internshipType: offer.internshipType || offer.compensationDetails?.type || "UNKNOWN",
           internshipMode: offer.internshipMode || "",
           classification: offer.classification || "",
           location: offer.location || "Unknown Location",
           compensationDetails: offer.compensationDetails || offer.stipend || {},
           jobDescription: offer.jobDescription || "",
-          qualifications: Array.isArray(offer.qualifications)
-            ? offer.qualifications
-            : [],
+          qualifications: Array.isArray(offer.qualifications) ? offer.qualifications : [],
           contactInfo: offer.contactInfo || {},
           imgUrl: offer.imgUrl || defaultCompanyLogo,
           partnerId: offer.partnerId || null,
@@ -448,10 +418,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         // If it's an old offer that is missing snapshot details, extract from PDF
         if ((!offer.jobDescription || !offer.companyName) && offer.s3Url) {
           try {
-            const pdfRes = await axios.post(
-              "/api/offer-letters/extract-pdf-data",
-              { s3Url: offer.s3Url },
-            );
+            const pdfRes = await axios.post('/api/offer-letters/extract-pdf-data', { s3Url: offer.s3Url });
             const pdfData = pdfRes.data;
             if (pdfData) {
               fallbackJob = {
@@ -459,29 +426,20 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                 companyName: pdfData.companyName || fallbackJob.companyName,
                 jobTitle: pdfData.jobTitle || fallbackJob.jobTitle,
                 location: pdfData.location || fallbackJob.location,
-                jobDescription:
-                  pdfData.jobDescription || fallbackJob.jobDescription,
-                qualifications:
-                  pdfData.qualifications?.length > 0
-                    ? pdfData.qualifications
-                    : fallbackJob.qualifications,
+                jobDescription: pdfData.jobDescription || fallbackJob.jobDescription,
+                qualifications: pdfData.qualifications?.length > 0 ? pdfData.qualifications : fallbackJob.qualifications,
                 duration: pdfData.duration || fallbackJob.duration,
-                internshipType:
-                  pdfData.internshipType || fallbackJob.internshipType,
-                internshipMode:
-                  pdfData.internshipMode || fallbackJob.internshipMode,
-                classification:
-                  pdfData.classification || fallbackJob.classification,
+                internshipType: pdfData.internshipType || fallbackJob.internshipType,
+                internshipMode: pdfData.internshipMode || fallbackJob.internshipMode,
+                classification: pdfData.classification || fallbackJob.classification,
                 compensationDetails: {
                   ...fallbackJob.compensationDetails,
-                  pdfExtractedCompensation: pdfData.pdfExtractedCompensation,
+                  pdfExtractedCompensation: pdfData.pdfExtractedCompensation
                 },
                 contactInfo: {
                   ...fallbackJob.contactInfo,
-                  ...(pdfData.contactInfo?.name
-                    ? { name: pdfData.contactInfo.name }
-                    : {}),
-                },
+                  ...(pdfData.contactInfo?.name ? { name: pdfData.contactInfo.name } : {})
+                }
               };
             }
           } catch (pdfErr) {
@@ -537,50 +495,48 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     };
 
     fetchScheduleForSlots();
-  }, [
-    showTimeModal,
-    job,
-    offer?.internshipId,
-    schedule?._id,
-    fetchInternshipSchedule,
-  ]);
+  }, [showTimeModal, job, offer?.internshipId, schedule?._id, fetchInternshipSchedule]);
 
   // ─── 3) Check for existing payment status on load ────────
   useEffect(() => {
     const userId = userInfo?._id;
-    const razorpayPaymentId = paymentStatus?.razorpayPaymentId;
+    const paypalPaymentId = paymentStatus?.paypalPaymentId;
 
     const checkPaymentStatus = async () => {
-      if (!job || job.internshipType !== "PAID" || !userId || razorpayPaymentId)
-        return;
+      if (
+        !job ||
+        job.internshipType !== "PAID" ||
+        !userId ||
+        paypalPaymentId
+      ) return;
 
       const response = await axios.get(
         `/api/internship/payments/status/${offer._id}`,
         {
           params: { studentId: userId },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
+          headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
+        }
       );
 
       if (response.data.paid) {
-        setPaymentStatus((prev) => ({
+        setPaymentStatus(prev => ({
           ...prev,
           paid: true,
           mongoPaymentId: response.data.paymentId,
-          razorpayPaymentId: response.data.razorpayPaymentId,
+          paypalPaymentId: response.data.paypalPaymentId,
           amount: response.data.amount,
-          currency: response.data.currency,
+          currency: response.data.currency
         }));
       }
     };
 
     checkPaymentStatus();
-  }, [job, offer._id, userInfo?._id, paymentStatus?.razorpayPaymentId]);
+  }, [job, offer._id, userInfo?._id, paymentStatus?.paypalPaymentId]);
+
 
   // 4. STIPEND SUBMISSION HANDLER
   const handleStipendSubmission = async (formDetails) => {
+
     // ✅ NEW: For FREE + STIPEND — accept immediately and open schedule (no confirmation/time-slot modal)
     const acceptAndOpenSchedule = async () => {
       if (loading) return;
@@ -592,7 +548,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         await axios.patch(
           `/api/offer-letters/${offer._id}/status`,
           { status: "Accepted" },
-          { withCredentials: true, timeout: 15000 },
+          { withCredentials: true, timeout: 15000 }
         );
 
         onStatusChange("Accepted");
@@ -620,8 +576,8 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         console.error("Accept failed:", err);
         toast.error(
           err?.response?.data?.error ||
-            err?.response?.data?.message ||
-            "Failed to accept offer.",
+          err?.response?.data?.message ||
+          "Failed to accept offer."
         );
       } finally {
         setLoading(false);
@@ -640,7 +596,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       };
 
       // Call the API endpoint to submit stipend details
-      const res = await axios.post("/api/internship/stipend-details", payload);
+      const res = await axios.post('/api/internship/stipend-details', payload);
 
       if (res.data.success) {
         setStipendDetailsSubmitted(true);
@@ -648,34 +604,31 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
         // ✅ NEW: For STIPEND → directly accept + open schedule (NO time-slot modal)
         await acceptAndOpenSchedule();
-      } else {
-        toast.error(res.data.message || "Failed to submit stipend details.");
+      }
+
+      else {
+        toast.error(res.data.message || 'Failed to submit stipend details.');
       }
     } catch (error) {
-      console.error("Stipend submission failed:", error);
-      toast.error("Failed to submit stipend details. Please try again.");
+      console.error('Stipend submission failed:', error);
+      toast.error('Failed to submit stipend details. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+
   useEffect(() => {
     if (showScheduleModal) {
       let displayTimetable = schedule?.timetable || [];
-      if (
-        job?.internshipType === "PAID" &&
-        Array.isArray(schedule?.batches) &&
-        schedule.batches.length > 0
-      ) {
-        const matchedBatch = schedule.batches.find(
-          (b) => b.timeSlot === preferredSlotLocal,
-        );
+      if (job?.internshipType === "PAID" && Array.isArray(schedule?.batches) && schedule.batches.length > 0) {
+        const matchedBatch = schedule.batches.find(b => b.timeSlot === preferredSlotLocal);
         if (matchedBatch) displayTimetable = matchedBatch.timetable || [];
       }
 
       if (displayTimetable.length > 0) {
         const todaySession = displayTimetable.find((session) =>
-          isToday(parseISO(session.date)),
+          isToday(parseISO(session.date))
         );
 
         if (todaySession) {
@@ -707,16 +660,12 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     if (job?.internshipType === "PAID") {
       const amount = Number(job?.compensationDetails?.amount);
       if (!Number.isFinite(amount) || amount <= 0) {
-        toast.error(
-          "This internship has an invalid payment amount. Please contact support.",
-        );
+        toast.error("This internship has an invalid payment amount. Please contact support.");
         return;
       }
 
-      if (!RAZORPAY_KEY_ID) {
-        toast.error(
-          "Payments are temporarily unavailable. Please contact support.",
-        );
+      if (!process.env.REACT_APP_PAYPAL_CLIENT_ID) {
+        toast.error("Payments are temporarily unavailable. Please contact support.");
         return;
       }
 
@@ -738,102 +687,61 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       : `https://${url}`;
   };
 
-  const handleRazorpayPayment = async () => {
-    if (!sdkReady) {
-      toast.error("Razorpay is still loading. Please wait.");
-      return;
-    }
+  // ✅ Updated PayPal order creation
+  const createPayPalOrder = async () => {
     try {
-      const { data: orderRes } = await axios.post(
-        "/api/internship/payments/create-razorpay-order",
-        {
-          internshipId: offer.internshipId,
-          offerId: offer._id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
-
-      if (!orderRes.orderId) {
-        toast.error("Failed to create payment order. Please try again.");
-        return;
-      }
-
-      const options = {
-        key: RAZORPAY_KEY_ID,
-        amount: orderRes.amount,
-        currency: orderRes.currency,
-        name: "Edutechex",
-        description: `Payment for ${job?.jobTitle || "Internship"}`,
-        order_id: orderRes.orderId,
-        handler: async function (response) {
-          try {
-            const { data: verify } = await axios.post(
-              "/api/internship/payments/verify-razorpay-payment",
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                offerId: offer._id,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-                },
-              },
-            );
-
-            if (verify.success) {
-              setPaymentStatus((prev) => ({
-                ...prev,
-                paid: true,
-                mongoPaymentId: verify.paymentId,
-                razorpayPaymentId: verify.razorpayPaymentId, // Keep state structure
-                amount: verify.amount,
-                currency: verify.currency,
-              }));
-
-              setShowPaymentModal(false);
-              toast.success(
-                "✅ Payment successful! You can now accept the offer.",
-              );
-
-              setTimeout(() => {
-                setResponseType("Accepted");
-                setShowModal(true);
-              }, 500);
-            } else {
-              toast.error("Payment verification failed.");
-            }
-          } catch (error) {
-            console.error("Error capturing payment:", error);
-            toast.error("Payment failed. Please try again.");
-          }
-        },
-        prefill: {
-          name: userInfo?.name || "",
-          email: userInfo?.email || "",
-          contact: userInfo?.phone || "",
-        },
-        theme: {
-          color: "#4f46e5",
-        },
-      };
-
-      const rzp1 = new window.Razorpay(options);
-      rzp1.on("payment.failed", function (response) {
-        console.error("Razorpay payment failed:", response.error);
-        toast.error("Payment failed: " + response.error.description);
+      const response = await axios.post('/api/internship/payments/create-paypal-order', {
+        internshipId: offer.internshipId,
+        offerId: offer._id,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
       });
-      rzp1.open();
+
+      return response.data.orderId;
     } catch (error) {
-      console.error("Error initiating Razorpay payment:", error);
-      toast.error("Failed to initiate payment.");
+      console.error('Error creating PayPal order:', error);
+      toast.error('Failed to create payment order');
+      throw error;
     }
   };
+
+  // ✅ Updated PayPal payment capture
+  const onPayPalApprove = async (data, actions) => {
+    try {
+      const response = await axios.post(
+        '/api/internship/payments/capture-paypal-payment',
+        {
+          orderId: data.orderID,
+          offerId: offer._id,
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` } }
+      );
+
+      if (response.data.success) {
+        setPaymentStatus(prev => ({
+          ...prev,
+          paid: true,
+          mongoPaymentId: response.data.paymentId,
+          paypalPaymentId: response.data.paypalPaymentId, // ✅ KEEP IT
+          amount: response.data.amount,
+          currency: response.data.currency
+        }));
+
+
+        setShowPaymentModal(false);
+        toast.success('✅ Payment successful! You can now accept the offer.');
+
+        setTimeout(() => {
+          setResponseType("Accepted");
+          setShowModal(true);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error capturing payment:', error);
+      toast.error('Payment failed. Please try again.');
+    }
+  };
+
 
   const confirmRespond = async () => {
     if (!responseType || loading) return;
@@ -920,9 +828,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
     if (job?.internshipType === "PAID") {
       payload.paymentId =
-        paymentStatus?.mongoPaymentId ||
-        paymentStatus?.razorpayPaymentId ||
-        null;
+        paymentStatus?.mongoPaymentId || paymentStatus?.paypalPaymentId || null;
     }
 
     try {
@@ -948,8 +854,8 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
       toast.error(
         error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          "Failed to save your time slot.",
+        error?.response?.data?.message ||
+        "Failed to save your time slot."
       );
     } finally {
       setSavingTimeSlot(false);
@@ -958,11 +864,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   };
 
   // ✅ NEW: Build available time slots from saved schedule.timeSlots
-  const scheduleType = (
-    schedule?.defaultType ||
-    job?.mode ||
-    "online"
-  ).toLowerCase();
+  const scheduleType = (schedule?.defaultType || job?.mode || "online").toLowerCase();
   const availableSlots = Array.isArray(schedule?.timeSlots?.[scheduleType])
     ? schedule.timeSlots[scheduleType]
     : [];
@@ -971,9 +873,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   const requiresPayment = job?.internshipType === "PAID";
   const requiresStipendDetails = job?.internshipType === "STIPEND";
   const paymentAmount = job?.compensationDetails?.amount || 0;
-  const currency = String(
-    job?.compensationDetails?.currency || "INR",
-  ).toUpperCase();
+  const currency = String(job?.compensationDetails?.currency || "USD").toUpperCase();
 
   const isUnpaidAccepted =
     offer?.status?.toLowerCase() === "accepted" &&
@@ -983,54 +883,38 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   // The backend callback will sync the full schedule after auth.
   const handleAddUpdateCalendar = async () => {
     if (!offer?.internshipId || !userInfo?.email) {
-      toast.error("Missing internship or user email");
+      toast.error('Missing internship or user email');
       return;
     }
 
     // open the status popup immediately
-    setSyncErrorMsg("");
+    setSyncErrorMsg('');
     setSyncSummary({ created: 0, updated: 0, deleted: 0 });
-    setSyncPhase("starting");
+    setSyncPhase('starting');
     setSyncModalOpen(true);
     let syncTimetable = schedule?.timetable || [];
-    if (
-      job?.internshipType === "PAID" &&
-      Array.isArray(schedule?.batches) &&
-      schedule.batches.length > 0
-    ) {
-      const matchedBatch = schedule.batches.find(
-        (b) => b.timeSlot === preferredSlotLocal,
-      );
+    if (job?.internshipType === "PAID" && Array.isArray(schedule?.batches) && schedule.batches.length > 0) {
+      const matchedBatch = schedule.batches.find(b => b.timeSlot === preferredSlotLocal);
       if (matchedBatch) syncTimetable = matchedBatch.timetable || [];
     }
     setSyncTotal(Array.isArray(syncTimetable) ? syncTimetable.length : 0);
 
     setLoading(true); // keep existing loading toggles (won't change button label below)
     try {
-      setSyncPhase("working");
+      setSyncPhase('working');
 
-      const res = await axios.post(
-        "/api/google/update-schedule",
-        {
-          internshipId: offer.internshipId,
-          studentEmail: userInfo.email,
-        },
-        {
-          withCredentials: true,
-          timeout: 5000, // keep the "starter" call snappy; real work runs in background
-        },
-      );
+      const res = await axios.post('/api/google/update-schedule', {
+        internshipId: offer.internshipId,
+        studentEmail: userInfo.email,
+      }, {
+        withCredentials: true,
+        timeout: 5000 // keep the "starter" call snappy; real work runs in background
+      });
 
       // Needs OAuth?
-      if (
-        res.status === 401 ||
-        res?.data?.message?.match(/auth|invalid_grant|unauthorized|token/i)
-      ) {
-        setSyncPhase("auth");
-        const stateObj = {
-          internshipId: offer.internshipId,
-          email: userInfo.email,
-        };
+      if (res.status === 401 || res?.data?.message?.match(/auth|invalid_grant|unauthorized|token/i)) {
+        setSyncPhase('auth');
+        const stateObj = { internshipId: offer.internshipId, email: userInfo.email };
         const state = btoa(JSON.stringify(stateObj));
         window.location.href = `${GOOGLE_AUTH_URL}?state=${encodeURIComponent(state)}`;
         return;
@@ -1038,55 +922,49 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
       // Non-blocking flow: backend returns 202 + { started: true }
       if (res.status === 202 || res?.data?.started) {
-        toast.info("Sync started…");
+        toast.info('Sync started…');
         // Stay in "working"; polling will flip to done/error
         return;
       }
 
       // Legacy synchronous success (if server still returns counts)
       if (res?.data?.success) {
-        const counts = res.data.counts ||
-          res.data.result?.counts || { created: 0, updated: 0, deleted: 0 };
+        const counts = res.data.counts || res.data.result?.counts || { created: 0, updated: 0, deleted: 0 };
         setSyncSummary(counts);
-        setSyncPhase("done");
-        toast.success("✅ Schedule synced to Google Calendar");
+        setSyncPhase('done');
+        toast.success('✅ Schedule synced to Google Calendar');
         return;
       }
 
       // Any other non-success payload
       if (res?.data && res?.data.success === false) {
-        setSyncPhase("error");
-        setSyncErrorMsg(res.data.message || "Sync failed");
-        throw new Error(res.data.message || "Sync failed");
+        setSyncPhase('error');
+        setSyncErrorMsg(res.data.message || 'Sync failed');
+        throw new Error(res.data.message || 'Sync failed');
       }
     } catch (err) {
       const status = err?.response?.status;
-      const message = err?.response?.data?.message || err.message || "";
-      if (
-        status === 401 ||
-        /auth|invalid_grant|unauthorized|token/i.test(message)
-      ) {
+      const message = err?.response?.data?.message || err.message || '';
+      if (status === 401 || /auth|invalid_grant|unauthorized|token/i.test(message)) {
         try {
-          setSyncPhase("auth");
-          const stateObj = {
-            internshipId: offer.internshipId,
-            email: userInfo.email,
-          };
+          setSyncPhase('auth');
+          const stateObj = { internshipId: offer.internshipId, email: userInfo.email };
           const state = btoa(JSON.stringify(stateObj));
           window.location.href = `${GOOGLE_AUTH_URL}?state=${encodeURIComponent(state)}`;
           return;
         } catch (e) {
-          console.error("Failed to start Google OAuth:", e);
+          console.error('Failed to start Google OAuth:', e);
         }
       }
-      console.error("Sync error:", err);
-      setSyncPhase("error");
-      setSyncErrorMsg("Could not sync to Google Calendar");
-      toast.error("Could not sync to Google Calendar");
+      console.error('Sync error:', err);
+      setSyncPhase('error');
+      setSyncErrorMsg('Could not sync to Google Calendar');
+      toast.error('Could not sync to Google Calendar');
     } finally {
       setLoading(false);
     }
   };
+
 
   // ─── 3) Render the schedule with table + per‐row Google Calendar links ─
   const renderSchedule = () => {
@@ -1108,50 +986,40 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         <div className="mt-4">
           {/* ── FIXED Summary Cards ──────────────────────────────── */}
           <div className="sticky top-0 z-10 bg-white pt-2 pb-4">
-            {schedule?.startDate &&
-              schedule?.endDate &&
-              schedule?.workHours && (
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex flex-col items-center justify-center">
-                    <p className="text-xs text-gray-500">Start Date</p>
-                    <p className="mt-1 font-medium text-gray-800">
-                      {format(parseISO(schedule.startDate), "MMM d, yyyy")}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex flex-col items-center justify-center">
-                    <p className="text-xs text-gray-500">End Date</p>
-                    <p className="mt-1 font-medium text-gray-800">
-                      {format(parseISO(schedule.endDate), "MMM d, yyyy")}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex flex-col items-center justify-center">
-                    <p className="text-xs text-gray-500">Working Hours</p>
-                    <p className="mt-1 font-medium text-gray-800">
-                      {schedule.workHours}
-                    </p>
-                  </div>
+            {schedule?.startDate && schedule?.endDate && schedule?.workHours && (
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex flex-col items-center justify-center">
+                  <p className="text-xs text-gray-500">Start Date</p>
+                  <p className="mt-1 font-medium text-gray-800">
+                    {format(parseISO(schedule.startDate), "MMM d, yyyy")}
+                  </p>
                 </div>
-              )}
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex flex-col items-center justify-center">
+                  <p className="text-xs text-gray-500">End Date</p>
+                  <p className="mt-1 font-medium text-gray-800">
+                    {format(parseISO(schedule.endDate), "MMM d, yyyy")}
+                  </p>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-3 flex flex-col items-center justify-center">
+                  <p className="text-xs text-gray-500">Working Hours</p>
+                  <p className="mt-1 font-medium text-gray-800">{schedule.workHours}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── BATCH TABS for PAID Internships ────────────────────── */}
-          {job?.internshipType === "PAID" &&
-            Array.isArray(schedule?.batches) &&
-            schedule.batches.length > 0 &&
-            (!preferredSlotLocal ||
-              !schedule.batches.some(
-                (b) => b.timeSlot === preferredSlotLocal,
-              )) && (
+          {job?.internshipType === "PAID" && Array.isArray(schedule?.batches) && schedule.batches.length > 0 &&
+            (!preferredSlotLocal || !schedule.batches.some(b => b.timeSlot === preferredSlotLocal)) && (
               <div className="mt-4 flex flex-wrap mb-2 border-b border-gray-200">
                 {schedule.batches.map((b, i) => (
                   <button
                     key={i}
                     onClick={() => setPreviewBatchIndex(i)}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      previewBatchIndex === i
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${previewBatchIndex === i
                         ? "border-indigo-600 text-indigo-600 bg-indigo-50/50"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     Batch: {b.timeSlot}
                   </button>
@@ -1167,55 +1035,28 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
             <table className="min-w-full bg-white rounded-lg">
               <thead className="bg-indigo-50 border-b border-indigo-200 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">
-                    Date
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">
-                    Day
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">
-                    Time
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">
-                    Summary
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">
-                    Section Link
-                  </th>
-                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">
-                    Type
-                  </th>
+                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">Date</th>
+                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">Day</th>
+                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">Time</th>
+                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">Summary</th>
+                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">Section Link</th>
+                  <th className="px-4 py-2 text-xs font-medium text-gray-600 text-center">Type</th>
                 </tr>
               </thead>
               <tbody>
                 {(() => {
-                  let displayTimetable = Array.isArray(schedule?.timetable)
-                    ? schedule.timetable
-                    : [];
+                  let displayTimetable = Array.isArray(schedule?.timetable) ? schedule.timetable : [];
 
                   // Use batch-specific timetable for PAID internships if available
-                  if (
-                    job?.internshipType === "PAID" &&
-                    Array.isArray(schedule?.batches) &&
-                    schedule.batches.length > 0
-                  ) {
+                  if (job?.internshipType === "PAID" && Array.isArray(schedule?.batches) && schedule.batches.length > 0) {
                     const savedPreferredSlot = preferredSlotLocal;
-                    const matchedBatch = savedPreferredSlot
-                      ? schedule.batches.find(
-                          (b) => b.timeSlot === savedPreferredSlot,
-                        )
-                      : null;
+                    const matchedBatch = savedPreferredSlot ? schedule.batches.find(b => b.timeSlot === savedPreferredSlot) : null;
 
                     if (matchedBatch && Array.isArray(matchedBatch.timetable)) {
                       displayTimetable = matchedBatch.timetable;
                     } else {
-                      const previewBatch =
-                        schedule.batches[previewBatchIndex] ||
-                        schedule.batches[0];
-                      if (
-                        previewBatch &&
-                        Array.isArray(previewBatch.timetable)
-                      ) {
+                      const previewBatch = schedule.batches[previewBatchIndex] || schedule.batches[0];
+                      if (previewBatch && Array.isArray(previewBatch.timetable)) {
                         displayTimetable = previewBatch.timetable;
                       }
                     }
@@ -1224,8 +1065,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                   return displayTimetable.length > 0 ? (
                     displayTimetable.map((session, idx) => {
                       const sessionDate = parseISO(session.date);
-                      const isTodaySession =
-                        isValid(sessionDate) && isToday(sessionDate);
+                      const isTodaySession = isValid(sessionDate) && isToday(sessionDate);
                       const rowRefKey = `${session.date}-${session.startTime}`;
 
                       const displayTime = `${session.startTime} - ${session.endTime}`;
@@ -1241,9 +1081,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                       return (
                         <tr
                           key={idx}
-                          ref={
-                            isTodaySession ? rowRefs.current[rowRefKey] : null
-                          }
+                          ref={isTodaySession ? rowRefs.current[rowRefKey] : null}
                           className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
                         >
                           <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap text-center">
@@ -1261,7 +1099,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                               onClick={() =>
                                 setSelectedSummary({
                                   sectionSummary: summaryText,
-                                  instructor: session.instructor || "",
+                                  instructor: session.instructor || ""
                                 })
                               }
                               className="text-indigo-600 hover:underline text-xs font-medium block mx-auto"
@@ -1273,9 +1111,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                                 type="button"
                                 onClick={() => {
                                   if (!isTodaySession) {
-                                    toast.info(
-                                      `This mock interview is only available on ${format(sessionDate, "dd MMM yyyy")}`,
-                                    );
+                                    toast.info(`This mock interview is only available on ${format(sessionDate, 'dd MMM yyyy')}`);
                                   } else {
                                     setSelectedMockSession(session);
                                   }
@@ -1295,36 +1131,24 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center text-indigo-600 hover:text-indigo-800 text-xs font-medium"
                                 >
-                                  <FontAwesomeIcon
-                                    icon={faLink}
-                                    className="mr-1"
-                                  />
+                                  <FontAwesomeIcon icon={faLink} className="mr-1" />
                                   Join Meeting
                                 </a>
                               ) : (
-                                <span className="text-gray-400 text-xs">
-                                  Link Pending
-                                </span>
+                                <span className="text-gray-400 text-xs">Link Pending</span>
                               )
                             ) : isOffline ? (
                               session.location?.address ? (
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    setSelectedLocation(session.location)
-                                  }
+                                  onClick={() => setSelectedLocation(session.location)}
                                   className="inline-flex items-center text-indigo-600 hover:text-indigo-800 text-xs font-medium"
                                 >
-                                  <FontAwesomeIcon
-                                    icon={faMapMarkerAlt}
-                                    className="mr-1"
-                                  />
+                                  <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-1" />
                                   Location
                                 </button>
                               ) : (
-                                <span className="text-gray-400 text-xs">
-                                  Location TBA
-                                </span>
+                                <span className="text-gray-400 text-xs">Location TBA</span>
                               )
                             ) : (
                               <>
@@ -1335,30 +1159,21 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center text-indigo-600 hover:text-indigo-800 text-xs font-medium mr-2"
                                   >
-                                    <FontAwesomeIcon
-                                      icon={faLink}
-                                      className="mr-1"
-                                    />
+                                    <FontAwesomeIcon icon={faLink} className="mr-1" />
                                     Join Meeting
                                   </a>
                                 )}
                                 {session.location?.address && (
                                   <p className="inline-flex items-center">
-                                    <FontAwesomeIcon
-                                      icon={faMapMarkerAlt}
-                                      className="mr-1 text-gray-600"
-                                    />
+                                    <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-1 text-gray-600" />
                                     <span className="text-gray-700 text-sm">
                                       {session.location.name}
                                     </span>
                                   </p>
                                 )}
-                                {!session.eventLink &&
-                                  !session.location?.address && (
-                                    <span className="text-gray-400 text-xs">
-                                      TBA
-                                    </span>
-                                  )}
+                                {!session.eventLink && !session.location?.address && (
+                                  <span className="text-gray-400 text-xs">TBA</span>
+                                )}
                               </>
                             )}
                           </td>
@@ -1366,13 +1181,12 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                             <span
                               className={`
                 inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full capitalize
-                ${
-                                isOnline
+                ${isOnline
                                   ? "bg-blue-100 text-blue-700"
                                   : isOffline
                                     ? "bg-green-100 text-green-700"
                                     : "bg-purple-100 text-purple-700"
-                              }
+                                }
               `}
                             >
                               {session.type}
@@ -1383,10 +1197,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                     })
                   ) : (
                     <tr>
-                      <td
-                        colSpan="6"
-                        className="text-center text-sm text-gray-500 py-4"
-                      >
+                      <td colSpan="6" className="text-center text-sm text-gray-500 py-4">
                         Internship schedule coming soon.
                       </td>
                     </tr>
@@ -1407,66 +1218,35 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               {mockInterviews.map((mi, idx) => {
                 const miDate = parseISO(mi.date);
                 const isTodaySession = isValid(miDate) && isToday(miDate);
-                const isPast =
-                  isValid(miDate) &&
-                  miDate < new Date(new Date().setHours(0, 0, 0, 0));
+                const isPast = isValid(miDate) && miDate < new Date(new Date().setHours(0, 0, 0, 0));
                 let actionText = "Not Started";
-                let actionClass =
-                  "bg-white text-gray-600 border-2 border-gray-100";
+                let actionClass = "bg-white text-gray-600 border-2 border-gray-100";
 
-                if (
-                  mi.studentStatus === "Completed" ||
-                  mi.status === "Completed"
-                ) {
+                if (mi.studentStatus === "Completed" || mi.status === "Completed") {
                   actionText = "Completed";
-                  actionClass =
-                    "bg-green-100 text-green-800 border-2 border-green-200";
+                  actionClass = "bg-green-100 text-green-800 border-2 border-green-200";
                 } else if (isTodaySession) {
                   actionText = "Take Mock Interview";
-                  actionClass =
-                    "bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer shadow-md border-2 border-transparent transition-transform hover:-translate-y-0.5";
+                  actionClass = "bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer shadow-md border-2 border-transparent transition-transform hover:-translate-y-0.5";
                 } else if (isPast) {
                   actionText = "Missed";
-                  actionClass =
-                    "bg-red-50 text-red-700 border-2 border-red-100";
+                  actionClass = "bg-red-50 text-red-700 border-2 border-red-100";
                 }
 
                 return (
-                  <div
-                    key={idx}
-                    className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-md transition-shadow"
-                  >
+                  <div key={idx} className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-md transition-shadow">
                     <div className="mb-3 md:mb-0">
                       <p className="text-lg font-bold text-indigo-900">{`Mock Interview ${idx + 1}`}</p>
                       <div className="flex items-center gap-3 mt-2 text-sm font-medium text-indigo-700 bg-white/60 w-max px-3 py-1 rounded-full shadow-sm border border-indigo-50">
-                        <span className="flex items-center">
-                          <FontAwesomeIcon
-                            icon={faCalendarAlt}
-                            className="mr-1.5"
-                          />{" "}
-                          {isValid(miDate)
-                            ? format(miDate, "dd MMM yyyy")
-                            : mi.date}
-                        </span>
+                        <span className="flex items-center"><FontAwesomeIcon icon={faCalendarAlt} className="mr-1.5" /> {isValid(miDate) ? format(miDate, "dd MMM yyyy") : mi.date}</span>
                         <span className="text-indigo-300">|</span>
-                        <span className="flex items-center">
-                          <FontAwesomeIcon icon={faClock} className="mr-1.5" />{" "}
-                          {mi.startTime} - {mi.endTime}
-                        </span>
+                        <span className="flex items-center"><FontAwesomeIcon icon={faClock} className="mr-1.5" /> {mi.startTime} - {mi.endTime}</span>
                       </div>
                       <p className="text-sm text-gray-700 mt-3 font-medium bg-white/50 px-3 py-1 rounded-md inline-block">
-                        <span className="text-gray-500 mr-1">Type:</span>{" "}
-                        <span className="text-gray-800">
-                          {mi.interviewType}
-                        </span>
+                        <span className="text-gray-500 mr-1">Type:</span> <span className="text-gray-800">{mi.interviewType}</span>
                         {mi.interviewer && (
                           <span className="ml-3 border-l pl-3 border-gray-300">
-                            <span className="text-gray-500 mr-1">
-                              Interviewer:
-                            </span>{" "}
-                            <span className="text-gray-800">
-                              {mi.interviewer}
-                            </span>
+                            <span className="text-gray-500 mr-1">Interviewer:</span> <span className="text-gray-800">{mi.interviewer}</span>
                           </span>
                         )}
                       </p>
@@ -1480,13 +1260,11 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                               ...mi,
                               mockInterview: {
                                 enabled: true,
-                                questions: mi.questions || [],
-                              },
+                                questions: mi.questions || []
+                              }
                             });
                           } else if (actionText === "Not Started") {
-                            toast.info(
-                              `This mock interview is scheduled for ${format(miDate, "dd MMM yyyy")}`,
-                            );
+                            toast.info(`This mock interview is scheduled for ${format(miDate, 'dd MMM yyyy')}`);
                           }
                         }}
                         className={`inline-block px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide ${actionClass}`}
@@ -1494,18 +1272,11 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                         {actionText}
                       </button>
 
-                      {mi.meetingLink &&
-                        actionText === "Take Mock Interview" && (
-                          <a
-                            href={normalizeUrl(mi.meetingLink)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-3 inline-flex items-center text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100/50 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
-                          >
-                            <FontAwesomeIcon icon={faLink} className="mr-2" />{" "}
-                            Join External Meeting
-                          </a>
-                        )}
+                      {mi.meetingLink && actionText === "Take Mock Interview" && (
+                        <a href={normalizeUrl(mi.meetingLink)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100/50 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
+                          <FontAwesomeIcon icon={faLink} className="mr-2" /> Join External Meeting
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
@@ -1519,9 +1290,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
   // ─── 4) "Loading" / "Error" / Header / Details / Actions ───────
   if (loadingJob)
-    return (
-      <div className="bg-white rounded-lg shadow-lg p-4 animate-pulse h-[420px] min-w-0 w-full overflow-hidden" />
-    );
+    return <div className="bg-white rounded-lg shadow-lg p-4 animate-pulse h-[420px] min-w-0 w-full overflow-hidden" />;
   if (errorJob) {
     return null;
   }
@@ -1539,27 +1308,18 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
     timeAgo = "Date unknown";
   }
 
-  const qualifications = Array.isArray(job.qualifications)
-    ? job.qualifications
-    : [];
-  const safeVisibleQualificationCount =
-    qualifications.length > 0
-      ? Math.min(Math.max(visibleQualificationCount, 0), qualifications.length)
-      : 0;
-  const visibleQualifications = qualifications.slice(
-    0,
-    safeVisibleQualificationCount,
-  );
-  const hiddenQualifications = qualifications.slice(
-    safeVisibleQualificationCount,
-  );
+  const qualifications = Array.isArray(job.qualifications) ? job.qualifications : [];
+  const safeVisibleQualificationCount = qualifications.length > 0
+    ? Math.min(Math.max(visibleQualificationCount, 0), qualifications.length)
+    : 0;
+  const visibleQualifications = qualifications.slice(0, safeVisibleQualificationCount);
+  const hiddenQualifications = qualifications.slice(safeVisibleQualificationCount);
   const compensationText = job.compensationDetails?.pdfExtractedCompensation
     ? job.compensationDetails.pdfExtractedCompensation
     : job.internshipType === "STIPEND"
-      ? `${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}${
-          job.compensationDetails?.frequency
-            ? ` per ${job.compensationDetails.frequency.toLowerCase()}`
-            : ""
+      ? `${job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}${job.compensationDetails?.frequency
+          ? ` per ${job.compensationDetails.frequency.toLowerCase()}`
+          : ""
         }`.trim()
       : job.internshipType === "FREE"
         ? "Unpaid / Free"
@@ -1569,19 +1329,14 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   const benefits = Array.isArray(job.compensationDetails?.benefits)
     ? job.compensationDetails.benefits.filter(Boolean)
     : [];
-  const additionalCosts = Array.isArray(
-    job.compensationDetails?.additionalCosts,
-  )
+  const additionalCosts = Array.isArray(job.compensationDetails?.additionalCosts)
     ? job.compensationDetails.additionalCosts.filter(Boolean)
     : [];
   const detailRows = [
     { label: "Company", value: job.companyName || "—" },
     { label: "Location", value: job.location || "Remote" },
     { label: "Start Date", value: formatDateLabel(job.startDate) },
-    {
-      label: "End Date / Duration",
-      value: formatDateLabel(job.endDateOrDuration || job.duration),
-    },
+    { label: "End Date / Duration", value: formatDateLabel(job.endDateOrDuration || job.duration) },
     { label: "Mode", value: formatEnumLabel(job.internshipMode || job.mode) },
     { label: "Type", value: formatEnumLabel(job.internshipType) },
     { label: "Level", value: job.classification || "—" },
@@ -1591,6 +1346,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   return (
     // NEW
     <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-full min-h-[420px] min-w-0 w-full overflow-hidden">
+
       {/* 5. RENDER STIPEND MODAL */}
       {/* 5. RENDER STIPEND MODAL (Fixed) */}
       {showStipendModal && (
@@ -1613,16 +1369,12 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
             </button>
 
             <div className="text-center mb-6">
-              <FontAwesomeIcon
-                icon={faCreditCard}
-                className="text-4xl text-indigo-600 mb-4"
-              />
+              <FontAwesomeIcon icon={faCreditCard} className="text-4xl text-indigo-600 mb-4" />
               <h2 className="text-xl font-semibold text-gray-800 mb-2">
                 Complete Payment
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                This is a paid internship. Please complete the payment to accept
-                the offer.
+                This is a paid internship. Please complete the payment to accept the offer.
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-lg font-bold text-gray-800">
@@ -1631,27 +1383,24 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               </div>
             </div>
 
-            {/* ✅ Razorpay Button */}
-            <button
-              onClick={handleRazorpayPayment}
-              className="w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 bg-[#0b123d] text-white hover:bg-[#1a2356] shadow-md"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
-                />
-              </svg>
-              Pay with Razorpay
-            </button>
+            {/* ✅ PayPal Buttons */}
+            <PayPalScriptProvider options={paypalInitialOptions}>
+              <PayPalButtons
+                createOrder={createPayPalOrder}
+                onApprove={onPayPalApprove}
+                forceReRender={[currency]}
+                onError={(error) => {
+                  console.error('PayPal error:', error);
+                  toast.error('Payment failed. Please try again.');
+                }}
+                style={{
+                  layout: 'vertical',
+                  color: 'blue',
+                  shape: 'rect',
+                  label: 'paypal'
+                }}
+              />
+            </PayPalScriptProvider>
           </div>
         </div>
       )}
@@ -1659,12 +1408,13 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       {showAuthLinkedModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6">
-            <h3 className="text-lg font-semibold text-gray-800 text-center whitespace-nowrap mb-4">
-              Your Google-Calendar authentication to Edutechex is successful ✅
+            <h3
+              className="text-lg font-semibold text-gray-800 text-center whitespace-nowrap mb-4"
+            >
+              Your Google-Calendar authentication to Skillnaav is successful ✅
             </h3>
             <p className="text-sm text-gray-700 text-center">
-              Now click on "Add/Update to Calendar" button to sync your Schedule
-              events to your Google Calendar.
+              Now click on "Add/Update to Calendar" button to sync your Schedule events to your Google Calendar.
             </p>
             <div className="mt-6 flex justify-center">
               <button
@@ -1710,11 +1460,10 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                   type="button"
                   onClick={confirmRespond}
                   className={`flex-1 h-10 rounded-xl text-sm font-semibold text-white transition active:scale-[0.98]
-              ${
-                responseType === "Accepted"
-                  ? "bg-indigo-600 hover:bg-indigo-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }`}
+              ${responseType === "Accepted"
+                      ? "bg-indigo-600 hover:bg-indigo-700"
+                      : "bg-red-600 hover:bg-red-700"
+                    }`}
                 >
                   {responseType === "Accepted" ? "Yes, Accept" : "Yes, Reject"}
                 </button>
@@ -1761,6 +1510,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                   <p className="text-sm text-gray-600 mt-1">
                     Choose your preferred slot to confirm acceptance.
                   </p>
+
                 </div>
               </div>
             </div>
@@ -1772,14 +1522,10 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-semibold uppercase tracking-wide">
                     <span className="text-gray-700">Available slots</span>{" "}
-                    <span className="text-gray-500 font-medium">
-                      (24 Hours Format)
-                    </span>
+                    <span className="text-gray-500 font-medium">(24 Hours Format)</span>
                   </p>
                   <span className="text-xs text-gray-500">
-                    {availableSlots.length > 0
-                      ? `${availableSlots.length} slots Available`
-                      : "No slots"}
+                    {availableSlots.length > 0 ? `${availableSlots.length} slots Available` : "No slots"}
                   </span>
                 </div>
 
@@ -1798,11 +1544,10 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                         <label
                           key={i}
                           className={`h-[72px] flex items-center justify-between rounded-2xl border bg-white px-4 cursor-pointer transition
-                      ${
-                        isSelected
-                          ? "border-indigo-500 ring-2 ring-indigo-200"
-                          : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40"
-                      }`}
+                      ${isSelected
+                              ? "border-indigo-500 ring-2 ring-indigo-200"
+                              : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                            }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             {/* Modern radio */}
@@ -1818,9 +1563,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
                             <div className="min-w-0">
                               <div className="text-sm font-semibold text-gray-900 truncate">
-                                {slot.startTime}{" "}
-                                <span className="text-gray-400">-</span>{" "}
-                                {slot.endTime}
+                                {slot.startTime} <span className="text-gray-400">-</span> {slot.endTime}
                               </div>
                               <div className="text-xs text-gray-500">
                                 Click to select
@@ -1845,14 +1588,15 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                             onClick={(e) => {
                               // ✅ Clicking the already selected slot should unselect it
                               if (isSelected) {
-                                e.preventDefault(); // stop native radio behavior
-                                e.stopPropagation(); // avoid extra bubbling
+                                e.preventDefault();     // stop native radio behavior
+                                e.stopPropagation();    // avoid extra bubbling
                                 setSelectedTimeSlot(null);
                               }
                             }}
                             onChange={() => setSelectedTimeSlot(label)} // ✅ Normal selection
                             className="sr-only"
                           />
+
                         </label>
                       );
                     })}
@@ -1883,11 +1627,10 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                 onClick={confirmTimeSelection}
                 disabled={savingTimeSlot || !selectedTimeSlot}
                 className={`h-10 px-5 rounded-xl text-white font-medium transition
-            ${
-              savingTimeSlot || !selectedTimeSlot
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
+            ${savingTimeSlot || !selectedTimeSlot
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                  }`}
               >
                 {savingTimeSlot ? "Saving..." : "Confirm"}
               </button>
@@ -2036,15 +1779,16 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         </div>
       )}
 
+
+
       <div className="mb-3 flex justify-end">
         <span
-          className={`inline-flex max-w-full rounded-full px-3 py-1 text-xs font-medium leading-tight text-center whitespace-normal break-words ${
-            offer.status === "Accepted"
-              ? "bg-green-100 text-green-700"
-              : offer.status === "Rejected"
-                ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
-          }`}
+          className={`inline-flex max-w-full rounded-full px-3 py-1 text-xs font-medium leading-tight text-center whitespace-normal break-words ${offer.status === "Accepted"
+            ? "bg-green-100 text-green-700"
+            : offer.status === "Rejected"
+              ? "bg-red-100 text-red-700"
+              : "bg-blue-100 text-blue-700"
+            }`}
         >
           {offer.status}
         </span>
@@ -2076,6 +1820,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         </div>
       </div>
 
+
       {/* DETAILS */}
       <div className="text-gray-600 text-sm mb-3 space-y-1">
         <p className="flex items-center">
@@ -2084,17 +1829,9 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         </p>
         <p className="flex items-center">
           <FontAwesomeIcon icon={faClock} className="mr-2" />
-          {isNaN(Date.parse(job.startDate))
-            ? job.startDate || "Date unknown"
-            : format(new Date(job.startDate), "dd MMM yyyy")}{" "}
-          –{" "}
-          {job.endDateOrDuration || job.duration
-            ? isNaN(Date.parse(job.endDateOrDuration || job.duration))
-              ? job.endDateOrDuration || job.duration
-              : format(
-                  new Date(job.endDateOrDuration || job.duration),
-                  "dd MMM yyyy",
-                )
+          {isNaN(Date.parse(job.startDate)) ? (job.startDate || "Date unknown") : format(new Date(job.startDate), "dd MMM yyyy")} –{" "}
+          {(job.endDateOrDuration || job.duration)
+            ? (isNaN(Date.parse(job.endDateOrDuration || job.duration)) ? (job.endDateOrDuration || job.duration) : format(new Date(job.endDateOrDuration || job.duration), "dd MMM yyyy"))
             : "—"}
         </p>
 
@@ -2107,8 +1844,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         )}
 
         <p className="flex items-start">
-          {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
-          <FontAwesomeIcon icon={faIndianRupee} className="mr-2 mt-1" />
+          <FontAwesomeIcon icon={faDollarSign} className="mr-2 mt-1" />
           <span>{compensationText}</span>
         </p>
       </div>
@@ -2141,9 +1877,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
             </>
           </div>
         ) : job?.isDeleted ? (
-          <span className="text-xs text-gray-400 italic">
-            No qualifications
-          </span>
+          <span className="text-xs text-gray-400 italic">No qualifications</span>
         ) : null}
         <div className="ml-auto">
           {offer.status.toLowerCase() !== "accepted" && (
@@ -2171,37 +1905,30 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               {q}
             </span>
           ))}
-          {Array.from({ length: qualifications.length }, (_, i) => i + 1).map(
-            (hiddenCount) => (
-              <span
-                key={`measure-count-${hiddenCount}`}
-                data-qualification-count={hiddenCount}
-                className="inline-flex whitespace-nowrap text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-medium"
-              >
-                +{hiddenCount}
-              </span>
-            ),
-          )}
+          {Array.from({ length: qualifications.length }, (_, i) => i + 1).map((hiddenCount) => (
+            <span
+              key={`measure-count-${hiddenCount}`}
+              data-qualification-count={hiddenCount}
+              className="inline-flex whitespace-nowrap text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-medium"
+            >
+              +{hiddenCount}
+            </span>
+          ))}
         </div>
       )}
 
       {/* SCHEDULE COMPLETED BADGE */}
       {attendanceData?.isScheduleClosed && (
         <div className="mt-3 mb-1 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 flex items-center gap-2">
-          <FontAwesomeIcon
-            icon={faCheckCircle}
-            className="text-emerald-500 flex-shrink-0"
-          />
-          <span className="text-xs font-bold text-emerald-700">
-            Schedule Completed
-          </span>
+          <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-500 flex-shrink-0" />
+          <span className="text-xs font-bold text-emerald-700">Schedule Completed</span>
         </div>
       )}
 
       {/* VIEW SCHEDULE & LINK CALENDAR BUTTONS */}
       {offer.status.toLowerCase() === "accepted" && (
         <div className="mt-auto pt-4">
-          {userPlan === "Premium Basic" || userPlan === "Premium Plus" ? (
+          {(userPlan === "Premium Basic" || userPlan === "Premium Plus") ? (
             <div className="space-y-5 pb-1">
               {/* VIEW SCHEDULE + DETAILS */}
               <div className="flex items-center justify-between">
@@ -2209,10 +1936,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                   onClick={() => setShowScheduleModal(true)}
                   className="flex items-center text-emerald-600 hover:text-emerald-700 text-sm font-medium"
                 >
-                  <FontAwesomeIcon
-                    icon={faCalendarAlt}
-                    className="mr-1 text-emerald-500"
-                  />
+                  <FontAwesomeIcon icon={faCalendarAlt} className="mr-1 text-emerald-500" />
                   View Schedule
                 </button>
                 <button
@@ -2229,16 +1953,17 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                 <button
                   onClick={handleAddUpdateCalendar}
                   className="text-sm font-semibold text-orange-600 transition hover:text-orange-700 disabled:cursor-not-allowed disabled:text-gray-400"
-                  disabled={syncPhase === "working" || syncPhase === "auth"}
+                  disabled={syncPhase === 'working' || syncPhase === 'auth'}
                 >
                   Add/Update to Calendar
                 </button>
               </div>
+
+
             </div>
           ) : (
             <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium">
-              Upgrade to Premium Basic or Plus to access schedule and calendar
-              features.
+              Upgrade to Premium Basic or Plus to access schedule and calendar features.
             </div>
           )}
         </div>
@@ -2255,10 +1980,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               &times;
             </button>
             <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
-              <FontAwesomeIcon
-                icon={faCalendarAlt}
-                className="mr-2 text-indigo-500"
-              />
+              <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-indigo-500" />
               Internship Schedule
             </h2>
 
@@ -2277,10 +1999,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                   </button>
 
                   <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-                    <FontAwesomeIcon
-                      icon={faMapMarkerAlt}
-                      className="mr-2 text-indigo-600"
-                    />
+                    <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-indigo-600" />
                     Location Details
                   </h3>
 
@@ -2324,23 +2043,16 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                     &times;
                   </button>
                   <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-                    <FontAwesomeIcon
-                      icon={faClock}
-                      className="mr-2 text-indigo-600"
-                    />
+                    <FontAwesomeIcon icon={faClock} className="mr-2 text-indigo-600" />
                     Summary
                   </h3>
                   <div className="text-sm text-gray-700 space-y-6">
                     <p>
-                      <strong className="text-gray-700">
-                        Section Summary:
-                      </strong>{" "}
+                      <strong className="text-gray-700">Section Summary:</strong>{" "}
                       {selectedSummary.sectionSummary || "—"}
                     </p>
                     <p>
-                      <strong className="text-gray-700">
-                        Instructor Name:
-                      </strong>{" "}
+                      <strong className="text-gray-700">Instructor Name:</strong>{" "}
                       {selectedSummary.instructor || "—"}
                     </p>
                   </div>
@@ -2388,8 +2100,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
               Complete the internship first
             </p>
             <p className="text-gray-600 text-sm mb-6">
-              Contact Your Instructor for the Internship Certificate after
-              completing your whole internship schedule
+              Contact Your Instructor for the Internship Certificate after completing your whole internship schedule
             </p>
             <button
               onClick={() => setShowCompleteNotice(false)}
@@ -2402,71 +2113,66 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       )}
 
       {/* ✅ ACTION BUTTONS */}
-      {(offer.status.toLowerCase() === "sent" || isUnpaidAccepted) &&
-        !job.isDeleted && (
-          <div className="mt-auto space-y-4 pt-4">
-            {/* Status Indicator for STIPEND details */}
-            {requiresStipendDetails && (
-              <div
-                className={`p-3 rounded-lg text-sm font-medium text-center ${
-                  stipendDetailsSubmitted
-                    ? "bg-green-100 text-green-800"
-                    : "bg-blue-100 text-blue-800"
+      {(offer.status.toLowerCase() === "sent" || isUnpaidAccepted) && !job.isDeleted && (
+        <div className="mt-auto space-y-4 pt-4">
+          {/* Status Indicator for STIPEND details */}
+          {requiresStipendDetails && (
+            <div
+              className={`p-3 rounded-lg text-sm font-medium text-center ${stipendDetailsSubmitted
+                ? "bg-green-100 text-green-800"
+                : "bg-blue-100 text-blue-800"
                 }`}
-              >
-                {/*Change faDollarSign to faIndainRupee - 15-09-2026 */}
-                <FontAwesomeIcon icon={faIndianRupee} className="mr-2" />
-                {stipendDetailsSubmitted
-                  ? `✅ Stipend details submitted.`
-                  : ` Stipend Details Required for Acceptance.`}
-              </div>
-            )}
-
-            {/* Payment Status Indicator for PAID internships */}
-            {requiresPayment && (
-              <div
-                className={`p-3 rounded-lg text-sm font-medium text-center ${
-                  paymentStatus?.paid
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
-              >
-                <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
-                {paymentStatus?.paid
-                  ? `✅ Payment completed (${paymentAmount} ${currency})`
-                  : ` Payment Required: ${paymentAmount} ${currency}`}
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleRespond("Accepted")}
-                disabled={loading}
-                className={`flex-1 px-4 py-2 rounded-lg text-white transition
-                ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
-                }`}
-              >
-                {loading ? "Processing..." : "Accept"}
-              </button>
-
-              <button
-                onClick={() => handleRespond("Rejected")}
-                disabled={loading}
-                className={`flex-1 px-4 py-2 rounded-lg text-white transition
-                ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
-                }`}
-              >
-                {loading ? "Please wait..." : "Reject"}
-              </button>
+            >
+              <FontAwesomeIcon icon={faDollarSign} className="mr-2" />
+              {stipendDetailsSubmitted
+                ? `✅ Stipend details submitted.`
+                : ` Stipend Details Required for Acceptance.`}
             </div>
+          )}
+
+          {/* Payment Status Indicator for PAID internships */}
+          {requiresPayment && (
+            <div
+              className={`p-3 rounded-lg text-sm font-medium text-center ${paymentStatus?.paid
+                ? "bg-green-100 text-green-800"
+                : "bg-yellow-100 text-yellow-800"
+                }`}
+            >
+              <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+              {paymentStatus?.paid
+                ? `✅ Payment completed (${paymentAmount} ${currency})`
+                : ` Payment Required: ${paymentAmount} ${currency}`}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleRespond("Accepted")}
+              disabled={loading}
+              className={`flex-1 px-4 py-2 rounded-lg text-white transition
+                ${loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
+                }`}
+            >
+              {loading ? "Processing..." : "Accept"}
+            </button>
+
+            <button
+              onClick={() => handleRespond("Rejected")}
+              disabled={loading}
+              className={`flex-1 px-4 py-2 rounded-lg text-white transition
+                ${loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                }`}
+            >
+              {loading ? "Please wait..." : "Reject"}
+            </button>
+
           </div>
-        )}
+        </div>
+      )}
 
       <CalendarSyncStatus
         open={syncModalOpen}
@@ -2478,6 +2184,6 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       />
     </div>
   );
-};
+}
 
 export default OfferLetterCard;
