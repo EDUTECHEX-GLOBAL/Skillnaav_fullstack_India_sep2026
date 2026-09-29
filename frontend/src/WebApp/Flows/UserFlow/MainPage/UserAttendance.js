@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../../../api/axiosInstance";
 import { Skeleton } from "antd";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarAlt, faMapMarkerAlt, faClock, faExclamationCircle, faCheckCircle, faTimesCircle, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const UserAttendance = () => {
   const [offers, setOffers] = useState([]);

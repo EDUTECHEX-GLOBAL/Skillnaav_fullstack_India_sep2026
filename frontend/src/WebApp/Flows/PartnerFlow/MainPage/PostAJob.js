@@ -351,7 +351,7 @@ const PostAJob = () => {
 
     const payload = {
       ...formData,
-      imgUrl: formData.imgUrl || defaultCompanyLogo,
+      imgUrl: formData.imgUrl || edutechex_logo_white,
       internshipMode: (formData.mode || "ONLINE").toUpperCase(),
       location: formData.state
         ? `${formData.city}, ${formData.state}, ${formData.country}`
@@ -805,7 +805,7 @@ const PostAJob = () => {
             <p className="text-sm text-gray-500 mt-1">Uploading image...</p>
           )}
           <img
-            src={previewUrl || formData.imgUrl || defaultCompanyLogo}
+            src={previewUrl || formData.imgUrl || edutechex_logo_white}
             alt="Internship preview"
             className="mt-2 h-24 w-24 rounded-lg object-cover border border-gray-200"
           />

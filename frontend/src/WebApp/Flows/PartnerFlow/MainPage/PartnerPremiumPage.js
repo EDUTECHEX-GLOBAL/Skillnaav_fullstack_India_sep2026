@@ -4,7 +4,6 @@ import axios from "../../../../api/axiosInstance";
 import { useSelector } from "react-redux";
 
 
-
 // Frontend plan definitions — price/duration here is display-only.
 // Server derives all values from planType — client never sends amount or duration.
 const plans = [
@@ -68,6 +67,8 @@ const plans = [
 export default function PartnerPremiumPage() {
   const [sdkReady, setSdkReady]               = useState(false);
   const [alert, setAlert]                     = useState(null);
+  const [selectedPlanType, setSelectedPlanType] = useState(null);
+  const [selectedIndex, setSelectedIndex]       = useState(null);
 
   const [isProcessing, setIsProcessing]       = useState(false);
   const [, setTick]                           = useState(0);
