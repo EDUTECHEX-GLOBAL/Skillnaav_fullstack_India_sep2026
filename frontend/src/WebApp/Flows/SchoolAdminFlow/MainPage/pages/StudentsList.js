@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from "../../../../../api/axiosInstance";
 import StudentStatusModal from './StudentStatusModal';
 import ConfirmationModal from './ConfirmationModal';
-import { Search, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
 // ─── Windowed page number builder ────────────────────────────────────────────
 const getPageNumbers = (current, total) => {

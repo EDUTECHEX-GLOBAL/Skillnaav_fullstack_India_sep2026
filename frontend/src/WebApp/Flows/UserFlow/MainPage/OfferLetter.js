@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "../../../../api/axiosInstance";
 import OfferLetterCard from "./OfferLetterCard";
 import { Skeleton } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheckCircle, faTimesCircle, faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 
 const offerGridClassName =
   "grid w-full gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))]";

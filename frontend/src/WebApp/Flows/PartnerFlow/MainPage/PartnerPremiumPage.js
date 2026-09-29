@@ -1,5 +1,5 @@
 // src/components/Partner/PartnerPremiumPage.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../../../../api/axiosInstance";
 import { useSelector } from "react-redux";
 
@@ -67,8 +67,8 @@ const plans = [
 export default function PartnerPremiumPage() {
   const [sdkReady, setSdkReady]               = useState(false);
   const [alert, setAlert]                     = useState(null);
-  const [selectedPlanType, setSelectedPlanType] = useState(null);
-  const [selectedIndex, setSelectedIndex]       = useState(null);
+  const [, setSelectedPlanType]               = useState(null);
+  const [, setSelectedIndex]                   = useState(null);
 
   const [isProcessing, setIsProcessing]       = useState(false);
   const [, setTick]                           = useState(0);
