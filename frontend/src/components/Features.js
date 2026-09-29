@@ -16,17 +16,17 @@ const buttonImages = {
 const imageSources = ["../assets/Feature3Img.png", "../assets/Feature4Img.png"];
 
 const Features = () => {
-  const { skillnaavData } = useSelector((state) => state.root);
+  const { edutechexData } = useSelector((state) => state.root);
 
   if (
-    !skillnaavData ||
-    !skillnaavData.features ||
-    skillnaavData.features.length === 0
+    !edutechexData ||
+    !edutechexData.features ||
+    edutechexData.features.length === 0
   ) {
     return null;
   }
 
-  const featuresData = skillnaavData.features.map((feature, index) => {
+  const featuresData = edutechexData.features.map((feature, index) => {
     const buttonColor =
       index === 0
         ? "text-blue-600"

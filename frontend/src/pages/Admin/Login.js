@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import SkillnaavLogo from "../../assets/skillnaav_logo-250w.png";
+import EdutechexLogo from "../../assets/edutechex_logo-250w.png";
 import axios from "../../api/axiosInstance";
 import { message } from "antd";
 import { ShowLoading, HideLoading } from "../../redux/rootSlice";
@@ -23,12 +23,12 @@ function Login() {
   const login = async () => {
     try {
       dispatch(ShowLoading());
-      const response = await axios.post("/api/skillnaav/admin-login", user);
+      const response = await axios.post("/api/edutechex/admin-login", user);
       dispatch(HideLoading());
 
       if (response.data.success) {
         message.success(response.data.message);
-        localStorage.setItem("skillnaavAdminSession", JSON.stringify(response.data));
+        localStorage.setItem("edutechexAdminSession", JSON.stringify(response.data));
         window.location.href = "/admin"; // Redirect to admin page on successful login
       } else {
         message.error(response.data.message);
@@ -43,7 +43,7 @@ function Login() {
     <div className="flex justify-center items-center h-screen bg-gray-200">
       <div className="w-96 p-8 bg-white rounded-lg shadow-md">
         <div className="flex justify-center mb-6">
-          <img src={SkillnaavLogo} alt="logo" className="w-36 h-auto" />
+          <img src={EdutechexLogo} alt="logo" className="w-36 h-auto" />
         </div>
         <h1 className="text-3xl text-center text-gray-800 mb-6 font-semibold">
           Admin Login

@@ -23,7 +23,7 @@ const partnerFeatureIndex = [
   { key: "support", label: "Support", description: "Contact support; fill the form with your issue and (optionally) add an attachment." },
   { key: "logout", label: "Logout", description: "Securely sign out from the Partner dashboard." },
   { key: "internship-payments", label: "Internship Payments", description: "Track/verify student payments for internships." },
-  { key: "partner-payments", label: "Partner Payments", description: "Billing and payments between Skillnaav and partners." },
+  { key: "partner-payments", label: "Partner Payments", description: "Billing and payments between Edutechex and partners." },
 ];
 
 const PartnerMainPage = () => {

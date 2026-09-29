@@ -152,7 +152,7 @@ export default function PartnerPremiumPage() {
         key: RAZORPAY_KEY_ID,
         amount: orderRes.amount,
         currency: orderRes.currency,
-        name: "Skillnaav",
+        name: "Edutechex",
         description: `Upgrade to ${plan.title}`,
         order_id: orderRes.id,
         handler: async function (response) {

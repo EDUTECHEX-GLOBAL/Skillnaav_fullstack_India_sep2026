@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Modal, Form, Input, Button, message, Skeleton } from "antd";
 import axios from "../../api/axiosInstance";
+import imageCompression from "browser-image-compression";
 
 
 const { TextArea } = Input;
 
 function AdminFeatures() {
-  const [skillnaavData, setSkillnaavData] = useState(null);
+  const [edutechexData, setEdutechexData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
@@ -16,11 +17,11 @@ function AdminFeatures() {
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false); // State to manage image upload loading
 
-  const fetchSkillnaavData = useCallback(async () => {
+  const fetchEdutechexData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/skillnaav/get-skillnaav-data");
-      setSkillnaavData(response.data);
+      const response = await axios.get("/api/edutechex/get-edutechex-data");
+      setEdutechexData(response.data);
     } catch (error) {
       message.error("Failed to fetch data. Please try again later.");
     } finally {
@@ -29,8 +30,8 @@ function AdminFeatures() {
   }, []);
 
   useEffect(() => {
-    fetchSkillnaavData();
-  }, [fetchSkillnaavData]);
+    fetchEdutechexData();
+  }, [fetchEdutechexData]);
 
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
@@ -43,12 +44,17 @@ function AdminFeatures() {
     reader.readAsDataURL(selectedFile);
 
     try {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(selectedFile, options);
 
-      const { data } = await axios.post("/api/upload/feature-image", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const formData = new FormData();
+      formData.append("image", compressedFile, selectedFile.name);
+
+      const { data } = await axios.post("/api/upload/feature-image", formData);
 
       if (data.success) {
         setImageUrl(data.imageUrl);
@@ -73,13 +79,13 @@ function AdminFeatures() {
         featureImg: imageUrl,
       };
       const response = await axios.put(
-        `/api/skillnaav/update-feature/${selectedFeature._id}`,
+        `/api/edutechex/update-feature/${selectedFeature._id}`,
         payload
       );
       if (response.data.success) {
         message.success(response.data.message);
         setShowEditModal(false);
-        fetchSkillnaavData();
+        fetchEdutechexData();
         form.resetFields();
         setImageUrl("");
         setPreviewImageUrl(""); // Clear preview image after successful update
@@ -100,11 +106,11 @@ function AdminFeatures() {
     try {
       setLoading(true);
       const payload = { ...values, featureImg: imageUrl };
-      const response = await axios.post("/api/skillnaav/add-feature", payload);
+      const response = await axios.post("/api/edutechex/add-feature", payload);
       if (response.data.success) {
         message.success(response.data.message);
         setShowAddModal(false);
-        fetchSkillnaavData();
+        fetchEdutechexData();
         form.resetFields();
         setImageUrl("");
         setPreviewImageUrl(""); // Clear preview image after successful addition
@@ -124,11 +130,11 @@ function AdminFeatures() {
     try {
       setLoading(true);
       const response = await axios.delete(
-        `/api/skillnaav/delete-feature/${featureId}`
+        `/api/edutechex/delete-feature/${featureId}`
       );
       if (response.data.success) {
         message.success(response.data.message);
-        fetchSkillnaavData();
+        fetchEdutechexData();
       } else {
         message.error(response.data.message || "Failed to delete feature.");
       }
@@ -158,11 +164,11 @@ function AdminFeatures() {
     setShowAddModal(true);
   };
 
-  if (loading || !skillnaavData || !skillnaavData.features) {
+  if (loading || !edutechexData || !edutechexData.features) {
     return <Skeleton active avatar />;
   }
 
-  const { features } = skillnaavData;
+  const { features } = edutechexData;
 
   return (
     <div>

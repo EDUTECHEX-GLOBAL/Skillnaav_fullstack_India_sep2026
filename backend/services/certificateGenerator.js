@@ -26,7 +26,7 @@ async function generateAndUploadCertificate({
     textColor = '#1f2937'
 }) {
     const certificateId = crypto.randomUUID();
-    const verificationUrl = `${process.env.FRONTEND_URL || 'https://www.skillnaav.com'}/verify/${certificateId}`;
+    const verificationUrl = `${process.env.FRONTEND_URL || 'https://www.edutechex.com'}/verify/${certificateId}`;
     
     // Format dates safely
     const formatDate = (dateInput) => {

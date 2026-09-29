@@ -1,8 +1,8 @@
 const axios = require("axios");
 
 const sendEmailViaBrevo = async (mailOptions) => {
-  let senderEmail = mailOptions.from || process.env.EMAIL_FROM || process.env.BREVO_SMTP_LOGIN || "support@skillnaav.com";
-  let senderName = "SkillNaav";
+  let senderEmail = mailOptions.from || process.env.EMAIL_FROM || process.env.BREVO_SMTP_LOGIN || "support@edutechex.com";
+  let senderName = "Edutechex";
 
   if (senderEmail && senderEmail.includes("<")) {
     const match = senderEmail.match(/(.*)<(.*)>/);
@@ -17,7 +17,7 @@ const sendEmailViaBrevo = async (mailOptions) => {
     to: [{ email: mailOptions.to }],
     subject: mailOptions.subject,
     headers: {
-      "List-Unsubscribe": "<mailto:unsubscribe@skillnaav.com?subject=unsubscribe>, <https://skillnaav.com/unsubscribe>",
+      "List-Unsubscribe": "<mailto:unsubscribe@edutechex.com?subject=unsubscribe>, <https://edutechex.com/unsubscribe>",
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
     }
   };

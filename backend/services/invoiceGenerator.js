@@ -1,6 +1,11 @@
 // services/invoiceGenerator.js
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+
+const EDUTECHEX_LOGO_PATH = path.resolve(__dirname, "../../frontend/src/assets/Edutech-logo.png");
+const EDUTECHEX_LOGO_BASE64 = fs.readFileSync(EDUTECHEX_LOGO_PATH).toString("base64");
 
 const AWS_REGION = process.env.AWS_REGION;
 const AWS_IMAGE_BUCKET = process.env.AWS_IMAGE_BUCKET;
@@ -159,10 +164,10 @@ async function generateAndUploadInvoice({
     <body>
         <div class="header">
             <div>
-                <div class="logo-placeholder">SkillNaav</div>
+                <img src="data:image/png;base64,${EDUTECHEX_LOGO_BASE64}" alt="Edutechex Logo" style="height: 40px; margin-bottom: 5px;" />
                 <div style="color: #6b7280; font-size: 12px; margin-top: 6px; line-height: 1.7;">
-                    skillnaav.com<br/>
-                    skillnaav@gmail.com
+                    edutechex.com<br/>
+                    edutechex@gmail.com
                 </div>
             </div>
             <div>
@@ -195,7 +200,7 @@ async function generateAndUploadInvoice({
             <tbody>
                 <tr>
                     <td>
-                        <strong>${description || (planType + ' — SkillNaav Premium Subscription')}</strong><br/>
+                        <strong>${description || (planType + ' — Edutechex Premium Subscription')}</strong><br/>
                     <span style="color: #6b7280; font-size: 13px;">${descriptionDetail || 'Internship platform premium access: unlimited applications, AI career tools, resume builder, mock interviews &amp; mentorship'}</span>
                     </td>
                     <td class="amount-col">$${amount.toFixed(2)}</td>
@@ -217,9 +222,9 @@ async function generateAndUploadInvoice({
         </div>
 
         <div class="footer">
-            Thank you for choosing SkillNaav. For any queries, please contact us at
-            <strong>skillnaav@gmail.com</strong> or visit <strong>skillnaav.com</strong>.<br/>
-            &copy; ${new Date().getFullYear()} SkillNaav. All rights reserved.
+            Thank you for choosing Edutechex. For any queries, please contact us at
+            <strong>edutechex@gmail.com</strong> or visit <strong>edutechex.com</strong>.<br/>
+            &copy; ${new Date().getFullYear()} Edutechex. All rights reserved.
         </div>
     </body>
     </html>

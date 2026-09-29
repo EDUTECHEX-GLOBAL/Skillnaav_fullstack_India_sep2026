@@ -766,7 +766,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         key: RAZORPAY_KEY_ID,
         amount: orderRes.amount,
         currency: orderRes.currency,
-        name: "Skillnaav",
+        name: "Edutechex",
         description: `Payment for ${job?.jobTitle || "Internship"}`,
         order_id: orderRes.orderId,
         handler: async function (response) {
@@ -1660,7 +1660,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6">
             <h3 className="text-lg font-semibold text-gray-800 text-center whitespace-nowrap mb-4">
-              Your Google-Calendar authentication to Skillnaav is successful ✅
+              Your Google-Calendar authentication to Edutechex is successful ✅
             </h3>
             <p className="text-sm text-gray-700 text-center">
               Now click on "Add/Update to Calendar" button to sync your Schedule

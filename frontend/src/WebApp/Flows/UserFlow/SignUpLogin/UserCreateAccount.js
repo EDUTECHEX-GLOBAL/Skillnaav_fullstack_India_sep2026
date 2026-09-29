@@ -6,7 +6,7 @@ import axios from "../../../../api/axiosInstance";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import loginImage from "../../../../assets-webapp/login-image.png";
+import loginImage from "../../../../assets-webapp/login-mockup-edutechex.png";
 import { GoogleLogin } from "@react-oauth/google";
 import { IN_STATES } from "../../../../constants/locations";
 import UserAgeGateConsent from "./UserProfileBuilding/UserAgeGateConsent";
@@ -1281,7 +1281,7 @@ const UnifiedUserRegistration = () => {
         <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-purple-50">
           <img
             src={loginImage}
-            alt="Skillnaav Login Illustration"
+            alt="Edutechex Login Illustration"
             className="w-full h-full object-cover rounded-lg"
           />
         </div>

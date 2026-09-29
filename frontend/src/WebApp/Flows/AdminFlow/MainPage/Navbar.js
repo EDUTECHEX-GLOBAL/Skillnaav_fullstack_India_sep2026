@@ -102,7 +102,7 @@ const Navbar = ({ onToggleSidebar, showMenuToggle }) => {
         {/* Logo */}
         <img
           src={logo}
-          alt="Skillnaav"
+          alt="Edutechex"
           className="h-11 object-contain"
         />
       </div>

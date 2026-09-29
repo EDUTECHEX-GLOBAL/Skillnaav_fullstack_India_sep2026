@@ -202,8 +202,8 @@ const approveSchoolAdmin = asyncHandler(async (req, res) => {
   await admin.save();
   await notifyUser(
     admin.email,
-    "Your Skillnaav School Admin account has been approved!",
-    `<p>Congratulations! Your Skillnaav admin account for <strong>${admin.schoolName}</strong> has been approved by our team.</p>`,
+    "Your Edutechex School Admin account has been approved!",
+    `<p>Congratulations! Your Edutechex admin account for <strong>${admin.schoolName}</strong> has been approved by our team.</p>`,
   );
   res.status(200).json({ message: "School Admin approved successfully." });
 });
@@ -221,7 +221,7 @@ const rejectSchoolAdmin = asyncHandler(async (req, res) => {
   await admin.save();
   await notifyUser(
     admin.email,
-    "Your Skillnaav School Admin account has been rejected.",
+    "Your Edutechex School Admin account has been rejected.",
     `<p>We're sorry to inform you that your admin registration for <strong>${admin.schoolName}</strong> has been rejected. If you believe this is a mistake, please contact support.</p>`,
   );
   res.status(200).json({ message: "School Admin rejected successfully." });
@@ -412,14 +412,14 @@ const uploadStudentsFromCSV = async (req, res) => {
           emailPromises.push(
             notifyUser(
               student.email,
-              "Welcome to SkillNaav - Your Login Credentials",
+              "Welcome to Edutechex - Your Login Credentials",
               `<p>Hello ${student.name},</p>
-              <p>Welcome to SkillNaav! Here are your login credentials:</p>
+              <p>Welcome to Edutechex! Here are your login credentials:</p>
               <ul>
                 <li><strong>Email:</strong> ${student.email}</li>
                 <li><strong>Password:</strong> ${plainPassword}</li>
               </ul>
-              <p>You can log in at <a href="https://www.skillnaav.com/user/login">https://www.skillnaav.com/user/login</a>.</p>
+              <p>You can log in at <a href="https://www.edutechex.com/user/login">https://www.edutechex.com/user/login</a>.</p>
               <p>We recommend changing your password after the first login.</p>`,
             ),
           );
@@ -466,7 +466,7 @@ const uploadStudentsFromCSV = async (req, res) => {
           try {
             await notifyUser(
               schoolAdmin.email,
-              "Student Credentials CSV – SkillNaav",
+              "Student Credentials CSV – Edutechex",
               `Attached is the student credentials CSV for ${createdStudents.length} newly created students.`,
               csvBuffer
                 ? [
@@ -887,10 +887,10 @@ const toggleStudentAccess = asyncHandler(async (req, res) => {
   }
 
   const statusText = isActive ? "restored" : "restricted";
-  const emailSubject = `Your SkillNaav account has been ${statusText}`;
+  const emailSubject = `Your Edutechex account has been ${statusText}`;
   const emailMessage = isActive
-    ? `Your access to SkillNaav has been restored by your school administrator. You may now log in again.`
-    : `Your access to SkillNaav has been restricted by your school administrator. You are currently blocked from logging in. Please contact your school for details.`;
+    ? `Your access to Edutechex has been restored by your school administrator. You may now log in again.`
+    : `Your access to Edutechex has been restricted by your school administrator. You are currently blocked from logging in. Please contact your school for details.`;
 
   await notifyUser(student.email, emailSubject, emailMessage);
 
@@ -1031,8 +1031,8 @@ const sendSchoolAdminVerificationCode = asyncHandler(async (req, res) => {
   );
   await notifyUser(
     email,
-    "SkillNaav School Admin OTP Verification",
-    generateOtpEmailHtml(otp, "creating your SkillNaav school admin account"),
+    "Edutechex School Admin OTP Verification",
+    generateOtpEmailHtml(otp, "creating your Edutechex school admin account"),
   );
   res.status(200).json({ message: "Verification code sent to email." });
 });

@@ -14,9 +14,9 @@ const userFlowQuestionSet = [
   { id: "performance", type: "rating", label: "5) How responsive/fast did the site feel (1-5)?" },
   { id: "featureUsed", type: "select", label: "6) Feature used most today", options: ["Search","Save","Apply","Profile","Other"] },
   { id: "confusing", type: "text", label: "7) Anything confusing or broken? (short)" },
-  { id: "nps", type: "scale", min: 0, max: 10, label: "8) How likely are you to recommend Skillnaav? (0-10)" },
+  { id: "nps", type: "scale", min: 0, max: 10, label: "8) How likely are you to recommend Edutechex? (0-10)" },
   { id: "suggestions", type: "textarea", label: "9) Suggestions to improve internship discovery" },
-  { id: "followUp", type: "yesno", label: "10) Would you like follow-up from Skillnaav?" },
+  { id: "followUp", type: "yesno", label: "10) Would you like follow-up from Edutechex?" },
   { id: "contactEmail", type: "text", label: "If yes, email:" }
 ];
 
@@ -52,7 +52,7 @@ const canonical = {
 };
 
 async function main() {
-  const MONGO = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/skillnaav";
+  const MONGO = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/edutechex";
   await mongoose.connect(MONGO, { useNewUrlParser: true, useUnifiedTopology: true });
 
   let totalUpdated = 0;

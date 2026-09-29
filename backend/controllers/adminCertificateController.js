@@ -60,7 +60,7 @@ const updateCertificateStatus = async (req, res) => {
 
             // Email Notification
             if (partner.email) {
-                const subject = `SkillNaav: Your Certificate Template has been ${status}`;
+                const subject = `Edutechex: Your Certificate Template has been ${status}`;
                 const html = `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
                         <h2 style="color: #4f46e5;">Certificate Template ${status}</h2>
@@ -68,10 +68,10 @@ const updateCertificateStatus = async (req, res) => {
                         <p>Your custom internship certificate template <strong>"${certificate.name}"</strong> has been reviewed by the admin.</p>
                         <p><strong>Status:</strong> <span style="color: ${status === 'Approved' ? 'green' : 'red'};">${status}</span></p>
                         ${adminRemarks ? `<p><strong>Admin Remarks:</strong> ${adminRemarks}</p>` : ''}
-                        ${status === 'Rejected' ? `<p>Please update your template ensuring it complies with our guidelines (e.g., includes the SkillNaav logo) and upload a new one.</p>` : ''}
+                        ${status === 'Rejected' ? `<p>Please update your template ensuring it complies with our guidelines (e.g., includes the Edutechex logo) and upload a new one.</p>` : ''}
                         <br/>
                         <p>Best regards,</p>
-                        <p>The SkillNaav Team</p>
+                        <p>The Edutechex Team</p>
                     </div>
                 `;
 

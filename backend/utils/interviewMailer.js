@@ -21,7 +21,7 @@ async function sendInterviewScheduledToStudent({
   timezone,
   partnerName,
 }) {
-  const subject = "Your SkillNaav Interview is Scheduled 🎯";
+  const subject = "Your Edutechex Interview is Scheduled 🎯";
   const companyText = companyName ? ` at <strong>${companyName}</strong>` : "";
 
   const bodyHtml = `
@@ -111,7 +111,7 @@ async function sendInterviewScheduledToPartner({
       </div>
     </div>
 
-    <p style="font-size: 14px; color: #64748b; text-align: center;">You can manage this interview and view candidate details directly from your SkillNaav dashboard.</p>
+    <p style="font-size: 14px; color: #64748b; text-align: center;">You can manage this interview and view candidate details directly from your Edutechex dashboard.</p>
   `;
 
   return notifyUser(to, subject, bodyHtml);

@@ -4,7 +4,7 @@ import axios from "../../api/axiosInstance";
 const { TextArea } = Input;
 
 const AdminTeam = () => {
-  const [skillnaavData, setSkillnaavData] = useState([]);
+  const [edutechexData, setEdutechexData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditTeamModalVisible, setIsEditTeamModalVisible] = useState(false);
   const [isAddTeamModalVisible, setIsAddTeamModalVisible] = useState(false);
@@ -14,22 +14,22 @@ const AdminTeam = () => {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
 
-  const fetchSkillnaavData = useCallback(async () => {
+  const fetchEdutechexData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/skillnaav/get-skillnaav-data");
-      setSkillnaavData(response.data.teammember);
+      const response = await axios.get("/api/edutechex/get-edutechex-data");
+      setEdutechexData(response.data.teammember);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching SkillNaav data:", error);
+      console.error("Error fetching Edutechex data:", error);
       setLoading(false);
       message.error("Failed to fetch team members");
     }
   }, []);
 
   useEffect(() => {
-    fetchSkillnaavData();
-  }, [fetchSkillnaavData]);
+    fetchEdutechexData();
+  }, [fetchEdutechexData]);
 
 const handleFileUpload = async (event) => {
   const selectedFile = event.target.files[0];
@@ -45,9 +45,7 @@ const handleFileUpload = async (event) => {
     const formData = new FormData();
     formData.append("image", selectedFile);
 
-    const { data } = await axios.post("/api/upload/team-image", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const { data } = await axios.post("/api/upload/team-image", formData);
 
     if (data.success) {
       setImgUrl(data.imageUrl);
@@ -68,11 +66,11 @@ const handleFileUpload = async (event) => {
     const teamData = { ...values, image: imgUrl };
     try {
       const response = await axios.post(
-        "/api/skillnaav/add-teammember",
+        "/api/edutechex/add-teammember",
         teamData
       );
       message.success(response.data.message);
-      fetchSkillnaavData();
+      fetchEdutechexData();
       setIsAddTeamModalVisible(false);
       form.resetFields();
       setImgUrl(null);
@@ -87,11 +85,11 @@ const handleFileUpload = async (event) => {
     const teamData = { ...values, image: imgUrl || selectedTeamMember.image };
     try {
       const response = await axios.put(
-        `/api/skillnaav/update-teammember/${selectedTeamMember._id}`,
+        `/api/edutechex/update-teammember/${selectedTeamMember._id}`,
         teamData
       );
       message.success(response.data.message);
-      fetchSkillnaavData();
+      fetchEdutechexData();
       setIsEditTeamModalVisible(false);
       form.resetFields();
       setImgUrl(null);
@@ -104,9 +102,9 @@ const handleFileUpload = async (event) => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/skillnaav/delete-teammember/${id}`);
+      await axios.delete(`/api/edutechex/delete-teammember/${id}`);
       message.success("Team member deleted successfully");
-      fetchSkillnaavData();
+      fetchEdutechexData();
     } catch (error) {
       console.error("Error deleting team member:", error);
       message.error("Failed to delete team member");
@@ -137,10 +135,10 @@ const handleFileUpload = async (event) => {
       </Button>
       {loading ? (
         <Skeleton active />
-      ) : skillnaavData.length > 0 ? (
+      ) : edutechexData.length > 0 ? (
         <List
           itemLayout="horizontal"
-          dataSource={skillnaavData}
+          dataSource={edutechexData}
           renderItem={(item) => (
             <List.Item
               actions={[

@@ -4,7 +4,7 @@ const notifyUser = require("./utils/notifyUser");
 (async () => {
   const result = await notifyUser(
     "anuradha@edutechex.com", 
-    "Test Email from SkillNaav",
+    "Test Email from Edutechex",
     "<p>This is a test email 🚀</p>"
   );
   console.log("Result:", result);

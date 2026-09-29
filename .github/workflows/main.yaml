@@ -20,7 +20,7 @@ jobs:
 
       - name: Run deployment script
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@skillnaav.com << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@edutechex.com << 'EOF'
             cd /home/ubuntu/
             ./deploy.sh feature/AutomaticInternshipSchedule # Pass the branch name directly
           EOF

@@ -234,7 +234,7 @@ router.put('/close', async (req, res) => {
                     }
                   });
 
-                  const verifyUrl = `${process.env.FRONTEND_URL || 'https://www.skillnaav.com'}/verify/${certData.certificateId}`;
+                  const verifyUrl = `${process.env.FRONTEND_URL || 'https://www.edutechex.com'}/verify/${certData.certificateId}`;
 
                   await transporter.sendMail({
                     from:    process.env.EMAIL_FROM    || process.env.BREVO_SMTP_LOGIN,
@@ -249,7 +249,7 @@ router.put('/close', async (req, res) => {
                       <p>Your certificate is now available.</p>
                       <p><a href="${certData.pdfUrl}">Download your Certificate</a></p>
                       <p>Verify your certificate here: <a href="${verifyUrl}">${verifyUrl}</a></p>
-                      <p>Best regards,<br>Skillnaav Team</p>
+                      <p>Best regards,<br>Edutechex Team</p>
                     `
                   });
 

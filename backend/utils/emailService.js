@@ -48,9 +48,9 @@ async function sendPaymentConfirmationEmail({
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px 40px;text-align:center;">
-            <p style="color:rgba(255,255,255,0.75);margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">SkillNaav</p>
+            <p style="color:rgba(255,255,255,0.75);margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">Edutechex</p>
             <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;">Payment Confirmed</h1>
-            <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Thank you for subscribing to SkillNaav Premium!</p>
+            <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Thank you for subscribing to Edutechex Premium!</p>
           </td>
         </tr>
 
@@ -59,7 +59,7 @@ async function sendPaymentConfirmationEmail({
           <td style="padding:32px 40px 0;">
             <p style="margin:0;font-size:15px;color:#374151;">Hi ${name},</p>
             <p style="margin:12px 0 0;font-size:14px;color:#6b7280;line-height:1.6;">
-              Your payment was successful and your <strong style="color:#374151;">${planType}</strong> subscription on <strong style="color:#6366f1;">SkillNaav</strong> is now active. You can now enjoy full premium access to all features.
+              Your payment was successful and your <strong style="color:#374151;">${planType}</strong> subscription on <strong style="color:#6366f1;">Edutechex</strong> is now active. You can now enjoy full premium access to all features.
             </p>
           </td>
         </tr>
@@ -123,11 +123,11 @@ async function sendPaymentConfirmationEmail({
           <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
             <p style="margin:0;font-size:12px;color:#9ca3af;">
               If you have questions about your subscription, contact us at
-              <a href="mailto:skillnaav@gmail.com" style="color:#6366f1;text-decoration:none;">skillnaav@gmail.com</a>
-              or visit <a href="https://skillnaav.com" style="color:#6366f1;text-decoration:none;">skillnaav.com</a>.
+              <a href="mailto:edutechex@gmail.com" style="color:#6366f1;text-decoration:none;">edutechex@gmail.com</a>
+              or visit <a href="https://edutechex.com" style="color:#6366f1;text-decoration:none;">edutechex.com</a>.
             </p>
             <p style="margin:8px 0 0;font-size:11px;color:#d1d5db;">
-              &copy; ${new Date().getFullYear()} SkillNaav. All rights reserved.
+              &copy; ${new Date().getFullYear()} Edutechex. All rights reserved.
             </p>
           </td>
         </tr>
@@ -140,9 +140,9 @@ async function sendPaymentConfirmationEmail({
   `.trim();
 
   await transporter.sendMail({
-    from: `"${process.env.EMAIL_FROM_NAME || "SkillNaav"}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+    from: `"${process.env.EMAIL_FROM_NAME || "Edutechex"}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to: email,
-    subject: `Payment confirmed — Your SkillNaav ${planType} is now active`,
+    subject: `Payment confirmed — Your Edutechex ${planType} is now active`,
     html,
   });
 
@@ -197,7 +197,7 @@ async function sendInternshipPaymentConfirmationEmail({
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#0ea5e9,#6366f1);padding:32px 40px;text-align:center;">
-            <p style="color:rgba(255,255,255,0.75);margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">SkillNaav</p>
+            <p style="color:rgba(255,255,255,0.75);margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">Edutechex</p>
             <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;">Internship Fee Paid!</h1>
             <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Your internship seat is confirmed.</p>
           </td>
@@ -274,11 +274,11 @@ async function sendInternshipPaymentConfirmationEmail({
           <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
             <p style="margin:0;font-size:12px;color:#9ca3af;">
               For questions, contact us at
-              <a href="mailto:skillnaav@gmail.com" style="color:#0ea5e9;text-decoration:none;">skillnaav@gmail.com</a>
-              or visit <a href="https://skillnaav.com" style="color:#0ea5e9;text-decoration:none;">skillnaav.com</a>.
+              <a href="mailto:edutechex@gmail.com" style="color:#0ea5e9;text-decoration:none;">edutechex@gmail.com</a>
+              or visit <a href="https://edutechex.com" style="color:#0ea5e9;text-decoration:none;">edutechex.com</a>.
             </p>
             <p style="margin:8px 0 0;font-size:11px;color:#d1d5db;">
-              &copy; ${new Date().getFullYear()} SkillNaav. All rights reserved.
+              &copy; ${new Date().getFullYear()} Edutechex. All rights reserved.
             </p>
           </td>
         </tr>
@@ -291,7 +291,7 @@ async function sendInternshipPaymentConfirmationEmail({
   `.trim();
 
   await transporter.sendMail({
-    from: `"SkillNaav" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+    from: `"Edutechex" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to: email,
     subject: `Internship fee confirmed — ${internshipTitle} at ${companyName}`,
     html,
@@ -335,7 +335,7 @@ async function sendSchoolAdminPaymentConfirmationEmail({
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px 40px;text-align:center;">
-            <p style="color:rgba(255,255,255,0.75);margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">SkillNaav</p>
+            <p style="color:rgba(255,255,255,0.75);margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">Edutechex</p>
             <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;">Payment Confirmed</h1>
             <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Thank you for purchasing student licenses!</p>
           </td>
@@ -346,7 +346,7 @@ async function sendSchoolAdminPaymentConfirmationEmail({
           <td style="padding:32px 40px 0;">
             <p style="margin:0;font-size:15px;color:#374151;">Hi ${name},</p>
             <p style="margin:12px 0 0;font-size:14px;color:#6b7280;line-height:1.6;">
-              Your payment was successful and your <strong style="color:#374151;">${planType}</strong> on <strong style="color:#6366f1;">SkillNaav</strong> is now active. You have been granted ${creditsAdded} student licenses.
+              Your payment was successful and your <strong style="color:#374151;">${planType}</strong> on <strong style="color:#6366f1;">Edutechex</strong> is now active. You have been granted ${creditsAdded} student licenses.
             </p>
           </td>
         </tr>
@@ -406,11 +406,11 @@ async function sendSchoolAdminPaymentConfirmationEmail({
           <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
             <p style="margin:0;font-size:12px;color:#9ca3af;">
               If you have questions about your subscription, contact us at
-              <a href="mailto:skillnaav@gmail.com" style="color:#6366f1;text-decoration:none;">skillnaav@gmail.com</a>
-              or visit <a href="https://skillnaav.com" style="color:#6366f1;text-decoration:none;">skillnaav.com</a>.
+              <a href="mailto:edutechex@gmail.com" style="color:#6366f1;text-decoration:none;">edutechex@gmail.com</a>
+              or visit <a href="https://edutechex.com" style="color:#6366f1;text-decoration:none;">edutechex.com</a>.
             </p>
             <p style="margin:8px 0 0;font-size:11px;color:#d1d5db;">
-              &copy; ${new Date().getFullYear()} SkillNaav. All rights reserved.
+              &copy; ${new Date().getFullYear()} Edutechex. All rights reserved.
             </p>
           </td>
         </tr>
@@ -423,9 +423,9 @@ async function sendSchoolAdminPaymentConfirmationEmail({
   `.trim();
 
   await transporter.sendMail({
-    from: `"${process.env.EMAIL_FROM_NAME || "SkillNaav"}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+    from: `"${process.env.EMAIL_FROM_NAME || "Edutechex"}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to: email,
-    subject: `Payment confirmed — ${planType} on SkillNaav`,
+    subject: `Payment confirmed — ${planType} on Edutechex`,
     html,
   });
 

@@ -33,7 +33,7 @@ const sendMockInterviewEmail = async (mockInterview, internshipId, partnerId, is
     // format date/time
     const dateStr = mockInterview.date ? new Date(mockInterview.date).toLocaleDateString() : 'N/A';
     const timeStr = `${mockInterview.startTime || 'N/A'} - ${mockInterview.endTime || 'N/A'}`;
-    const meetingLink = mockInterview.meetingLink || "Please login to your SkillNaav portal to access the mock interview.";
+    const meetingLink = mockInterview.meetingLink || "Please login to your Edutechex portal to access the mock interview.";
 
     const subject = isUpdate 
       ? `Update: Mock Interview Rescheduled for ${internship.jobTitle}`

@@ -1,21 +1,11 @@
 {
-  "short_name": "Skill Naav",
-  "name": "Skill Naav — Navigate Your Skills",
+  "short_name": "Edutechex",
+  "name": "Edutechex — Navigate Your Skills",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "/favicon-192x192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "/favicon-512x512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/logo-white-tile-1024.png?v=2",
+      "sizes": "64x64 192x192 512x512",
+      "type": "image/png"
     }
   ],
   "start_url": ".",

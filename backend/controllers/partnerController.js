@@ -70,8 +70,8 @@ const sendPartnerVerificationCode = asyncHandler(async (req, res) => {
 
   await notifyUser(
     email,
-    "SkillNaav Partner Email Verification Code",
-    generateOtpEmailHtml(otp, "creating your SkillNaav partner account"),
+    "Edutechex Partner Email Verification Code",
+    generateOtpEmailHtml(otp, "creating your Edutechex partner account"),
   );
 
   res.status(200).json({ message: "Verification code sent to email." });
@@ -548,8 +548,8 @@ const approvePartner = asyncHandler(async (req, res) => {
 
   await notifyUser(
     partner.email,
-    "Your SkillNaav Partner Account has been approved!",
-    "Congratulations! Your SkillNaav partner account has been approved by the admin. You can now log in and access all features.",
+    "Your Edutechex Partner Account has been approved!",
+    "Congratulations! Your Edutechex partner account has been approved by the admin. You can now log in and access all features.",
   );
 
   res.status(200).json({ message: "Partner approved successfully." });
@@ -573,11 +573,11 @@ const rejectPartner = asyncHandler(async (req, res) => {
 
   const rejectionReason =
     req.body.reason ||
-    "Your SkillNaav partner account has been rejected by the admin.";
+    "Your Edutechex partner account has been rejected by the admin.";
 
   await notifyUser(
     partner.email,
-    "Your SkillNaav Partner Account has been rejected.",
+    "Your Edutechex Partner Account has been rejected.",
     rejectionReason,
   );
 

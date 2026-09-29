@@ -60,7 +60,7 @@ router.post("/generate/:userId", async (req, res) => {
 
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Skillnaav_CV_${safeName}.pdf"`,
+      "Content-Disposition": `attachment; filename="Edutechex_CV_${safeName}.pdf"`,
     });
     res.send(fastapiRes.data);
 

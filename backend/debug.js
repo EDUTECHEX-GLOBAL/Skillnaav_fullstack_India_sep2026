@@ -6,7 +6,7 @@ const OfferLetter = require("./models/webapp-models/offerLetterModel");
 require("./models/webapp-models/userModel");
 
 async function check() {
-    await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://udaysankar:uday1234@cluster0.dbcy9.mongodb.net/skillnaav?retryWrites=true&w=majority");
+    await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://udaysankar:uday1234@cluster0.dbcy9.mongodb.net/edutechex?retryWrites=true&w=majority");
     const internshipId = "69ef2be125fdf9530698db23";
     const offers = await OfferLetter.find({ internshipId }).populate({
         path: 'studentId',

@@ -16,7 +16,7 @@ const {
   FAQCard,
   Contact,
   Footer,
-} = require("../models/skillnaavModel");
+} = require("../models/edutechexModel");
 
 const User = require("../models/userModel");
 
@@ -48,18 +48,21 @@ const PROJECTIONS = {
   footer:          { contactdetails: 1, email: 1, usefullinksheader: 1, usefullink1: 1, usefullink2: 1, usefullink3: 1, usefullink4: 1, stayinformedheader: 1, stayinformedsubtext: 1, subscribetext: 1, copyrighttext: 1, copyrightsubtext: 1 },
 };
 
-// ─── GET /get-skillnaav-data ──────────────────────────────────────────────────
+// ─── GET /get-edutechex-data ──────────────────────────────────────────────────
 router.get(
-  "/get-skillnaav-data",
+  "/get-edutechex-data",
   asyncHandler(async (req, res) => {
-    const CACHE_KEY  = "skillnaav-data";
-    const ETAG_KEY   = "skillnaav-etag";
+    console.log("--> HIT GET /get-edutechex-data");
+    const CACHE_KEY  = "edutechex-data";
+    const ETAG_KEY   = "edutechex-etag";
 
     // 1. Serve from cache if available
+    console.log("--> Checking cache");
     let cached    = cache.get(CACHE_KEY);
     let cachedTag = cache.get(ETAG_KEY);
 
     if (cached && cachedTag) {
+      console.log("--> Cache hit");
       // ETag check — return 304 if client already has this version
       if (req.headers["if-none-match"] === cachedTag) {
         return res.status(304).end();
@@ -70,39 +73,40 @@ router.get(
     }
 
     // 2. Cache miss — fetch from MongoDB
-    //    .lean()      → plain JS objects (no Mongoose document overhead)
-    //    projection   → only the fields the UI needs
-    const [
-      discovers,
-      discovercompimg,
-      visionhead,
-      visionpoint,
-      features,
-      team,
-      teammember,
-      pricing,
-      pricingcard,
-      faq,
-      faqcard,
-      footer,
-    ] = await Promise.all([
-      Discover.find({},        PROJECTIONS.discover).lean(),
-      DiscoverCompImg.find({}, PROJECTIONS.discovercompimg).lean(),
-      VisionHead.find({},      PROJECTIONS.visionhead).lean(),
-      VisionPoint.find({},     PROJECTIONS.visionpoint).lean(),
-      Feature.find({},         PROJECTIONS.features).lean(),
-      Team.find({},            PROJECTIONS.team).lean(),
-      TeamMember.find({},      PROJECTIONS.teammember).lean(),
-      Pricing.find({},         PROJECTIONS.pricing).lean(),
-      PricingCard.find({},     PROJECTIONS.pricingcard).lean(),
-      FAQ.find({},             PROJECTIONS.faq).lean(),
-      FAQCard.find({},         PROJECTIONS.faqcard).lean(),
-      Footer.find({},          PROJECTIONS.footer).lean(),
-      // Note: Contact intentionally excluded — sensitive & not needed on the public page
-    ]);
+    console.log("--> Fetching from DB");
+    try {
+      const [
+        discovers,
+        discovercompimg,
+        visionhead,
+        visionpoint,
+        features,
+        team,
+        teammember,
+        pricing,
+        pricingcard,
+        faq,
+        faqcard,
+        footer,
+      ] = await Promise.all([
+        Discover.find({},        PROJECTIONS.discover).lean(),
+        DiscoverCompImg.find({}, PROJECTIONS.discovercompimg).lean(),
+        VisionHead.find({},      PROJECTIONS.visionhead).lean(),
+        VisionPoint.find({},     PROJECTIONS.visionpoint).lean(),
+        Feature.find({},         PROJECTIONS.features).lean(),
+        Team.find({},            PROJECTIONS.team).lean(),
+        TeamMember.find({},      PROJECTIONS.teammember).lean(),
+        Pricing.find({},         PROJECTIONS.pricing).lean(),
+        PricingCard.find({},     PROJECTIONS.pricingcard).lean(),
+        FAQ.find({},             PROJECTIONS.faq).lean(),
+        FAQCard.find({},         PROJECTIONS.faqcard).lean(),
+        Footer.find({},          PROJECTIONS.footer).lean(),
+        // Note: Contact intentionally excluded — sensitive & not needed on the public page
+      ]);
 
-    const responseData = {
-      discover: discovers,
+      console.log("--> DB Fetch success");
+      const responseData = {
+        discover: discovers,
       discovercompimg,
       visionhead,
       visionpoint,
@@ -128,7 +132,12 @@ router.get(
 
     res.setHeader("ETag", etag);
     res.setHeader("Cache-Control", "public, max-age=600");
+    console.log("--> Sending response");
     res.status(200).json(responseData);
+    } catch (dbErr) {
+      console.error("--> DB FETCH FAILED:", dbErr);
+      throw dbErr;
+    }
   })
 );
 

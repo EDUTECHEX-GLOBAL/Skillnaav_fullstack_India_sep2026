@@ -1,7 +1,7 @@
 // backend/utils/instructorMailer.js
 const notifyUser = require("./notifyUser");
 
-// Optional public base URL to make file links absolute (ex: https://skillnaav.com)
+// Optional public base URL to make file links absolute (ex: https://edutechex.com)
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || "";
 
 /* ------------ helpers ------------ */
@@ -148,7 +148,7 @@ function buildInstructorCreatedEmail(docRaw) {
   } = doc;
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Instructor";
-  const subject = "SkillNaav — Your Instructor Profile Has Been Created";
+  const subject = "Edutechex — Your Instructor Profile Has Been Created";
 
   /* ------------ sections ------------ */
 
@@ -259,7 +259,7 @@ function buildInstructorCreatedEmail(docRaw) {
 
   const bodyHtml = `
     <p>Hi ${fullName},</p>
-    <p>Welcome to <strong>SkillNaav</strong> 🎉 Your instructor profile has been created with the details below:</p>
+    <p>Welcome to <strong>Edutechex</strong> 🎉 Your instructor profile has been created with the details below:</p>
 
     ${personal}
     ${professional}

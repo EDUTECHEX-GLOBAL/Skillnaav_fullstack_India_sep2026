@@ -41,7 +41,7 @@ router.get("/export/users", async (req, res) => {
       user.createdAt ? new Date(user.createdAt).toISOString() : "",
     ].map(escapeCsv).join(","));
 
-    const filename = `skillnaav-users-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `edutechex-users-${new Date().toISOString().slice(0, 10)}.csv`;
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.status(200).send([headers.map(escapeCsv).join(","), ...rows].join("\n"));

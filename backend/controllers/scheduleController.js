@@ -98,7 +98,7 @@ async function notifyAcceptedStudentsOfSchedule({ internshipId, scheduleDoc, isN
     : 'Your internship schedule was updated';
 
   // Send users to the offer letter tab
-  const appUrl = (process.env.FRONTEND_BASE_URL || process.env.WEBAPP_BASE_URL || 'https://www.skillnaav.com') + '/user-main-page/offer-letter';
+  const appUrl = (process.env.FRONTEND_BASE_URL || process.env.WEBAPP_BASE_URL || 'https://www.edutechex.com') + '/user-main-page/offer-letter';
 
   const previewHtml = upcoming
     ? `<p><b>Next session:</b> ${new Date(upcoming.date).toLocaleDateString('en-IN')} ${upcoming.startTime}–${upcoming.endTime} (${upcoming.type || 'online'})</p>`
@@ -115,7 +115,7 @@ async function notifyAcceptedStudentsOfSchedule({ internshipId, scheduleDoc, isN
         <p>${isNew ? 'A new' : 'An updated'} schedule has been posted for your internship.</p>
         ${previewHtml}
         <p><a href="${appUrl}">Open your dashboard</a> to view all sessions.</p>
-        <p>- Skillnaav Team</p>
+        <p>- Edutechex Team</p>
         `
       ).catch(err => console.error('Schedule email failed:', o.email, err))
     )

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
-import defaultCompanyLogo from "../../../../assets/default-company-logo.png";
+import defaultCompanyLogo from "../../../../assets/logo-white-tile-1024.png";
 
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { IN_STATES } from "../../../../constants/locations";
@@ -719,7 +719,7 @@ const PostAJob = () => {
                   className="ml-1 text-teal-500 hover:text-red-500 leading-none"
                   aria-label={`Remove ${q}`}
                 >
-                  Ã—
+                  &times;
                 </button>
               </span>
             ))}
@@ -751,7 +751,7 @@ const PostAJob = () => {
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            Press Enter or click Add. Click Ã— to remove a skill.
+            Press Enter or click Add. Click &times; to remove a skill.
           </p>
         </div>
 

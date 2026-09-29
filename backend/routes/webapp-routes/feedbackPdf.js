@@ -15,9 +15,9 @@
 //     { id: "performance", label: "5) How responsive/fast did the site feel (1-5)?" },
 //     { id: "featureUsed", label: "6) Feature used most today" },
 //     { id: "confusing", label: "7) Anything confusing or broken? (short)" },
-//     { id: "nps", label: "8) How likely are you to recommend Skillnaav? (0-10)" },
+//     { id: "nps", label: "8) How likely are you to recommend Edutechex? (0-10)" },
 //     { id: "suggestions", label: "9) Suggestions to improve internship discovery" },
-//     { id: "followUp", label: "10) Would you like follow-up from Skillnaav?" },
+//     { id: "followUp", label: "10) Would you like follow-up from Edutechex?" },
 //     { id: "contactEmail", label: "If yes, email:" }
 //   ],
 //   partner: [
@@ -91,13 +91,13 @@
 //       size: "A4",
 //       info: {
 //         Title: `Feedback ${id}`,
-//         Author: "Skillnaav",
+//         Author: "Edutechex",
 //       }
 //     });
 //     doc.pipe(res);
 
 //     // HEADER (title + small meta)
-//     doc.fontSize(18).font("Helvetica-Bold").fillColor("#111827").text("Skillnaav — Feedback Report", { align: "left" });
+//     doc.fontSize(18).font("Helvetica-Bold").fillColor("#111827").text("Edutechex — Feedback Report", { align: "left" });
 //     doc.moveDown(0.3);
 
 //     // small subtitle row

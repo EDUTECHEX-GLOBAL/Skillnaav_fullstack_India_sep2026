@@ -1,1 +1,1 @@
-# skillnaav-fullstack
+# edutechex-fullstack

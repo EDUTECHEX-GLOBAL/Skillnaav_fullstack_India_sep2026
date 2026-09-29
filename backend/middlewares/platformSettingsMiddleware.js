@@ -35,7 +35,7 @@ const maintenanceGuard = async (req, res, next) => {
   try {
     const settings = await getSettings();
     if (!settings.platformFeatures?.maintenanceMode || await isAdminRequest(req)) return next();
-    return res.status(503).json({ success: false, code: "MAINTENANCE_MODE", message: "SkillNaav is currently under maintenance. Please try again later." });
+    return res.status(503).json({ success: false, code: "MAINTENANCE_MODE", message: "Edutechex is currently under maintenance. Please try again later." });
   } catch (error) {
     console.error("Unable to check maintenance mode:", error);
     return res.status(500).json({ success: false, message: "Unable to check platform availability." });

@@ -1907,7 +1907,7 @@ const PartnerSupport = () => {
         <div className="flex-1 flex justify-center">
           <img
             src={logo}
-            alt="Skillnaav"
+            alt="Edutechex"
             className="h-8 w-auto object-contain"
           />
         </div>

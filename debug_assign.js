@@ -3,7 +3,7 @@ const Instructure = require('./backend/models/webapp-models/InstructureManagemen
 const InternshipSchedule = require('./backend/models/webapp-models/InternshipScheduleModel');
 
 async function debug() {
-    await mongoose.connect('mongodb://localhost:27017/SkillNaav', {
+    await mongoose.connect('mongodb://localhost:27017/Edutechex', {
         useNewUrlParser: true,
         useUnifiedTopology: true
     });

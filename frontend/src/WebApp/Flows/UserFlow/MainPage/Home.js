@@ -12,10 +12,10 @@ import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "../../../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import Skillnaavlogo from "../../../../assets/logo-white-tile-1024.png";
+import Edutechexlogo from "../../../../assets/logo-white-tile-1024.png";
 import { format } from "date-fns";
 
-const Homeimage = "/Home-Image.png";
+const Homeimage = "/Home-Image-Edutechex.png";
 
 const MAX_LIMITS = {
   Free: 5,
@@ -38,7 +38,7 @@ const getSavedLimitByPlan = (planType) => {
 
 const Home = () => {
   const [assistantPreviewVisible, setAssistantPreviewVisible] = useState(
-    () => window.__skillnaavAssistantPreviewVisible ?? true,
+    () => window.__edutechexAssistantPreviewVisible ?? true,
   );
   const [assistantExpanded, setAssistantExpanded] = useState(false);
   useEffect(() => {
@@ -47,12 +47,12 @@ const Home = () => {
       setAssistantExpanded(!!event.detail.expanded);
     };
     window.addEventListener(
-      "skillnaav-assistant-preview",
+      "edutechex-assistant-preview",
       updateAssistantPreview,
     );
     return () =>
       window.removeEventListener(
-        "skillnaav-assistant-preview",
+        "edutechex-assistant-preview",
         updateAssistantPreview,
       );
   }, []);
@@ -117,7 +117,7 @@ const Home = () => {
     const link = document.createElement("link");
     link.rel = "preload";
     link.as = "image";
-    link.href = "/Home-Image.png";
+    link.href = "/Home-Image-Edutechex.png";
     link.setAttribute("fetchpriority", "high");
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
@@ -485,17 +485,17 @@ const Home = () => {
         </>
       )}
 
-      {/* Skillnaav analysis FAB */}
+      {/* Edutechex analysis FAB */}
       <div
         className={`fixed right-6 z-50 transition-all duration-300 ${!assistantPreviewVisible ? "bottom-28" : assistantExpanded ? "bottom-[390px]" : "bottom-[300px]"}`}
       >
         <button
-          onClick={() => navigate("/skillnaav-analysis")}
+          onClick={() => navigate("/edutechex-analysis")}
           className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
         >
           <img
-            src={Skillnaavlogo}
-            alt="Skillnaav Analysis"
+            src={Edutechexlogo}
+            alt="Edutechex Analysis"
             className="w-12 h-12"
           />
         </button>

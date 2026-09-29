@@ -105,7 +105,7 @@ async function generateCV(profileData) {
     });
     return {
       buffer: Buffer.from(res.data),
-      filename: `Skillnaav_CV_${(profileData.name || 'Resume').replace(/\s+/g, '_')}.pdf`,
+      filename: `Edutechex_CV_${(profileData.name || 'Resume').replace(/\s+/g, '_')}.pdf`,
     };
   } catch (err) {
     console.error('[aiService] generateCV:', err.message);

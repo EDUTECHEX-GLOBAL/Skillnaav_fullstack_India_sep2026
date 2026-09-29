@@ -7,7 +7,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 mongo_uri = os.environ.get("MONGO_URI")
 client = MongoClient(mongo_uri, tlsCAFile=certifi.where())
-db = client[os.environ.get("MONGO_DB_NAME", "skillnaav-land")]
+db = client[os.environ.get("MONGO_DB_NAME", "edutechex-land")]
 
 applications_col = db["applications"]
 shortlist_col = db["shortlist"]

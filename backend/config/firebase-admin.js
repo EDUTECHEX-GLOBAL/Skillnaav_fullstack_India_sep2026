@@ -5,7 +5,7 @@ const serviceAccount = require("../firebaseServiceAccountKey.json"); // Replace 
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://skillnaav-authentication.firebaseio.com", // Replace with your project ID
+  databaseURL: "https://edutechex-authentication.firebaseio.com", // Replace with your project ID
 });
 
 module.exports = admin;

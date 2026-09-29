@@ -103,7 +103,7 @@ const loginUser = async (req, res) => {
       try {
         await notifyUser(
           user.email,
-          "SkillNaav Admin Login OTP",
+          "Edutechex Admin Login OTP",
           generateOtpEmailHtml(otp, "logging in to your admin account"),
         );
       } catch (err) {
@@ -176,7 +176,7 @@ const forgotPassword = async (req, res) => {
       try {
         await notifyUser(
           user.email,
-          "SkillNaav Admin Password Reset OTP",
+          "Edutechex Admin Password Reset OTP",
           generateOtpEmailHtml(otp, "resetting your admin password"),
         );
       } catch (err) {
@@ -300,7 +300,7 @@ const resendLoginOtp = async (req, res) => {
       try {
         await notifyUser(
           user.email,
-          "SkillNaav Admin Login OTP",
+          "Edutechex Admin Login OTP",
           generateOtpEmailHtml(otp, "logging in to your admin account"),
         );
       } catch (err) {
@@ -401,7 +401,7 @@ const requestChangePasswordOtp = async (req, res) => {
       try {
         await notifyUser(
           user.email,
-          "SkillNaav Security: Password Change OTP",
+          "Edutechex Security: Password Change OTP",
           generateOtpEmailHtml(otp, "changing your admin password"),
         );
       } catch (err) {

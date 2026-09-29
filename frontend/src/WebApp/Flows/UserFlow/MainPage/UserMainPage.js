@@ -53,8 +53,8 @@ const UserMainPageContent = () => {
   // Let other floating controls move out of the assistant preview's space.
   useEffect(() => {
     const previewVisible = !assistantBubbleHidden;
-    window.__skillnaavAssistantPreviewVisible = previewVisible;
-    window.dispatchEvent(new CustomEvent("skillnaav-assistant-preview", { detail: { visible: previewVisible } }));
+    window.__edutechexAssistantPreviewVisible = previewVisible;
+    window.dispatchEvent(new CustomEvent("edutechex-assistant-preview", { detail: { visible: previewVisible } }));
   }, [assistantBubbleHidden]);
 
   const startAssistantBubbleDrag = (event) => {
@@ -274,9 +274,15 @@ const UserMainPageContent = () => {
       )}
 
       {/* Reverify Modal */}
-      <Modal open={showReverifyModal} footer={null} closable={false} centered>
-        <UserAgeGateConsent onComplete={handleReverifyComplete} saving={reverifySaving} />
-      </Modal>
+      {showReverifyModal && (
+        <UserAgeGateConsent 
+          open={showReverifyModal} 
+          mode="REVERIFY_OVER18" 
+          onComplete={handleReverifyComplete} 
+          saving={reverifySaving} 
+          userEmail={userInfo?.email}
+        />
+      )}
 
       {/* Unified AI Video Assistant Widget */}
       {selectedTab !== "assessment" && !assistantBubbleHidden && (

@@ -473,8 +473,8 @@ const approveUser = asyncHandler(async (req, res) => {
   await user.save();
   await notifyUser(
     user.email,
-    "Your SkillNaav account has been approved!",
-    "Congratulations! Your SkillNaav account has been approved by the admin. You can now log in and access all features."
+    "Your Edutechex account has been approved!",
+    "Congratulations! Your Edutechex account has been approved by the admin. You can now log in and access all features."
   );
   res.status(200).json({ message: "User approved successfully." });
 });
@@ -494,8 +494,8 @@ const rejectUser = asyncHandler(async (req, res) => {
   await user.save();
   await notifyUser(
     user.email,
-    "Your SkillNaav account has been rejected.",
-    "Your SkillNaav account has been rejected by the admin. Please contact support for more information."
+    "Your Edutechex account has been rejected.",
+    "Your Edutechex account has been rejected by the admin. Please contact support for more information."
   );
   res.status(200).json({ message: "User rejected successfully." });
 });
@@ -562,8 +562,8 @@ const sendSignupVerificationCode = asyncHandler(async (req, res) => {
   );
   await notifyUser(
     email,
-    "SkillNaav Email Verification Code",
-    generateOtpEmailHtml(otp, "creating your SkillNaav account")
+    "Edutechex Email Verification Code",
+    generateOtpEmailHtml(otp, "creating your Edutechex account")
   );
   res.status(200).json({ message: "Verification code sent to email." });
 });
@@ -762,7 +762,7 @@ const sendAgeGateVerificationCode = asyncHandler(async (req, res) => {
 
   await notifyUser(
     email,
-    "SkillNaav Age Verification Code",
+    "Edutechex Age Verification Code",
     generateOtpEmailHtml(otp, "verifying your age")
   );
 

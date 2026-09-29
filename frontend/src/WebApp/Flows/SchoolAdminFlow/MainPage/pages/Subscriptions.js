@@ -139,7 +139,7 @@ const SubscriptionPlans = () => {
         key: RAZORPAY_KEY_ID,
         amount: orderRes.amount,
         currency: orderRes.currency,
-        name: "Skillnaav",
+        name: "Edutechex",
         description: `Upgrade to ${planTitle}`,
         order_id: orderRes.id,
         handler: async function (response) {

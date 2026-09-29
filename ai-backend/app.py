@@ -1,5 +1,5 @@
 """
-SkillNaav Unified API  –  v3.1
+Edutechex Unified API  –  v3.1
 ================================
 Combines all 4 agents into ONE FastAPI app on ONE port (default 8000).
 
@@ -43,7 +43,7 @@ import Instructor     as _instructor  # Instructor assignment engine     (was :8
 
 # ── Root application ──────────────────────────────────────────────────────────
 app = FastAPI(
-    title="SkillNaav Unified API",
+    title="Edutechex Unified API",
     description=(
         "All four AI agents on a single port — no URL changes needed.\n\n"
         "| Routes | Agent |\n"
@@ -61,8 +61,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://www.skillnaav.com",
-        "https://skillnaav.com",
+        "https://www.edutechex.com",
+        "https://edutechex.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],

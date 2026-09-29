@@ -205,7 +205,7 @@ const googleCallback = async (req, res) => {
   try {
     console.log('Starting token exchange process...');
 
-    // ✅ We expect state to contain the SkillNaav user email (the one who clicked "Add/Update")
+    // ✅ We expect state to contain the Edutechex user email (the one who clicked "Add/Update")
     const statePayload = decodeStatePayload(state);
     const requestedEmail = statePayload?.email ? String(statePayload.email).toLowerCase() : null;
 
@@ -255,7 +255,7 @@ const googleCallback = async (req, res) => {
 
     const googleEmail = String(email).toLowerCase();
 
-    // From here onwards, always use the SkillNaav user's email as the key
+    // From here onwards, always use the Edutechex user's email as the key
     const identityEmail = requestedEmail || googleEmail;
 
     // Store tokens with email (preserve old refresh_token if Google didn't send one)
@@ -287,10 +287,10 @@ const googleCallback = async (req, res) => {
       const targetOrigin = FRONTEND_BASE_URL || "*";
       return res.status(200).send(`<!doctype html>
         <html><body style="font-family:Arial,sans-serif;text-align:center;padding:40px">
-          <p>Google Calendar connected. You can return to SkillNaav.</p>
+          <p>Google Calendar connected. You can return to Edutechex.</p>
           <script>
             if (window.opener) {
-              window.opener.postMessage({ type: "skillnaav-google-calendar-connected" }, ${JSON.stringify(targetOrigin)});
+              window.opener.postMessage({ type: "edutechex-google-calendar-connected" }, ${JSON.stringify(targetOrigin)});
               window.close();
             }
           </script>

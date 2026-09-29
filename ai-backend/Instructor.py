@@ -29,7 +29,7 @@ except Exception as e:  # pragma: no cover
 # -----------------------------
 # Use server host only in URI; pick DB by DB_NAME
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017")
-DB_NAME   = os.getenv("DB_NAME", "skillnaav-land")  # <-- your DB in Compass
+DB_NAME   = os.getenv("DB_NAME", "edutechex-land")  # <-- your DB in Compass
 
 INSTRUCTORS_COLL = os.getenv("INSTRUCTORS_COLL", "")
 SCHEDULES_COLL   = os.getenv("SCHEDULES_COLL", "")

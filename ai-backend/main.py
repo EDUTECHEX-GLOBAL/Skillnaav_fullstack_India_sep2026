@@ -40,7 +40,7 @@ app = FastAPI()
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://www.skillnaav.com", "https://skillnaav.com"],
+    allow_origins=["http://localhost:3000", "https://www.edutechex.com", "https://edutechex.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -189,7 +189,6 @@ def invoke_bedrock(prompt_text):
         message = _get_anthropic().messages.create(
             model="claude-haiku-4-5-20251001",  # Fast + affordable for skill analysis
             max_tokens=2048,
-            temperature=0.3,
             messages=[
                 {"role": "user", "content": prompt_text}
             ]
@@ -561,7 +560,7 @@ async def analyze_skills(
 def read_root():
     """Health check endpoint"""
     return {
-        "message": "SkillNaav API is running!",
+        "message": "Edutechex API is running!",
         "timestamp": now(),
         "version": "2.0.0"
     }

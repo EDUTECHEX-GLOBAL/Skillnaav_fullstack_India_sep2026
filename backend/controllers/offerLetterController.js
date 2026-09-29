@@ -107,7 +107,7 @@ const sendOfferLetter = async (req, res) => {
         : internshipDoc?.contactInfo?.phone || contactInfo?.phone || "",
     };
 
-    // ✅ Generate PDF with SkillNaav + partner logos and real contactInfo
+    // ✅ Generate PDF with Edutechex + partner logos and real contactInfo
     const pdfBuffer = await generateOfferPDFBuffer({
       name,
       email,
@@ -185,7 +185,7 @@ const sendOfferLetter = async (req, res) => {
 
     notifyUser(
       email,
-      'Your SkillNaav Offer Letter',
+      'Your Edutechex Offer Letter',
       `Hi ${name}, <a href="${s3Url}">download your offer letter</a>.`
     ).catch(err => console.error('Email notification failed:', err));
 
@@ -334,7 +334,7 @@ const updateOfferStatus = async (req, res) => {
             });
 
             const appUrl =
-              (process.env.FRONTEND_BASE_URL || process.env.WEBAPP_BASE_URL || 'https://www.skillnaav.com') +
+              (process.env.FRONTEND_BASE_URL || process.env.WEBAPP_BASE_URL || 'https://www.edutechex.com') +
               '/user-main-page/offer-letter';
 
             const previewHtml = upcoming
@@ -351,7 +351,7 @@ const updateOfferStatus = async (req, res) => {
               <p>Your internship schedule is now available.</p>
               ${previewHtml}
               <p><a href="${appUrl}">Open your dashboard</a></p>
-              <p>- Skillnaav Team</p>
+              <p>- Edutechex Team</p>
             `
               ),
               sendNotification({

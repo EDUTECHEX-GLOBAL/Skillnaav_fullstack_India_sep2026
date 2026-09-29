@@ -324,7 +324,7 @@ const Navbar = ({ onToggleSidebar }) => {
         <button onClick={onToggleSidebar} className="md:hidden text-gray-700 focus:outline-none">
           <FontAwesomeIcon icon={faBars} className="text-xl" />
         </button>
-        <img src={logo} alt="Skillnaav Logo" className="h-8 sm:h-10 w-auto object-contain" width="120" height="56" />
+        <img src={logo} alt="Edutechex Logo" className="h-8 sm:h-10 w-auto object-contain" width="120" height="56" />
       </div>
 
       {/* Right: User info + dropdown */}

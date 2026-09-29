@@ -103,7 +103,7 @@ FLOW CONTEXT:
 
     return `${
       firstName ? `Hi ${firstName}!` : "Hi!"
-    } 👋 I’m your Skillnaav Partner Assistant. How can I help you with the Partner dashboard today?`;
+    } 👋 I’m your Edutechex Partner Assistant. How can I help you with the Partner dashboard today?`;
   }
 
   // Allowed keywords
@@ -119,7 +119,7 @@ FLOW CONTEXT:
     "support",
     "profile",
     "payment",
-    "skillnaav",
+    "edutechex",
     "partner",
   ];
 
@@ -140,7 +140,7 @@ FLOW CONTEXT:
     .join("\n");
 
   const SYSTEM_PROMPT = `
-You are Skillnaav Partner Assistant.
+You are Edutechex Partner Assistant.
 
 You ONLY help with:
 - Partner dashboard

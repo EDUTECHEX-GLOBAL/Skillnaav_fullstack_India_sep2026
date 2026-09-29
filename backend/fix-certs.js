@@ -10,7 +10,7 @@ const { generateAndUploadCertificate } = require("./services/certificateGenerato
 require("./models/webapp-models/userModel");
 
 async function fixCertificates() {
-    await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://udaysankar:uday1234@cluster0.dbcy9.mongodb.net/skillnaav?retryWrites=true&w=majority");
+    await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://udaysankar:uday1234@cluster0.dbcy9.mongodb.net/Edutechex?retryWrites=true&w=majority");
     
     const internshipId = "69ef2be125fdf9530698db23";
     

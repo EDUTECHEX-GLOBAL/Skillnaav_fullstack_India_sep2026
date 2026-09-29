@@ -353,7 +353,7 @@ router.put("/:id", async (req, res) => {
     qualifications, contactInfo, imgUrl,
     country, state, city,
     sector, classification, applicationOpen,
-    compensationDetails, internshipMode,
+    compensationDetails, internshipMode, internshipType,
   } = req.body;
 
   try {
@@ -386,6 +386,7 @@ router.put("/:id", async (req, res) => {
     if (classification !== undefined) $set.classification = classification;
     if (applicationOpen !== undefined) $set.applicationOpen = applicationOpen;
     if (internshipMode !== undefined) $set.internshipMode = internshipMode;
+    if (internshipType !== undefined) $set.internshipType = internshipType;
     if (compensationDetails !== undefined) $set.compensationDetails = compensationDetails;
 
     // Recompose the location string from parts if provided

@@ -70,7 +70,7 @@ const fileToMeta = async (file) => {
 
     // return the doc to store in Mongo
     return {
-        url: httpsUrl(bucket, key),         // e.g. https://skillnaavres.s3.us-west-1.amazonaws.com/jobs/1752-...png
+        url: httpsUrl(bucket, key),         // e.g. https://edutechexres.s3.us-west-1.amazonaws.com/jobs/1752-...png
         originalName: file.originalname,
         mimeType: file.mimetype,
         size: file.size,
@@ -330,7 +330,7 @@ exports.deleteInstructure = async (req, res) => {
 
 // Helper to create basic ICS string
 const createICS = (sessions) => {
-    let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//SkillNaav//Instructor Schedule//EN\r\n";
+    let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Edutechex//Instructor Schedule//EN\r\n";
     sessions.forEach(s => {
         // Date parsing
         const d = new Date(s.date);
@@ -347,11 +347,11 @@ const createICS = (sessions) => {
         const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         
         ics += "BEGIN:VEVENT\r\n";
-        ics += `UID:${crypto.randomBytes(16).toString("hex")}@skillnaav.com\r\n`;
+        ics += `UID:${crypto.randomBytes(16).toString("hex")}@edutechex.com\r\n`;
         ics += `DTSTAMP:${stamp}\r\n`;
         ics += `DTSTART:${startStr}\r\n`;
         ics += `DTEND:${endStr}\r\n`;
-        ics += `SUMMARY:SkillNaav Class: ${s.sectionSummary || "Session"}\r\n`;
+        ics += `SUMMARY:Edutechex Class: ${s.sectionSummary || "Session"}\r\n`;
         if (s.eventLink) {
             ics += `LOCATION:${s.eventLink}\r\n`;
         }
@@ -582,7 +582,7 @@ exports.autoAssignInstructors = async (req, res) => {
                 <p>Best regards,<br/>Your Partner Team</p>
             `;
             
-            await notifyUser(inst.email, "New Class Assignments - SkillNaav", htmlBody, attachments).catch(console.error);
+            await notifyUser(inst.email, "New Class Assignments - Edutechex", htmlBody, attachments).catch(console.error);
         }
 
         res.json({
@@ -647,7 +647,7 @@ exports.startInstructorEmailOtp = async (req, res) => {
         if (!email) return res.status(400).json({ message: "Email is required." });
 
         const code = issueOtp(email);
-        const subject = "SkillNaav — Verify your email (OTP)";
+        const subject = "Edutechex — Verify your email (OTP)";
         const bodyHtml = `
       <div style="font-family:Arial,sans-serif;line-height:1.6">
         <h2>Verify your email</h2>

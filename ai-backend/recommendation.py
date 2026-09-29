@@ -27,7 +27,7 @@ _inflight: Dict[str, asyncio.Event] = {}
 
 # ── MongoDB setup ─────────────────────────────────────────────────────────────
 MONGO_URI = os.getenv("MONGO_URI", "")
-DB_NAME = os.getenv("MONGO_DB_NAME", "skillnaav")
+DB_NAME = os.getenv("MONGO_DB_NAME", "edutechex")
 
 # How long cached recommendations stay valid before recomputing
 CACHE_TTL_HOURS = int(os.getenv("REC_CACHE_TTL_HOURS", "6"))

@@ -87,7 +87,7 @@ const createMeeting = async (req, res) => {
   }
 
   try {
-    const organizerName = req.partner?.name || "SkillNaav Partner";
+    const organizerName = req.partner?.name || "Edutechex Partner";
     const calendar = await getCalendarClient(req.partner?.email);
     const start = new Date(Date.now() + 5 * 60 * 1000);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
@@ -97,14 +97,14 @@ const createMeeting = async (req, res) => {
       conferenceDataVersion: 1,
       sendUpdates: "all",
       requestBody: {
-        summary: `SkillNaav meeting with ${organizerName}`,
-        description: `${organizerName} invited you to a Google Meet meeting through SkillNaav.`,
+        summary: `Edutechex meeting with ${organizerName}`,
+        description: `${organizerName} invited you to a Google Meet meeting through Edutechex.`,
         start: { dateTime: start.toISOString() },
         end: { dateTime: end.toISOString() },
         attendees: [{ email: recipientEmail }],
         conferenceData: {
           createRequest: {
-            requestId: `skillnaav-${crypto.randomUUID()}`,
+            requestId: `edutechex-${crypto.randomUUID()}`,
             conferenceSolutionKey: { type: "hangoutsMeet" },
           },
         },

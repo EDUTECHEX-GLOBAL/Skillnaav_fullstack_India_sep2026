@@ -152,12 +152,12 @@ async function scheduleInterview(req, res) {
     const end = new Date(start.getTime() + durationMinutes * 60000);
 
     const event = {
-      summary: `SkillNaav Interview – ${finalInternshipTitle}`,
+      summary: `Edutechex Interview – ${finalInternshipTitle}`,
       start: { dateTime: start.toISOString(), timeZone: timezone },
       end: { dateTime: end.toISOString(), timeZone: timezone },
       conferenceData: {
         createRequest: {
-          requestId: `skillnaav-${Date.now()}`,
+          requestId: `edutechex-${Date.now()}`,
           conferenceSolutionKey: { type: "hangoutsMeet" },
         },
       },

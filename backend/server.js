@@ -32,6 +32,7 @@ const allowedOrigins = [
   process.env.FRONTEND_BASE_URL,
   process.env.FRONTEND_BASE_URL_2,
   process.env.FRONTEND_BASE_URL_3,
+  process.env.FRONTEND_BASE_URL_4,
 ].filter(Boolean);
 
 const corsOptions = {
@@ -53,7 +54,7 @@ const chatbotRoute = require("./routes/chatbot");
 const userRoutes = require("./routes/webapp-routes/userRoutes");
 const internRoutes = require("./routes/webapp-routes/internshipPostRoutes");
 const partnerBinRoutes = require("./routes/webapp-routes/partnerBinRoutes");
-const skillnaavRoute = require("./routes/skillnaavRoute");
+const edutechexRoute = require("./routes/edutechexRoute");
 const partnerRoutes = require("./routes/webapp-routes/partnerRoutes");
 const adminRoutes = require("./routes/webapp-routes/adminRoutes");
 const adminCertificateRoutes = require("./routes/webapp-routes/adminCertificateRoutes");
@@ -116,8 +117,8 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/interns", internRoutes);
 app.use("/api/partner-bin", partnerBinRoutes);
-app.use("/api/skillnaav", skillnaavRoute);
-app.use("/api/contact", skillnaavRoute);
+app.use("/api/edutechex", edutechexRoute);
+app.use("/api/contact", edutechexRoute);
 app.use("/api/partners", partnerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/subscriptions", adminSubscriptionRoutes);

@@ -19,9 +19,9 @@ async function sendGuardianConsentEmail({
 }) {
     if (!guardianEmail) return;
 
-    const subject = "Guardian consent received for Skillnaav (Under 18)";
+    const subject = "Guardian consent received for Edutechex (Under 18)";
 
-    const appUrl = process.env.WEBAPP_BASE_URL || "https://www.skillnaav.com";
+    const appUrl = process.env.WEBAPP_BASE_URL || "https://www.edutechex.com";
     const when = consentAt ? new Date(consentAt) : new Date();
 
     const safeGuardianName = (guardianName || "Guardian").trim();
@@ -35,7 +35,7 @@ async function sendGuardianConsentEmail({
       <p>Hi ${safeGuardianName},</p>
 
       <p>
-        We received a guardian consent submission for <b>${safeStudentName}</b> to use Skillnaav and apply for internships.
+        We received a guardian consent submission for <b>${safeStudentName}</b> to use Edutechex and apply for internships.
       </p>
 
       ${safeStudentEmail ? `<p><b>Child account email:</b> ${safeStudentEmail}</p>` : ""}
@@ -55,7 +55,7 @@ async function sendGuardianConsentEmail({
         You can log in anytime at: <a href="${appUrl}/user/login">${appUrl}/user/login</a>
       </p>
 
-      <p>- Skillnaav Team</p>
+      <p>- Edutechex Team</p>
     </div>
   `;
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SkillNaavLogo from "../assets/Edutech-logo.png";
+import EdutechexLogo from "../assets/Edutech-logo.png";
 import Menu from "../assets/Menu.svg";
 import Close from "../assets/close.png";
 
@@ -28,8 +28,8 @@ const Navbar = () => {
           <a href="/" aria-label="Home">
             <img
               className="w-[150px]"
-              src={SkillNaavLogo}
-              alt="SkillNaav Logo"
+              src={EdutechexLogo}
+              alt="Edutechex Logo"
             />
           </a>
           <div className="hidden lg:flex gap-x-8 ml-8">

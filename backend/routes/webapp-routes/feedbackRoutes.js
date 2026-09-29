@@ -85,9 +85,9 @@ const canonicalQuestionSets = {
     { id: "performance", label: "5) How responsive/fast did the site feel (1-5)?", type: "rating" },
     { id: "featureUsed", label: "6) Feature used most today", type: "text" },
     { id: "confusing", label: "7) Anything confusing or broken? (short)", type: "text" },
-    { id: "nps", label: "8) How likely are you to recommend Skillnaav? (0-10)", type: "nps" },
+    { id: "nps", label: "8) How likely are you to recommend Edutechex? (0-10)", type: "nps" },
     { id: "suggestions", label: "9) Suggestions to improve internship discovery", type: "text" },
-    { id: "followUp", label: "10) Would you like follow-up from Skillnaav?", type: "boolean" },
+    { id: "followUp", label: "10) Would you like follow-up from Edutechex?", type: "boolean" },
     { id: "contactEmail", label: "If yes, email:", type: "email" }
   ],
   partner: [
@@ -436,9 +436,9 @@ router.get("/:id/pdf", async (req, res) => {
       size: "A4",
       info: {
         Title: `Feedback Report - ${feedback._id}`,
-        Author: "Skillnaav Feedback System",
+        Author: "Edutechex Feedback System",
         Subject: `Feedback from ${feedback.flow || "user"} flow`,
-        Creator: "Skillnaav"
+        Creator: "Edutechex"
       }
     });
 
@@ -497,7 +497,7 @@ router.get("/:id/pdf", async (req, res) => {
 
     // Header (same style)
     doc.fontSize(20).font("Helvetica-Bold").fillColor("#111827");
-    const title = "Skillnaav — Feedback";
+    const title = "Edutechex — Feedback";
     doc.text(title, { align: "center" });
     const titleW = doc.widthOfString(title);
     const titleX = (PAGE_W - titleW) / 2;

@@ -4,7 +4,15 @@ const notFound = (req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  console.error("🔥 Global Error Handler caught:", err);
+  
+  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  
+  let errorMessage = err.message || "";
+  if (err.name === 'MulterError' || errorMessage.includes('Invalid file type') || errorMessage.includes('too large')) {
+    statusCode = 400;
+  }
+  
   res.status(statusCode);
   res.json({
     message: err.message,

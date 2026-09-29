@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import axiosInstance from "../api/axiosInstance";
 import { LiveAvatarSession, SessionEvent } from "@heygen/liveavatar-web-sdk";
 import aiAssistantBg from "../assets/Aiassistant.png";
-import assistantVideo from "../assets/skillnaav-corporate-assistant-body-only-v3-silent_1.mp4";
+import assistantVideo from "../assets/edutechex-corporate-assistant-body-only-v3-silent_1.mp4";
 import chatbotIcon from "../assets-webapp/chat-bot.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Minimize2, X, ChevronUp, Mic, MicOff, MoreHorizontal, MessageSquare, PhoneOff } from 'lucide-react';
@@ -58,8 +58,8 @@ export default function Chatbot() {
   // Dispatch event when widget state changes so external FABs (like Home.js) can adjust their position
   useEffect(() => {
     const isCardVisible = widgetState === 'collapsed' || widgetState === 'expanded' || widgetState === 'fullscreen';
-    window.__skillnaavAssistantPreviewVisible = isCardVisible;
-    window.dispatchEvent(new CustomEvent("skillnaav-assistant-preview", { detail: { visible: isCardVisible, expanded: widgetState === 'expanded' } }));
+    window.__edutechexAssistantPreviewVisible = isCardVisible;
+    window.dispatchEvent(new CustomEvent("edutechex-assistant-preview", { detail: { visible: isCardVisible, expanded: widgetState === 'expanded' } }));
   }, [widgetState]);
 
   // Initialize Speech Recognition
@@ -140,7 +140,7 @@ export default function Chatbot() {
         setTimeout(() => {
           if (sessionRef.current) {
             try {
-              sessionRef.current.repeat("Hello! I am your Skill Naav assistant. How can I help you today?");
+              sessionRef.current.repeat("Hello! I am your Edutechex assistant. How can I help you today?");
             } catch (err) {
               console.warn("Avatar repeat error:", err);
             }
@@ -335,9 +335,9 @@ export default function Chatbot() {
 
                 {/* Right Controls */}
                 <div className="flex gap-1 items-center ml-auto">
-                  {/* Branding text "Skillnaav" logo */}
+                  {/* Branding text "Edutechex" logo */}
                   <div className="pointer-events-none box-border flex items-center justify-center rounded-full bg-black/40 h-7 px-2 backdrop-blur-md border border-white/10 hidden sm:flex transition-opacity duration-300">
-                      <span className="text-[9px] font-bold text-white tracking-widest uppercase leading-none">Skillnaav</span>
+                      <span className="text-[9px] font-bold text-white tracking-widest uppercase leading-none">Edutechex</span>
                   </div>
                   
                   {/* X button is always visible so user can always close it */}

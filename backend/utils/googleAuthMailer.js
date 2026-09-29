@@ -32,11 +32,11 @@ async function sendGoogleAuthPromptEmail({ to, firstName, lastName, statePayload
     const authUrl = `${SERVER_BASE_URL}/api/google/auth?state=${encodeURIComponent(b64state)}`;
 
     const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Instructor";
-    const subject = "SkillNaav — Connect your Google Calendar";
+    const subject = "Edutechex — Connect your Google Calendar";
 
     const bodyHtml = `
     <p>Hi ${fullName},</p>
-    <p>To keep your internship schedule in sync automatically, please connect your Google Calendar to <strong>SkillNaav</strong>.</p>
+    <p>To keep your internship schedule in sync automatically, please connect your Google Calendar to <strong>Edutechex</strong>.</p>
     <p>
       <a href="${authUrl}" target="_blank" rel="noopener"
          style="display:inline-block;background:#0ea5a4;color:#fff;padding:10px 14px;border-radius:8px;
@@ -60,19 +60,19 @@ async function sendGoogleAuthSuccessEmail({ to, firstName, lastName }) {
     if (!to) return { ok: false, reason: "missing-email" };
 
     const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Instructor";
-    const subject = "Google authentication to SkillNaav successful ✅";
+    const subject = "Google authentication to Edutechex successful ✅";
 
     const dashboardUrl = abs(`${FRONTEND_BASE_URL}/user-main-page?tab=offer-letter`);
 
     const bodyHtml = `
     <p>Hi ${fullName},</p>
-    <p><strong>Success!</strong> Your Google Calendar is now connected to <strong>SkillNaav</strong>.</p>
+    <p><strong>Success!</strong> Your Google Calendar is now connected to <strong>Edutechex</strong>.</p>
     <p>From now on, your internship schedule can be synced to your Google Calendar.</p>
     <p>
       <a href="${dashboardUrl}" target="_blank" rel="noopener"
          style="display:inline-block;background:#0ea5a4;color:#fff;padding:10px 14px;border-radius:8px;
                 text-decoration:none;font-weight:600;">
-        Open SkillNaav
+        Open Edutechex
       </a>
     </p>
     <p>If you have any questions, reply to this email and we’ll help.</p>

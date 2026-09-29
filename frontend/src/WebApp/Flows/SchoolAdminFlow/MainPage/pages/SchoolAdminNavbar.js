@@ -117,7 +117,7 @@ const SchoolAdminNavbar = React.memo(({ onLogout, onToggleSidebar }) => {
           <FaBars className="text-xl" />
         </button>
 
-        <img src={logo} alt="SkillNaav" className="h-10 w-auto" />
+        <img src={logo} alt="Edutechex" className="h-10 w-auto" />
       </div>
 
       {/* Right: Logout button — keep your existing logout button here */}

@@ -119,7 +119,7 @@ function PremiumPage() {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: orderRes.data.amount,
         currency: orderRes.data.currency,
-        name: "Skillnaav",
+        name: "Edutechex",
         description: `Upgrade to ${planTypeStr}`,
         order_id: orderRes.data.id,
         handler: async function (response) {
@@ -170,7 +170,7 @@ function PremiumPage() {
           contact: userInfo.phone || "",
         },
         theme: {
-          color: "#4f46e5", // Indigo-600 to match Skillnaav theme
+          color: "#4f46e5", // Indigo-600 to match Edutechex theme
         },
       };
 

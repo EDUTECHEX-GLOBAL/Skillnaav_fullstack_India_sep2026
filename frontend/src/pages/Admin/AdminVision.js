@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Modal, Form, Input, Button, message, List, Skeleton } from "antd";
 import axios from "../../api/axiosInstance";
+import imageCompression from "browser-image-compression";
 
 const { TextArea } = Input;
 
 const AdminVision = () => {
-  const [skillnaavData, setSkillnaavData] = useState(null);
+  const [edutechexData, setEdutechexData] = useState(null);
   const [modalData, setModalData] = useState({
     isVisible: false,
     type: "",
@@ -16,22 +17,22 @@ const AdminVision = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const fetchSkillnaavData = useCallback(async () => {
+  const fetchEdutechexData = useCallback(async () => {
     try {
-      const response = await axios.get("/api/skillnaav/get-skillnaav-data");
-      setSkillnaavData(response.data);
+      const response = await axios.get("/api/edutechex/get-edutechex-data");
+      setEdutechexData(response.data);
       if (response.data.visionhead?.length > 0) {
         setImgUrl(response.data.visionhead[0].visionImg || "");
         setPreviewUrl(response.data.visionhead[0].visionImg || "");
       }
     } catch (error) {
-      console.error("Error fetching skillnaav data:", error);
+      console.error("Error fetching edutechex data:", error);
     }
   }, []);
 
   useEffect(() => {
-    fetchSkillnaavData();
-  }, [fetchSkillnaavData]);
+    fetchEdutechexData();
+  }, [fetchEdutechexData]);
 
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
@@ -43,12 +44,17 @@ const AdminVision = () => {
     reader.readAsDataURL(selectedFile);
 
     try {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(selectedFile, options);
 
-      const { data } = await axios.post("/api/upload/vision-image", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const formData = new FormData();
+      formData.append("image", compressedFile, selectedFile.name);
+
+      const { data } = await axios.post("/api/upload/vision-image", formData);
 
       if (data.success) {
         setImgUrl(data.imageUrl);
@@ -71,7 +77,7 @@ const AdminVision = () => {
         if (modalData.type === "editHead") {
           const { _id } = modalData.data;
           response = await axios.put(
-            `/api/skillnaav/update-visionhead/${_id}`,
+            `/api/edutechex/update-visionhead/${_id}`,
             {
               ...values,
               visionImg: imgUrl,
@@ -81,17 +87,17 @@ const AdminVision = () => {
           const { _id } = modalData.data;
           values._id = _id;
           response = await axios.put(
-            `/api/skillnaav/update-visionpoint/${_id}`,
+            `/api/edutechex/update-visionpoint/${_id}`,
             values
           );
         } else if (modalData.type === "addPoint") {
-          response = await axios.post("/api/skillnaav/add-visionpoint", values);
+          response = await axios.post("/api/edutechex/add-visionpoint", values);
         }
 
         if (response.data.success) {
           message.success(response.data.message);
           setModalData({ isVisible: false, type: "", data: null });
-          fetchSkillnaavData();
+          fetchEdutechexData();
           form.resetFields();
           setPreviewUrl("");
         } else {
@@ -101,18 +107,18 @@ const AdminVision = () => {
         message.error(`Error ${modalData.type}: ${error.message}`);
       }
     },
-    [modalData, form, fetchSkillnaavData, imgUrl]
+    [modalData, form, fetchEdutechexData, imgUrl]
   );
 
   const handleDelete = useCallback(
     async (id) => {
       try {
         const response = await axios.delete(
-          `/api/skillnaav/delete-visionpoint/${id}`
+          `/api/edutechex/delete-visionpoint/${id}`
         );
         if (response.data.success) {
           message.success(response.data.message);
-          fetchSkillnaavData();
+          fetchEdutechexData();
         } else {
           message.error(response.data.message);
         }
@@ -120,7 +126,7 @@ const AdminVision = () => {
         message.error(`Error deleting vision point: ${error.message}`);
       }
     },
-    [fetchSkillnaavData]
+    [fetchEdutechexData]
   );
 
   const openModal = useCallback(
@@ -137,7 +143,7 @@ const AdminVision = () => {
     [form]
   );
 
-  if (!skillnaavData) {
+  if (!edutechexData) {
     return (
       <div className="flex justify-center items-center h-full">
         <Skeleton active avatar />
@@ -145,7 +151,7 @@ const AdminVision = () => {
     );
   }
 
-  const { visionhead, visionpoint } = skillnaavData;
+  const { visionhead, visionpoint } = edutechexData;
 
   return (
     <div className="container mx-auto py-8">

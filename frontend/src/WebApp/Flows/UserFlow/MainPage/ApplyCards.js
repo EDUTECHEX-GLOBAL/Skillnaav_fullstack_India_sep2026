@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import SkillAnalysis from "./SkillnaavAnalysis";
+import SkillAnalysis from "./EdutechexAnalysis";
 import ProctoredAssessment from "./AssessmentModal";
 
 const MAX_LIMITS = {
@@ -509,7 +509,7 @@ const ApplyCards = ({ job, onBack }) => {
         }
       }
 
-      if (planType !== "Premium Plus" && planType !== "Premium Basic") {
+      if (!studentAssessment) {
         console.log("check toast"); //18-09-2026
         toast.error(
           "You must generate and complete the assessment before applying.",

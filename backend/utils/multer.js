@@ -13,8 +13,8 @@ const s3 = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
   requestHandler: {
-    requestTimeout: 30000,
-    socketTimeout: 30000,
+    requestTimeout: 120000,
+    socketTimeout: 120000,
   },
   maxAttempts: 3,
 });

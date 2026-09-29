@@ -166,7 +166,7 @@ const Navbar = ({ onToggleSidebar }) => {
           <button onClick={onToggleSidebar} className="text-gray-700 md:hidden">
             <FontAwesomeIcon icon={faBars} className="text-xl" />
           </button>
-          <img src={logo} alt="Skillnaav Logo" className="h-10" />
+          <img src={logo} alt="Edutechex Logo" className="h-10" />
         </div>
 
         <div className="relative flex items-center space-x-5">

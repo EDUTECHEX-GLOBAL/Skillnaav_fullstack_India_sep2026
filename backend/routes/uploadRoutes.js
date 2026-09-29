@@ -3,7 +3,7 @@ const router = express.Router();
 const { imageUploader } = require("../utils/multer");
 
 // Discover image
-router.post("/discover-image", imageUploader("discover").single("image"), (req, res) => {
+router.post("/discover-image", imageUploader("discover", 10).single("image"), (req, res) => {
   if (!req.file?.location) {
     return res.status(400).json({ success: false, message: "Upload failed" });
   }
@@ -11,7 +11,7 @@ router.post("/discover-image", imageUploader("discover").single("image"), (req, 
 });
 
 // Vision image
-router.post("/vision-image", imageUploader("vision").single("image"), (req, res) => {
+router.post("/vision-image", imageUploader("vision", 10).single("image"), (req, res) => {
   console.log("▶️ Received upload");
   console.log("🧾 req.file:", req.file);
   console.log("📎 req.body:", req.body);
@@ -25,7 +25,7 @@ router.post("/vision-image", imageUploader("vision").single("image"), (req, res)
 
 
 // Team image
-router.post("/team-image", imageUploader("team").single("image"), (req, res) => {
+router.post("/team-image", imageUploader("team", 10).single("image"), (req, res) => {
   if (!req.file?.location) {
     return res.status(400).json({ success: false, message: "Upload failed" });
   }
@@ -33,7 +33,7 @@ router.post("/team-image", imageUploader("team").single("image"), (req, res) => 
 });
 
 // Feature image
-router.post("/feature-image", imageUploader("features").single("image"), (req, res) => {
+router.post("/feature-image", imageUploader("features", 10).single("image"), (req, res) => {
   if (!req.file?.location) {
     return res.status(400).json({ success: false, message: "Upload failed" });
   }
@@ -42,7 +42,7 @@ router.post("/feature-image", imageUploader("features").single("image"), (req, r
 
 router.post(
   "/job-image",
-  imageUploader("jobs").single("image"),
+  imageUploader("jobs", 10).single("image"),
   (req, res) => {
     console.log("▶️ Received job-image upload");
     console.log("🧾 req.file:", req.file);

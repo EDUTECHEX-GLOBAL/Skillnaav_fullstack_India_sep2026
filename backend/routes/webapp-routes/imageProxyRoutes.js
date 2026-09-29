@@ -5,7 +5,7 @@
 // from the same origin (localhost:5000 → S3 → back to browser).
 //
 // Usage:
-//   GET /api/image-proxy?url=https://skillnaavres.s3.us-west-1.amazonaws.com/...
+//   GET /api/image-proxy?url=https://edutechexres.s3.us-west-1.amazonaws.com/...
 //
 // The frontend replaces direct S3 URLs with this proxy URL.
 
@@ -16,8 +16,8 @@ const { URL } = require("url");
 
 // Allowed S3 buckets (whitelist to prevent open-redirect abuse)
 const ALLOWED_HOSTS = [
-  "skillnav-documents-prod.s3.us-east-2.amazonaws.com",
-  "skillnav-documents-prod.s3.amazonaws.com",
+  "edutechex-documents-prod.s3.us-east-2.amazonaws.com",
+  "edutechex-documents-prod.s3.amazonaws.com",
   `${process.env.AWS_IMAGE_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`,
   `${process.env.AWS_RESUME_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`,
 ].filter(Boolean);

@@ -14,7 +14,7 @@ import {
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { format } from "date-fns";
 
-import Skillnaavlogo from "../../../../assets/Edutech-logo.png";
+import Edutechexlogo from "../../../../assets/Edutech-logo.png";
 import AdminChatModal from "./AdminChatModal";
 
 Modal.setAppElement("#root");
@@ -72,7 +72,7 @@ const InternshipDetails = ({ internship, onClose }) => (
         </div>
         <div className="mt-6 flex items-start gap-6">
           <img
-            src={internship.imgUrl || Skillnaavlogo}
+            src={internship.imgUrl || Edutechexlogo}
             alt={internship.companyName}
             className="w-20 h-20 rounded-2xl object-cover shadow-2xl ring-4 ring-white/50"
           />
@@ -652,7 +652,7 @@ const PartnerManagement = () => {
               <div className="p-5 pt-12 border-b border-gray-100">
                 <div className="flex items-start gap-3 mb-3">
                   <img
-                    src={internship.imgUrl || Skillnaavlogo}
+                    src={internship.imgUrl || Edutechexlogo}
                     alt={internship.companyName}
                     className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-white/50"
                   />
