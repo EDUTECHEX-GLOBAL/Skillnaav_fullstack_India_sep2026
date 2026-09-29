@@ -30,10 +30,6 @@ const BulkSendOffer = ({ selectedStudents: rawStudents, internshipId, onCancel, 
     fetchInternship();
   }, [internshipId]);
 
-  const getValidSchoolAdminId = () => {
-    const raw = localStorage.getItem("schoolAdminId");
-    return raw && /^[a-f\d]{24}$/i.test(raw) ? raw : null;
-  };
 
   const sendOfferToStudent = async (student) => {
     if (!student || !student.student_id || !student.email) {

@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../../../../api/axiosInstance";
 
 // FIX 1: Server-side price map mirrored on frontend for display only.
 // The server derives the real price from planType — this is only for UI rendering.
-const PLAN_PRICES = {
-  "Free": 0,
-  "Premium Basic": 2.99,
-  "Premium Plus": 6.99,
-};
+
 
 function PremiumPage() {
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
@@ -15,8 +11,7 @@ function PremiumPage() {
   const [planType, setPlanType] = useState("Free");
   const [premiumExpiration, setPremiumExpiration] = useState(null);
   const [sdkReady, setSdkReady] = useState(false);
-  const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
-  const [selectedPlanType, setSelectedPlanType] = useState(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   // FIX 2: Separate loading state for initial data fetch
   const [isFetching, setIsFetching] = useState(true);

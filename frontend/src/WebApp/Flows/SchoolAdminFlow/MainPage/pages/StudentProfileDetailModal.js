@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../../../../../api/axiosInstance';
 import {
-  Loader2, CheckCircle2, XCircle, User, Mail, GraduationCap,
+  Loader2, CheckCircle2, XCircle, User, GraduationCap,
   Briefcase, MapPin, Star, Link, X,
 } from 'lucide-react';
 

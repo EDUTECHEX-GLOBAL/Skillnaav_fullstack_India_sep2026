@@ -4,8 +4,13 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
-const EDUTECHEX_LOGO_PATH = path.resolve(__dirname, "../../frontend/src/assets/edutechex_logo_white (1).png");
-const EDUTECHEX_LOGO_BASE64 = fs.readFileSync(EDUTECHEX_LOGO_PATH).toString("base64");
+const EDUTECHEX_LOGO_PATH = path.resolve(__dirname, "../../frontend/src/assets/Edutech-logo.png");
+let EDUTECHEX_LOGO_BASE64 = "";
+try {
+  EDUTECHEX_LOGO_BASE64 = fs.readFileSync(EDUTECHEX_LOGO_PATH).toString("base64");
+} catch (error) {
+  console.warn("Could not load logo for invoice generator:", error.message);
+}
 
 const AWS_REGION = process.env.AWS_REGION;
 const AWS_IMAGE_BUCKET = process.env.AWS_IMAGE_BUCKET;

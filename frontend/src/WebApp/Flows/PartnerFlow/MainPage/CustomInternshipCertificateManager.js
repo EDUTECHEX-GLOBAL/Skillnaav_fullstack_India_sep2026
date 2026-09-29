@@ -126,11 +126,10 @@ const CustomInternshipCertificateManager = () => {
     }
   };
 
-  // eslint-disable-next-line
   useEffect(() => {
     fetchCertificates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partnerId]);
-
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;

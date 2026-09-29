@@ -68,8 +68,7 @@ const plans = [
 export default function PartnerPremiumPage() {
   const [sdkReady, setSdkReady]               = useState(false);
   const [alert, setAlert]                     = useState(null);
-  const [selectedIndex, setSelectedIndex]     = useState(null);
-  const [selectedPlanType, setSelectedPlanType] = useState(null);
+
   const [isProcessing, setIsProcessing]       = useState(false);
   const [, setTick]                           = useState(0);
   const [paymentHistory, setPaymentHistory]   = useState([]);
@@ -77,7 +76,7 @@ export default function PartnerPremiumPage() {
   const [loadingHistory, setLoadingHistory]   = useState(false);
   const [expiryWarning, setExpiryWarning]     = useState(false);
 
-  const paypalInstanceRef = useRef(null);
+
 
   // ✅ FIX 1: partner MUST be declared before any usage — moved to top of component body
   const reduxPartner = useSelector((s) => s.auth?.partnerInfo);

@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
-import defaultCompanyLogo from "../../../../assets/default-company-logo.png";
-
+import edutechex_logo_white from "../../../../assets/edutechex_logo_white (1).png";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { IN_STATES } from "../../../../constants/locations";
 const SuccessModal = ({ onOk }) => (

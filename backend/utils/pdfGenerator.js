@@ -27,8 +27,13 @@ const axios       = require("axios");
 // Logo removed
 
 const fs2 = require('fs');
-const Edutechex_LOGO_BUF = fs2.readFileSync('C:\\Users\\dell\\Desktop\\skillnaav-fullstack\\frontend\\src\\assets\\edutechex_logo_white (1).png');
-
+const path2 = require('path');
+let Edutechex_LOGO_BUF = null;
+try {
+  Edutechex_LOGO_BUF = fs2.readFileSync(path2.resolve(__dirname, '../../frontend/src/assets/Edutech-logo.png'));
+} catch (error) {
+  console.warn("Could not load logo for pdf generator:", error.message);
+}
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
   navy:    "#1a1a2e",

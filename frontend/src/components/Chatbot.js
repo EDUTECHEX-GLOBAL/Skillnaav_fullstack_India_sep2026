@@ -8,14 +8,6 @@ import chatbotIcon from "../assets-webapp/chat-bot.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Minimize2, X, ChevronUp, Mic, MicOff, MoreHorizontal, MessageSquare, PhoneOff } from 'lucide-react';
 
-const languages = [
-  "Arabic", "Bulgarian", "Chinese", "Croatian", "Czech", "Danish", 
-  "Dutch", "English", "Finnish", "French", "German", "Greek", 
-  "Hindi", "Hungarian", "Indonesian", "Italian", "Japanese", "Korean", 
-  "Norwegian", "Polish", "Portuguese", "Romanian", "Russian", "Slovak", 
-  "Spanish", "Swedish", "Thai", "Turkish", "Ukrainian", "Vietnamese"
-];
-
 export default function Chatbot() {
   // Widget States: 'fab' (just button), 'collapsed' (preview card), 'expanded' (large card), 'fullscreen'
   const [widgetState, setWidgetState] = useState('collapsed');
@@ -24,15 +16,12 @@ export default function Chatbot() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [debugText, setDebugText] = useState("");
-  const [language, setLanguage] = useState('English');
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
 
   const videoRef = useRef(null);
   const sessionRef = useRef(null);
   const recognitionRef = useRef(null);
-  const dropdownRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // Auto-scroll transcript when new messages arrive
@@ -44,16 +33,7 @@ export default function Chatbot() {
   
   const token = localStorage.getItem("userToken") || sessionStorage.getItem("userToken") || "";
 
-  // Close dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsLanguageOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
 
   // Dispatch event when widget state changes so external FABs (like Home.js) can adjust their position
   useEffect(() => {
@@ -226,15 +206,12 @@ export default function Chatbot() {
     else setWidgetState('fab');
   };
 
-  const languageCode = language.substring(0, 2).toUpperCase();
-
   // STYLES FOR THE 3 STATES
   // All states render the SAME video container, we just animate the container sizing
   const isFullscreen = widgetState === 'fullscreen';
   const isExpanded = widgetState === 'expanded';
   const isCollapsed = widgetState === 'collapsed';
   const isMenu = widgetState === 'menu';
-  const isFab = widgetState === 'fab';
 
   let dialogStyle = {};
   if (isFullscreen) {

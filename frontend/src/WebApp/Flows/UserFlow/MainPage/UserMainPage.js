@@ -13,7 +13,6 @@ import UserAgeGateConsent from "../SignUpLogin/UserProfileBuilding/UserAgeGateCo
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import PendingApprovalCard from './PendingApprovalCard';
-import chatbotIcon from "../../../../assets-webapp/chat-bot.png";
 
 const UserMainPageContent = () => {
   const { handleSelectTab, selectedTab } = useTabContext();

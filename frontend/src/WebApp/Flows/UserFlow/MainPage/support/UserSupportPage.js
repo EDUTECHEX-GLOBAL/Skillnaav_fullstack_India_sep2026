@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
-import logo from "../../../../../assets/Edutech-logo.png";
+
 import StudentSupport from "./Support";
 
 const UserSupportPage = () => {

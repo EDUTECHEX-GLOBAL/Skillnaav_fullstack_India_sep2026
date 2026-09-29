@@ -337,7 +337,7 @@ const SchoolAdminForgotPassword = ({ onClose }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("/api/school-admin/verify-reset-otp", {
+      await axios.post("/api/school-admin/verify-reset-otp", {
         email: email.trim(),
         otp: otp.trim(),
       });
