@@ -2572,8 +2572,10 @@ const StudentTicketsPanel = () => {
       } finally {
         if (showSpinner) p.setLoading(false);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // `p` is a freshly assembled container; these callbacks only read stable
+    // React setters and refs, while their changing state values are dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [API_URL],
   );
 
@@ -2601,8 +2603,10 @@ const StudentTicketsPanel = () => {
         console.error(err);
         p.loadTicketsRef.current?.();
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // `p` is a freshly assembled container; these callbacks only read stable
+    // React setters and refs, while their changing state values are dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [API_URL],
   );
 
@@ -2909,8 +2913,10 @@ const StudentTicketsPanel = () => {
       await loadMessages(t._id);
       await p.markReadRef.current?.(t._id);
       p.scrollEnd();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // `p` is a freshly assembled container; these callbacks only read stable
+    // React setters and refs, while their changing state values are dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [loadMessages],
   );
 
@@ -4525,8 +4531,10 @@ const SchoolStudentPanel = () => {
       } finally {
         if (showSpinner) p.setLoading(false);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // `p` is a freshly assembled container; these callbacks only read stable
+    // React setters and refs, while their changing state values are dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [API_URL],
   );
 
@@ -4554,8 +4562,10 @@ const SchoolStudentPanel = () => {
         console.error(err);
         p.loadTicketsRef.current?.();
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // `p` is a freshly assembled container; these callbacks only read stable
+    // React setters and refs, while their changing state values are dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [API_URL],
   );
 
@@ -4881,8 +4891,10 @@ const SchoolStudentPanel = () => {
       await loadMessages(t._id);
       await p.markReadRef.current?.(t._id);
       p.scrollEnd();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // `p` is a freshly assembled container; these callbacks only read stable
+    // React setters and refs, while their changing state values are dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [loadMessages],
   );
 

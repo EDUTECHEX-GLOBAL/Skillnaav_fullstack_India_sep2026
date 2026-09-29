@@ -533,7 +533,7 @@ const ChatView = ({
 
     inputRef.current.style.height = "42px";
     inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
-  }, [input]);
+  }, [input, inputRef]);
 
   const messageList = useMemo(
     () =>
