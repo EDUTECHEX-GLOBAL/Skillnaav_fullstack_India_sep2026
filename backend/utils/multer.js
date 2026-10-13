@@ -68,12 +68,12 @@ const resumeUpload = createUploader(
   5 * 1024 * 1024
 );
 
-// ✅ Profile pic uploader
+// ✅ Profile pic / Age Verification selfie uploader
 const profilePicUpload = createUploader(
   process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_RESUME_BUCKET,
   "profile-pics",
-  /jpe?g|png|gif/,
-  2 * 1024 * 1024
+  /jpe?g|png|gif|webp/,
+  10 * 1024 * 1024
 );
 
 // ✅ Retry-enabled file upload (for buffers/files)

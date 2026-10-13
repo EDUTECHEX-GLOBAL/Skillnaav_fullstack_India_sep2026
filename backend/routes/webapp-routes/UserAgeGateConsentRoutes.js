@@ -13,7 +13,18 @@ const { profilePicUpload } = require("../../utils/multer");
 router.post(
     "/",
     authenticate,
-    profilePicUpload.single("ageVerificationPhoto"),
+    (req, res, next) => {
+        profilePicUpload.single("ageVerificationPhoto")(req, res, (err) => {
+            if (err) {
+                console.error("Age verification photo upload error:", err);
+                return res.status(400).json({
+                    success: false,
+                    message: err.message || "Failed to upload verification photo. Please try again.",
+                });
+            }
+            next();
+        });
+    },
     saveUserAgeGateConsent
 );
 

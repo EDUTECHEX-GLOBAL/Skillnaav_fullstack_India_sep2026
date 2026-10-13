@@ -11,11 +11,46 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "../../../../api/axiosInstance";
+import { validateEmail } from "../../../../utils/validators";
 
 const validationSchema = Yup.object({
-  email: Yup.string().email("Invalid email address").required("Required"),
-  password: Yup.string().required("Required"),
+  email: Yup.string()
+    .required("Email is required.")
+    .test("valid-email", function (value) {
+      const err = validateEmail(value);
+      if (err) return this.createError({ message: err });
+      return true;
+    }),
+  password: Yup.string().required("Password is required."),
 });
+
+const redirectToAppropriateDashboard = (isB2BStudent, navigate) => {
+  const currentHost = window.location.hostname;
+  const port = window.location.port ? `:${window.location.port}` : "";
+  const protocol = window.location.protocol;
+
+  if (isB2BStudent) {
+    if (currentHost === "localhost" || currentHost === "127.0.0.1") {
+      window.location.href = `${protocol}//b2b.localhost${port}/user-main-page`;
+      return;
+    } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.")) {
+      const b2bHost = currentHost.replace(/^www\./, "");
+      window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page`;
+      return;
+    }
+  } else {
+    if (currentHost.startsWith("b2b.localhost")) {
+      window.location.href = `${protocol}//localhost${port}/user-main-page`;
+      return;
+    } else if (currentHost.startsWith("b2b.") || currentHost.startsWith("campus.")) {
+      const mainHost = currentHost.replace(/^(b2b|campus)\./, "");
+      window.location.href = `${protocol}//${mainHost}${port}/user-main-page`;
+      return;
+    }
+  }
+
+  navigate("/user-main-page");
+};
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -46,6 +81,9 @@ const UserLogin = () => {
       localStorage.removeItem("sessionId");
       localStorage.setItem("userToken", data.token);
 
+      const schoolAdminId = data.schoolAdmin || data.schoolAdminId || null;
+      const schoolName = data.schoolName || data.school || null;
+
       localStorage.setItem("studentInfo", JSON.stringify({
         _id: data._id,
         name: data.name,
@@ -53,13 +91,17 @@ const UserLogin = () => {
         profileImage: data.profileImage,
         isPremium: data.isPremium,
         planType: data.planType,
-        premiumExpiration: data.premiumExpiration ?? null, // ✅ FIX: was missing — Navbar reads this from localStorage on load
+        premiumExpiration: data.premiumExpiration ?? null,
         adminApproved: data.adminApproved,
         status: data.status,
+        schoolAdmin: schoolAdminId,
+        schoolAdminId: schoolAdminId,
+        schoolName: schoolName,
+        isB2B: !!schoolAdminId,
       }));
 
-      if (data.schoolAdminId) {
-        localStorage.setItem("schoolAdminId", data.schoolAdminId);
+      if (schoolAdminId) {
+        localStorage.setItem("schoolAdminId", schoolAdminId);
       }
 
       const sessionRes = await axios.post(
@@ -79,7 +121,7 @@ const UserLogin = () => {
       localStorage.setItem("loginTime", Date.now());
 
       setLoading(false);
-      navigate("/user-main-page");
+      redirectToAppropriateDashboard(!!schoolAdminId, navigate);
     } catch (err) {
       console.error("Login error:", err.response || err.message);
       setError(err.response?.data?.message || "Something went wrong");
@@ -90,17 +132,17 @@ const UserLogin = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
-      {/* Left Section (Image) */}
+      {/* Left Section (Image) - Hidden on mobile/tablet, full height on desktop like revamp */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
         <img
           src={loginImage}
           alt="login"
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
         />
       </div>
 
       {/* Right Section (Form) */}
-      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2">
+      <div className="flex flex-col items-center justify-center p-6 sm:p-8 w-full lg:w-1/2">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
             Dear Student, Welcome!
@@ -200,6 +242,9 @@ const UserLogin = () => {
 
                 localStorage.setItem("userToken", res.data.token);
 
+                const schoolAdminId = res.data.schoolAdmin || res.data.schoolAdminId || null;
+                const schoolName = res.data.schoolName || res.data.school || null;
+
                 localStorage.setItem("studentInfo", JSON.stringify({
                   _id: res.data._id,
                   name: res.data.name,
@@ -207,7 +252,12 @@ const UserLogin = () => {
                   profileImage: res.data.profileImage,
                   isGoogleUser: res.data.isGoogleUser,
 
-                  // IMPORTANT
+                  // B2B fields — needed for correct redirect
+                  schoolAdmin: schoolAdminId,
+                  schoolAdminId: schoolAdminId,
+                  schoolName: schoolName,
+                  isB2B: !!schoolAdminId,
+
                   adminApproved: res.data.adminApproved,
                   status: res.data.status,
                   isActive: res.data.isActive,
@@ -217,12 +267,17 @@ const UserLogin = () => {
                   premiumExpiration: res.data.premiumExpiration ?? null,
                 }));
 
+                if (schoolAdminId) {
+                  localStorage.setItem("schoolAdminId", schoolAdminId);
+                }
+
                 localStorage.setItem("loginTime", Date.now());
 
                 if (res.data.needsProfileCompletion) {
                   navigate("/user-create-account");
                 } else {
-                  navigate("/user-main-page");
+                  // ✅ Same B2B/B2C redirect logic as email login
+                  redirectToAppropriateDashboard(!!schoolAdminId, navigate);
                 }
 
               } catch (err) {

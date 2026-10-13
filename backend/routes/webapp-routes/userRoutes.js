@@ -7,6 +7,7 @@ const { profilePicUpload } = require('../../utils/multer');
 const {
   registerUser,
   authUser,
+  authB2BUser,
   updateUserProfile,
   getAllUsers,
   approveUser,
@@ -37,6 +38,7 @@ router.post(
 );
 
 router.post("/login", authUser);
+router.post("/b2b/login", authB2BUser);
 
 router.get("/check-email", checkIfUserExists);
 

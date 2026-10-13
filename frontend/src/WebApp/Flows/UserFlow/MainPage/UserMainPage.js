@@ -102,7 +102,7 @@ const UserMainPageContent = () => {
   }, [searchParams, navigate, handleSelectTab]);
 
   useEffect(() => {
-    if (!userInfo || userInfo.isPremium || popupDismissed) return;
+    if (!userInfo || userInfo.isPremium || userInfo.isB2B || userInfo.schoolAdmin || popupDismissed) return;
     const initialDelay = setTimeout(() => {
       setShowUpgradePopup(true);
       popupTimerRef.current = setTimeout(() => setShowUpgradePopup(false), 10000);
@@ -132,7 +132,7 @@ const UserMainPageContent = () => {
       fd.append("ageGateCompleted", "true");
       fd.append("ageVerificationPhoto", payload.ageVerificationPhoto);
       await axios.post("/api/user-age-gate-consent", fd, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setShowReverifyModal(false);
       setIsApproved(false);

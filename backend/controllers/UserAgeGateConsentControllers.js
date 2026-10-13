@@ -162,20 +162,12 @@ const saveUserAgeGateConsent = async (req, res) => {
             };
         }
 
-        // ✅ Put _id first (keeps document order stable in MongoDB viewer)
-        const replacementDoc = existing?._id
-            ? { _id: existing._id, ...replacement }
-            : replacement;
-
-        // ✅ Native replaceOne (upsert) — drops any old unwanted fields automatically
-        await UserAgeGateConsent.collection.replaceOne(
+        // ✅ Mongoose findOneAndUpdate with upsert — safe, robust, and maintains schema integrity
+        const consent = await UserAgeGateConsent.findOneAndUpdate(
             { user: userObjectId },
-            replacementDoc,
-            { upsert: true }
+            { $set: replacement },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
         );
-
-        // ✅ Read back updated document
-        const consent = await UserAgeGateConsent.findOne({ user: userObjectId });
 
         // ✅ Send guardian consent email immediately for UNDER_18 (non-blocking)
         if (ageCategory === "UNDER_18") {
@@ -201,7 +193,10 @@ const saveUserAgeGateConsent = async (req, res) => {
         console.error("saveUserAgeGateConsent error:", err);
         return res
             .status(500)
-            .json({ success: false, message: "Server error saving consent." });
+            .json({
+                success: false,
+                message: err.message || "Server error saving consent.",
+            });
     }
 };
 

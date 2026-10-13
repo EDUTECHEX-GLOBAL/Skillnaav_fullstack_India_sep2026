@@ -68,6 +68,7 @@ const userwebappSchema = new mongoose.Schema(
     schoolAdmin: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SchoolAdmin",
+      default: null,
     },
 
     careerChatUsage: { type: Number, default: 0 },

@@ -65,32 +65,36 @@ const Navbar = () => {
         {/* Mobile Menu */}
         <div
           className={`${
-            menuOpen ? "translate-x-0" : "-translate-x-full"
-          } fixed top-0 left-0 w-full h-screen bg-white flex flex-col items-center justify-center gap-5 z-50 transition-transform duration-300 ease-in-out`}
+            menuOpen ? "translate-x-0" : "translate-x-full"
+          } fixed top-0 right-0 w-full md:w-80 h-screen bg-white/95 backdrop-blur-lg shadow-2xl flex flex-col pt-24 px-8 gap-6 z-50 transition-transform duration-300 ease-in-out`}
         >
-          <div className="flex justify-end w-full p-4">
+          <div className="absolute top-6 right-6">
             <img
               src={Close}
               alt="Close Menu"
               onClick={toggleMenu}
-              width={30}
-              height={30}
-              className="cursor-pointer transition-transform duration-300 transform hover:scale-110"
+              width={24}
+              height={24}
+              className="cursor-pointer transition-transform duration-300 transform hover:scale-110 hover:rotate-90 opacity-70 hover:opacity-100"
             />
           </div>
-          {navLinks.map((item, index) => (
-            <a
-              key={index}
-              href={item.href}
-              onClick={toggleMenu}
-              className="text-[#36485C] font-medium text-2xl transition duration-300 transform hover:scale-105"
-            >
-              {item.name}
-            </a>
-          ))}
-          <a href="#contacts" onClick={toggleMenu}>
-            <div className="font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-6 py-3 rounded-md transition duration-300 text-2xl">
-              Requ
+          
+          <div className="flex flex-col gap-6 w-full mt-4">
+            {navLinks.map((item, index) => (
+              <a
+                key={index}
+                href={item.href}
+                onClick={toggleMenu}
+                className="text-[#36485C] font-semibold text-xl border-b border-gray-100 pb-2 transition duration-300 transform hover:text-[#451E5D] hover:translate-x-2"
+              >
+                {item.name}
+              </a>
+            ))}
+          </div>
+
+          <a href="#contacts" onClick={toggleMenu} className="w-full mt-8">
+            <div className="font-semibold text-center text-white bg-[#451E5D] shadow-lg shadow-[#451E5D]/30 hover:bg-[#2c3b4e] hover:shadow-xl hover:-translate-y-1 px-6 py-4 rounded-xl transition-all duration-300 text-lg w-full">
+              Request Call Back
             </div>
           </a>
         </div>

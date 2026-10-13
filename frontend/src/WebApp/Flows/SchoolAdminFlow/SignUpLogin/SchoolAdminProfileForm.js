@@ -251,8 +251,6 @@ const SchoolAdminProfileForm = () => {
             >
               <option value="">Select Language</option>
               <option value="English">English</option>
-              <option value="French">French</option>
-              <option value="Bilingual">Bilingual (English/French)</option>
             </select>
           </div>
         </div>

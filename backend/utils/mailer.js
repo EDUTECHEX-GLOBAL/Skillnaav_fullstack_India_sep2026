@@ -1,7 +1,13 @@
 const axios = require("axios");
+const fs = require("fs");
 
 const sendEmailViaBrevo = async (mailOptions) => {
-  let senderEmail = mailOptions.from || process.env.EMAIL_FROM || process.env.BREVO_SMTP_LOGIN || "support@edutechex.com";
+  let senderEmail =
+    mailOptions.from ||
+    process.env.EMAIL_FROM ||
+    process.env.EMAIL_USER ||
+    process.env.BREVO_SMTP_LOGIN ||
+    "skillnaav@gmail.com";
   let senderName = "Edutechex";
 
   if (senderEmail && senderEmail.includes("<")) {
@@ -18,8 +24,8 @@ const sendEmailViaBrevo = async (mailOptions) => {
     subject: mailOptions.subject,
     headers: {
       "List-Unsubscribe": "<mailto:unsubscribe@edutechex.com?subject=unsubscribe>, <https://edutechex.com/unsubscribe>",
-      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
-    }
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   };
 
   if (mailOptions.html) {
@@ -38,29 +44,63 @@ const sendEmailViaBrevo = async (mailOptions) => {
     payload.replyTo = { email: replyEmail };
   }
 
-  if (mailOptions.attachments && mailOptions.attachments.length > 0) {
-    payload.attachment = mailOptions.attachments
+  if (mailOptions.attachments && Array.isArray(mailOptions.attachments) && mailOptions.attachments.length > 0) {
+    const processedAttachments = mailOptions.attachments
       .map((att) => {
-        if (att.content && Buffer.isBuffer(att.content)) {
-          return { name: att.filename, content: att.content.toString("base64") };
-        }
-        if (att.content && typeof att.content === "string") {
-          return { name: att.filename, content: Buffer.from(att.content).toString("base64") };
+        try {
+          if (att.content && Buffer.isBuffer(att.content)) {
+            return { name: att.filename || "attachment", content: att.content.toString("base64") };
+          }
+          if (att.content && typeof att.content === "string") {
+            return { name: att.filename || "attachment", content: Buffer.from(att.content).toString("base64") };
+          }
+          if (att.path && fs.existsSync(att.path)) {
+            const fileBuffer = fs.readFileSync(att.path);
+            return { name: att.filename || "attachment", content: fileBuffer.toString("base64") };
+          }
+        } catch (readErr) {
+          console.warn("Could not process email attachment:", att.filename, readErr.message);
         }
         return null;
       })
       .filter(Boolean);
+
+    if (processedAttachments.length > 0) {
+      payload.attachment = processedAttachments;
+    }
   }
 
-  const response = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
-    headers: {
-      "api-key": process.env.BREVO_API_KEY || process.env.BREVO_SMTP_KEY,
-      "Content-Type": "application/json",
-      "accept": "application/json",
-    },
-  });
+  const apiKey = process.env.BREVO_API_KEY || process.env.BREVO_SMTP_KEY;
 
-  return { response: response.data };
+  try {
+    const response = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+        accept: "application/json",
+      },
+    });
+
+    return { response: response.data };
+  } catch (error) {
+    console.error("❌ Brevo API Error details:", error.response?.data || error.message);
+
+    // Fallback if sender domain was rejected by Brevo
+    if (error.response?.status === 400 && senderEmail !== process.env.EMAIL_USER && process.env.EMAIL_USER) {
+      console.log(`🔄 Retrying email send with verified fallback sender: ${process.env.EMAIL_USER}`);
+      payload.sender = { name: "Edutechex", email: process.env.EMAIL_USER };
+      const retryResponse = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+      });
+      return { response: retryResponse.data };
+    }
+
+    throw error;
+  }
 };
 
 const transporter = {

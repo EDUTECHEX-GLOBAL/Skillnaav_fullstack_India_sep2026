@@ -51,7 +51,7 @@ const schoolAdminSchema = new mongoose.Schema(
       schoolNumber: { type: String },
       languageOfInstruction: {
         type: String,
-        enum: ["English", "French", "Bilingual"],
+        default: "English",
       },
       verificationDoc: { type: String },
     },

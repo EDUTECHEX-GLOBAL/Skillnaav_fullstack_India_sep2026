@@ -1,4 +1,3 @@
-// Navbar.jsx (updated & cleaned)
 import React, { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt, faBell, faBars, faCrown } from "@fortawesome/free-solid-svg-icons";
@@ -90,8 +89,23 @@ const Navbar = ({ onToggleSidebar }) => {
     localStorage.removeItem("studentInfo");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("sessionId");
+    localStorage.removeItem("schoolAdminId");
     sessionStorage.clear();
-    navigate("/user/login");
+
+    const currentHost = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : "";
+    const protocol = window.location.protocol;
+
+    if (currentHost.startsWith("b2b.localhost")) {
+      window.location.href = `${protocol}//localhost${port}/user`;
+      return;
+    } else if (currentHost.startsWith("b2b.") || currentHost.startsWith("campus.")) {
+      const mainHost = currentHost.replace(/^(b2b|campus)\./, "");
+      window.location.href = `${protocol}//${mainHost}${port}/user`;
+      return;
+    }
+
+    navigate("/user");
   };
 
   const handleLogoutTrigger = async () => {

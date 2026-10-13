@@ -1,7 +1,7 @@
 // File: UserCreateAccount.js
 
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import DatePicker from "react-datepicker";
@@ -10,6 +10,7 @@ import loginImage from "../../../../assets-webapp/login-image-edutechex.png";
 import { GoogleLogin } from "@react-oauth/google";
 import { IN_STATES } from "../../../../constants/locations";
 import UserAgeGateConsent from "./UserProfileBuilding/UserAgeGateConsent";
+import { validateEmail, validateName } from "../../../../utils/validators";
 
 
 // ---------------------------------------------------------------------------
@@ -28,6 +29,7 @@ const clearRegistrationSession = () => {
 
 const UnifiedUserRegistration = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Initialise step from sessionStorage so a refresh lands on the right screen
   const [currentStep, setCurrentStep] = useState(() => {
@@ -58,8 +60,9 @@ const UnifiedUserRegistration = () => {
   // --- UNIFIED FORM STATE ---
   // Restore non-sensitive fields from sessionStorage when the page is refreshed
   const [formData, setFormData] = useState(() => {
+    const passedEmail = location.state?.email || "";
     const defaults = {
-      name: "", email: "", password: "", confirmPassword: "",
+      name: "", email: passedEmail, password: "", confirmPassword: "",
       institutionName: "", dob: null, educationLevel: "", grade: "", fieldOfStudy: "",
       country: "", state: "", city: "", zip: "", address: "",
       desiredField: "", linkedin: "", portfolio: "", skills: "", interests: "",
@@ -72,6 +75,7 @@ const UnifiedUserRegistration = () => {
       return {
         ...defaults,
         ...parsed,
+        email: parsed.email || passedEmail,
         // dob is serialised as an ISO string — restore to Date object
         dob: parsed.dob ? new Date(parsed.dob) : null,
         // File objects cannot be serialised — always reset
@@ -84,6 +88,13 @@ const UnifiedUserRegistration = () => {
       return defaults;
     }
   });
+
+  // Also update if location.state.email arrives or changes
+  useEffect(() => {
+    if (location.state?.email && !formData.email) {
+      setFormData((prev) => ({ ...prev, email: location.state.email }));
+    }
+  }, [location.state?.email]);
 
   // --- PERSIST step + formData to sessionStorage on every change ---
   // This is what makes refresh-resume work.
@@ -285,8 +296,14 @@ const UnifiedUserRegistration = () => {
       setErrorMessage("Please fill all required fields.");
       return false;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrorMessage("Invalid email format.");
+    const nameErr = validateName(name);
+    if (nameErr) {
+      setErrorMessage(nameErr);
+      return false;
+    }
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setErrorMessage(emailErr);
       return false;
     }
     // Password strength: min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char
@@ -410,7 +427,8 @@ const UnifiedUserRegistration = () => {
       setErrorMessage("");
     } catch (err) {
       console.error("Consent save failed:", err);
-      setErrorMessage("Failed to save consent. Please try again.");
+      const serverMsg = err?.response?.data?.message || err?.message;
+      setErrorMessage(serverMsg || "Failed to save consent. Please try again.");
     } finally {
       setSavingConsent(false);
     }
@@ -1015,7 +1033,7 @@ const UnifiedUserRegistration = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen font-poppins bg-gray-100 lg:bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
 
       {/* ✅ Full-screen resume spinner — shown while we check for an incomplete registration */}
       {resuming && (
@@ -1025,19 +1043,19 @@ const UnifiedUserRegistration = () => {
         </div>
       )}
 
-      {/* Side Image (only visible on step 1/1.5) */}
+      {/* Side Image (only visible on step 1/1.5) - Hidden on mobile/tablet, full height on desktop like revamp */}
       {(currentStep === 1 || currentStep === 1.5) && (
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-purple-50">
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
           <img
             src={loginImage}
-            alt="Edutechex Login Illustration"
-            className="w-full h-full object-cover rounded-lg"
+            alt="Edutechex Registration Illustration"
+            className="w-full h-full object-cover"
           />
         </div>
       )}
 
-      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white mx-auto">
-        <div className={`w-full max-w-md ${currentStep !== 1 && currentStep !== 1.5 ? 'max-w-xl' : ''} flex flex-col justify-center min-h-screen lg:min-h-full`}>
+      <div className={`flex flex-col items-center justify-center p-6 sm:p-8 w-full ${(currentStep === 1 || currentStep === 1.5) ? 'lg:w-1/2' : ''} bg-white mx-auto`}>
+        <div className={`w-full max-w-md ${(currentStep !== 1 && currentStep !== 1.5) ? 'lg:max-w-2xl' : ''} flex flex-col justify-center min-h-screen lg:min-h-full`}>
 
           {errorMessage && (
             <div className="mb-4 p-4 bg-red-100 text-red-800 border border-red-400 rounded">
@@ -1056,6 +1074,12 @@ const UnifiedUserRegistration = () => {
 
           {(currentStep === 1 || currentStep === 1.5) && (
             <>
+              <div className="flex items-center my-6">
+                <hr className="w-full border-gray-300" />
+                <span className="px-3 text-gray-500 text-sm">OR</span>
+                <hr className="w-full border-gray-300" />
+              </div>
+
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
                   try {
@@ -1088,10 +1112,9 @@ const UnifiedUserRegistration = () => {
                 }}
               />
 
-
-              <p className="text-center text-gray-500 font-medium text-base">
+              <p className="text-center text-gray-500 font-medium text-base mt-6">
                 Already have an account?{" "}
-                <Link to="/user/login" className="text-blue-500 hover:underline">
+                <Link to="/user/login" className="text-blue-500 hover:underline font-semibold">
                   Login
                 </Link>
               </p>

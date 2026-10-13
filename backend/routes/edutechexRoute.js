@@ -238,7 +238,29 @@ router.get("/", asyncHandler(async (req, res) => {
 
 router.post("/", asyncHandler(async (req, res) => {
   const { name, email, subject, message } = req.body;
-  const newContact = new Contact({ name, email, subject, message });
+  if (!name || typeof name !== "string" || !name.trim()) {
+    return res.status(400).json({ success: false, message: "Name is required." });
+  }
+  if (!email || typeof email !== "string" || !email.trim()) {
+    return res.status(400).json({ success: false, message: "Email is required." });
+  }
+
+  const cleanedEmail = email.trim().toLowerCase();
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
+  if (!EMAIL_REGEX.test(cleanedEmail) || cleanedEmail.includes("..")) {
+    return res.status(400).json({ success: false, message: "Please provide a valid email address." });
+  }
+
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({ success: false, message: "Message is required." });
+  }
+
+  const newContact = new Contact({
+    name: name.trim(),
+    email: cleanedEmail,
+    subject: typeof subject === "string" ? subject.trim() : "",
+    message: message.trim(),
+  });
   await newContact.save();
   res.status(201).json(newContact);
 }));

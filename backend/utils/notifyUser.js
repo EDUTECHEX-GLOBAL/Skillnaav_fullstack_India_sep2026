@@ -54,9 +54,12 @@ const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
       });
     }
 
+    const senderEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || "skillnaav@gmail.com";
+    const replyToEmail = process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER || "skillnaav@gmail.com";
+
     const mailOptions = {
-      from: `"Edutechex Support" <${process.env.EMAIL_FROM}>`,
-      replyTo: `"Edutechex Admin" <${process.env.EMAIL_REPLY_TO}>`,
+      from: `"Edutechex Support" <${senderEmail}>`,
+      replyTo: `"Edutechex Admin" <${replyToEmail}>`,
       to: email,
       subject,
       text: bodyHtml.replace(/<[^>]+>/g, ""), // plain-text fallback
@@ -66,10 +69,10 @@ const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
 
     console.log("📧 Sending email to:", email);
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent successfully:", result.response);
+    console.log("✅ Email sent successfully:", result?.response || "OK");
     return result;
   } catch (error) {
-    console.error("❌ Failed to send email:", error.message);
+    console.error("❌ Failed to send email:", error.response?.data || error.message);
     return null;
   }
 };

@@ -62,6 +62,9 @@ const getUserProfile = asyncHandler(async (req, res) => {
     isPremium: user.isPremium,
     planType: user.planType,
     premiumExpiration: user.premiumExpiration,
+    schoolAdmin: user.schoolAdmin || null,
+    schoolName: user.schoolName || user.school || null,
+    isB2B: !!user.schoolAdmin,
   };
   res.json(userProfile);
 });
@@ -661,7 +664,7 @@ const googleAuthUser = asyncHandler(async (req, res) => {
     status: "Pending",
     adminApproved: false,
     isActive: false,
-    schoolAdmin: false,   // ✅ IMPORTANT DEFAULT
+    schoolAdmin: null,   // ✅ ObjectId field: null for individual/B2C users
   });
 
   const token = generateToken(user._id);
@@ -672,7 +675,7 @@ const googleAuthUser = asyncHandler(async (req, res) => {
     name,
     profileImage: picture,
     isGoogleUser: true,
-    schoolAdmin: false,   // ✅ IMPORTANT
+    schoolAdmin: null,
     schoolName: null,
     school: null,
     needsProfileCompletion: true,
@@ -772,9 +775,96 @@ const sendAgeGateVerificationCode = asyncHandler(async (req, res) => {
 
 
 
+// ✅ B2B Student Authentication Controller
+const authB2BUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Email and password are required.");
+  }
+
+  const user = await Userwebapp.findOne({ email });
+  if (!user) {
+    res.status(400);
+    throw new Error("Invalid student credentials or account not found.");
+  }
+
+  // 🚫 Block manual login for Google users
+  if (user.isGoogleUser) {
+    res.status(400);
+    throw new Error("This account was created using Google. Please sign in with Google.");
+  }
+
+  const isMatch = await user.matchPassword(password);
+  if (!isMatch) {
+    res.status(400);
+    throw new Error("Invalid email or password.");
+  }
+
+  // 🏫 Check B2B affiliation
+  if (!user.schoolAdmin) {
+    res.status(403);
+    throw new Error("This account is registered as an individual student (B2C). Please use the standard Student Login portal.");
+  }
+
+  // School-admin restriction / activation
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error("Your institutional account has not been activated or has been restricted by your administrator.");
+  }
+
+  await expireIfNeeded(user);
+
+  const token = generateToken(user._id);
+
+  const session = await LoginSession.create({
+    studentId: user._id,
+    schoolAdmin: user.schoolAdmin,
+    loginAt: new Date(),
+  });
+
+  let resolvedSchool = user.schoolName || user.school || null;
+  if (!resolvedSchool && user.schoolAdmin) {
+    try {
+      const schoolAdminDoc = await SchoolAdmin.findById(user.schoolAdmin).select("schoolName").lean();
+      if (schoolAdminDoc?.schoolName) {
+        resolvedSchool = schoolAdminDoc.schoolName;
+        await Userwebapp.findByIdAndUpdate(user._id, {
+          schoolName: resolvedSchool,
+          school: resolvedSchool,
+        });
+      }
+    } catch (err) {
+      console.error("Could not resolve schoolName from schoolAdmin:", err.message);
+    }
+  }
+
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    profileImage: user.profileImage,
+    isPremium: user.isPremium,
+    planType: user.planType,
+    premiumExpiration: user.premiumExpiration,
+    token,
+    sessionId: session._id,
+    schoolAdmin: user.schoolAdmin,
+    schoolAdminId: user.schoolAdmin,
+    schoolName: resolvedSchool,
+    school: resolvedSchool,
+    adminApproved: user.adminApproved,
+    status: user.status,
+    isFullyApproved: user.status === "Approved" && user.adminApproved,
+    isB2B: true,
+  });
+});
+
 module.exports = {
   registerUser,
   authUser,
+  authB2BUser,
   updateUserProfile,
   getAllUsers,
   approveUser,
