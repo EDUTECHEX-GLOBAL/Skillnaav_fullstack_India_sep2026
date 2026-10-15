@@ -1078,6 +1078,13 @@ const EditModalBody = ({
                 type={type}
                 value={si.contactInfo?.[field.split(".")[1]] || ""}
                 onChange={(e) => updateField(field, e.target.value)}
+                maxLength={
+                  field === "contactInfo.name"
+                    ? 60
+                    : field === "contactInfo.email"
+                    ? 80
+                    : 25
+                }
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               />

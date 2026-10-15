@@ -290,31 +290,35 @@ const Notifications = ({ onNavigate }) => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 min-h-screen font-poppins bg-gradient-to-br from-white via-slate-100 to-slate-200">
+    <div className="p-2 sm:p-4 md:p-6 min-h-screen font-poppins bg-gradient-to-br from-white via-slate-100 to-slate-200 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 tracking-tight flex items-center gap-3">
-            <BellIcon className="w-6 h-6 text-blue-600" />
-            Notifications
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <BellIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+              Notifications
+            </h1>
             {unreadCount > 0 && (
-              <span className="ml-2 inline-flex items-center text-xs font-medium bg-blue-600 text-white px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center text-xs font-semibold bg-blue-600 text-white px-2.5 py-0.5 rounded-full shadow-xs flex-shrink-0">
                 {unreadCount} New
               </span>
             )}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          </div>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 pl-0.5">
             Recent updates, offers and recommendations
           </p>
         </div>
-        {/* change the style to decrease the size of the button in mobile view gap-2 to gap-1 text-sm to text-xs sm:text-sm px-3 py-1 to px-2 sm:px-3 py-1 sm:py-2* - 06-08-2026 */}
+
         <button
           onClick={markAllRead}
-          className="inline-flex items-center gap-1 text-xs sm:text-sm bg-white border border-gray-200 px-2 sm:px-3 py-1 sm:py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+          className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300 px-3 py-1.5 rounded-xl shadow-xs transition active:scale-95 whitespace-nowrap"
           aria-label="Mark all as read"
         >
-          <ArrowPathIcon className="w-4 h-4" />
-          Mark all read
+          <ArrowPathIcon className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+          <span>Mark all read</span>
         </button>
       </div>
 
@@ -334,123 +338,152 @@ const Notifications = ({ onNavigate }) => {
           </p>
         </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3.5 sm:space-y-4">
           {notifications.map((notification) => (
             <li
               key={notification._id}
               onClick={(e) => handleNotificationClick(notification, e)}
-              className={`relative p-4 sm:p-5 rounded-2xl shadow-sm flex gap-4 items-start transition-all duration-150 border cursor-pointer ${
+              className={`p-3.5 sm:p-5 rounded-2xl shadow-xs flex flex-col transition-all duration-150 border cursor-pointer ${
                 notification.isRead
-                  ? "bg-white border-gray-200 hover:border-gray-300"
-                  : "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:border-blue-300"
+                  ? "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                  : "bg-gradient-to-r from-blue-50/70 via-indigo-50/30 to-blue-50/70 border-blue-200 hover:border-blue-300 hover:shadow-sm"
               }`}
             >
-              {/* Icon */}
-              <div className="flex-shrink-0 mt-1">
-                {notification.isRead ? (
-                  <CheckCircleIcon className="w-6 h-6 text-green-500" />
-                ) : (
-                  <BellIcon className="w-6 h-6 text-blue-600 animate-pulse" />
-                )}
-              </div>
+              {/* Card Header Row: Icon + Content */}
+              <div className="flex items-start gap-3 w-full">
+                {/* Status Icon */}
+                <div className="flex-shrink-0 mt-0.5">
+                  {notification.isRead ? (
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <BellIcon className="w-5 h-5 text-blue-600 animate-pulse" />
+                    </div>
+                  )}
+                </div>
 
-              {/* Body */}
-              <div className="flex-1 min-w-0 pr-8">
-                {notification.title && (
-                  <p
-                    className={`text-base font-semibold ${notification.isRead ? "text-gray-800" : "text-gray-900"}`}
-                  >
-                    {notification.title}
-                  </p>
-                )}
-                <p
-                  className={`text-sm ${
-                    notification.isRead
-                      ? "text-gray-700"
-                      : "text-blue-900 font-medium"
-                  } ${notification.title ? "mt-1" : ""}`}
-                >
-                  {notification.message}
-                </p>
-
-                {notification.link && (
-                  <span className="inline-block mt-2 text-xs text-blue-700 font-medium underline hover:text-blue-900 transition-colors">
-                    {linkLabel(notification.type)}
-                  </span>
-                )}
-
-                <p className="text-xs text-gray-400 mt-2">
-                  {new Date(notification.createdAt).toLocaleString()}
-                </p>
-              </div>
-
-              {/* Unread badge */}
-              {!notification.isRead && (
-                <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide bg-blue-600 text-white px-2 py-0.5 rounded-full self-start">
-                  New
-                </span>
-              )}
-
-              {/* ── Per-card context menu ──────────────────────────────────── */}
-              <div
-                className="absolute top-3 right-3 z-10"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={() =>
-                    setOpenMenuId((prev) =>
-                      prev === notification._id ? null : notification._id,
-                    )
-                  }
-                  className="text-gray-400 hover:text-gray-700 p-1 rounded transition-colors"
-                  aria-label="Open notification menu"
-                >
-                  <EllipsisVerticalIcon className="w-5 h-5" />
-                </button>
-
-                {openMenuId === notification._id && (
-                  <div
-                    className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden py-1"
-                    role="menu"
-                  >
-                    {notification.link && (
-                      <>
-                        <button
-                          onClick={() => {
-                            navigateToLink(notification.link);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                {/* Content: Title & Details */}
+                <div className="flex-1 min-w-0">
+                  {/* Top line: Title, badge, and 3-dots button */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      {notification.title && (
+                        <h3
+                          className={`text-sm sm:text-base font-semibold leading-snug break-words ${
+                            notification.isRead
+                              ? "text-gray-800"
+                              : "text-gray-900 font-bold"
+                          }`}
                         >
-                          {menuOpenLabel(notification.type)}
-                        </button>
+                          {notification.title}
+                        </h3>
+                      )}
+                      {!notification.isRead && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-600 text-white px-2 py-0.5 rounded-full flex-shrink-0 shadow-xs">
+                          New
+                        </span>
+                      )}
+                    </div>
 
-                        <button
-                          onClick={() => {
-                            handleDownload(
-                              notification.link,
-                              downloadFilename(notification.type),
-                            );
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          {menuDownloadLabel(notification.type)}
-                        </button>
-
-                        <div className="border-t border-gray-100 my-1" />
-                      </>
-                    )}
-
+                    {/* 3-dots action toggle */}
                     <button
-                      onClick={(e) => handleDelete(notification, e)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId((prev) =>
+                          prev === notification._id ? null : notification._id,
+                        );
+                      }}
+                      className={`p-1.5 -mr-1 -mt-1 rounded-lg transition-colors flex-shrink-0 focus:outline-none ${
+                        openMenuId === notification._id
+                          ? "bg-blue-100 text-blue-700"
+                          : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                      }`}
+                      aria-label="Toggle actions"
                     >
-                      Delete
+                      <EllipsisVerticalIcon className="w-5 h-5" />
                     </button>
                   </div>
-                )}
+
+                  {/* Message body - FULL WIDTH without artificial pr-20 */}
+                  <p
+                    className={`text-xs sm:text-sm mt-1.5 leading-relaxed break-words ${
+                      notification.isRead
+                        ? "text-gray-600"
+                        : "text-gray-800 font-medium"
+                    }`}
+                  >
+                    {notification.message}
+                  </p>
+
+                  {/* Link action if available */}
+                  {notification.link && (
+                    <div className="mt-2">
+                      <span className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold underline underline-offset-2 transition-colors">
+                        {linkLabel(notification.type)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Timestamp */}
+                  <div className="mt-2 text-[11px] sm:text-xs text-gray-400">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </div>
+                </div>
               </div>
+
+              {/* Inline Action Tray (Inside the same card box) */}
+              {openMenuId === notification._id && (
+                <div
+                  className="mt-3.5 pt-3 border-t border-gray-200/80 w-full flex flex-wrap items-center justify-end gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {notification.link && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigateToLink(notification.link);
+                          setOpenMenuId(null);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-xs transition active:scale-95"
+                      >
+                        <span>📄</span>
+                        <span>{menuOpenLabel(notification.type)}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleDownload(
+                            notification.link,
+                            downloadFilename(notification.type),
+                          );
+                          setOpenMenuId(null);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-xs transition active:scale-95"
+                      >
+                        <span>⬇️</span>
+                        <span>{menuDownloadLabel(notification.type)}</span>
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      handleDelete(notification, e);
+                      setOpenMenuId(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg shadow-xs transition active:scale-95"
+                  >
+                    <span>🗑️</span>
+                    <span>Delete</span>
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

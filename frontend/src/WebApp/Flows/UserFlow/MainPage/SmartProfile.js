@@ -145,49 +145,55 @@ const DiffCard = ({ diff, onApprove, onReject }) => {
     if (typeof val === "object") return (
       <div className="text-xs text-gray-600 space-y-0.5 mt-1">
         {Object.entries(val).map(([k, v]) => v ? (
-          <div key={k}><span className="text-gray-400 capitalize">{k}:</span> {String(v)}</div>
+          <div key={k} className="break-words [overflow-wrap:anywhere]"><span className="text-gray-400 capitalize">{k}:</span> {String(v)}</div>
         ) : null)}
       </div>
     );
-    return <span className="text-sm text-gray-700">{String(val)}</span>;
+    return <span className="text-sm text-gray-700 break-words [overflow-wrap:anywhere]">{String(val)}</span>;
   };
 
   const isUserwebapp = diff.target === "userwebapp";
 
   return (
-    <div className="border border-amber-200 bg-amber-50/70 rounded-xl p-4 space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
+    <div className="border border-amber-200 bg-amber-50/70 rounded-xl p-3.5 sm:p-4 space-y-3 min-w-0 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
           <Ico d={ICONS.sparkle} className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-gray-800">{diff.label}</p>
-            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-              isUserwebapp ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
-            }`}>
-              {isUserwebapp ? "Updates your main profile" : "Adds to profile portfolio"}
-            </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-gray-800 break-words leading-snug">{diff.label}</p>
+            <div className="mt-1">
+              <span className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${
+                isUserwebapp ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+              }`}>
+                {isUserwebapp ? "Updates your main profile" : "Adds to profile portfolio"}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
           <button onClick={() => onApprove(diff._id)}
-            className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+            className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
             <Ico d={ICONS.check} className="w-3.5 h-3.5" /> Accept
           </button>
           <button onClick={() => onReject(diff._id)}
-            className="flex items-center gap-1 bg-white hover:bg-red-50 border border-red-200 text-red-500 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+            className="flex items-center gap-1 bg-white hover:bg-red-50 border border-red-200 text-red-500 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
             <Ico d={ICONS.x} className="w-3.5 h-3.5" /> Ignore
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-white rounded-lg p-2.5 border border-gray-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="bg-white rounded-lg p-2.5 border border-gray-100 min-w-0 overflow-hidden">
           <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Current</p>
-          {renderVal(diff.currentValue)}
+          <div className="break-words [overflow-wrap:anywhere]">
+            {renderVal(diff.currentValue)}
+          </div>
         </div>
-        <div className="bg-white rounded-lg p-2.5 border border-green-100">
+        <div className="bg-white rounded-lg p-2.5 border border-green-100 min-w-0 overflow-hidden">
           <p className="text-xs font-semibold text-green-600 uppercase mb-1">Suggested</p>
-          {renderVal(diff.suggestedValue)}
+          <div className="break-words [overflow-wrap:anywhere]">
+            {renderVal(diff.suggestedValue)}
+          </div>
         </div>
       </div>
     </div>
@@ -287,7 +293,7 @@ const SmartProfile = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-5 font-poppins">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5 font-poppins min-w-0">
       {/* ── Toast ──────────────────────────────────────────────────────────── */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium transition-all
@@ -315,9 +321,9 @@ const SmartProfile = () => {
 
       {/* ── Profile Completion Card ─────────────────────────────────────────── */}
       <Card>
-        <div className="p-5 flex items-center gap-5">
+        <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
           <Ring score={data?.profileCompletionScore || 0} profileImage={data?.profileImage} />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-800">Profile Strength</p>
             <p className="text-gray-500 text-sm mt-0.5">
               {(data?.profileCompletionScore || 0) >= 75
@@ -327,7 +333,7 @@ const SmartProfile = () => {
                 : "Complete your profile for better AI matching."}
             </p>
             {/* Quick gap hints */}
-            <div className="flex flex-wrap gap-1.5 mt-2.5">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 mt-2.5">
               {!data?.summary && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">+ Summary</span>}
               {!(data?.experience?.length) && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">+ Experience</span>}
               {!(data?.projects?.length) && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">+ Projects</span>}

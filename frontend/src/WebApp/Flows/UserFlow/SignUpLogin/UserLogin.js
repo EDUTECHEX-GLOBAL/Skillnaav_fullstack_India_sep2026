@@ -24,27 +24,31 @@ const validationSchema = Yup.object({
   password: Yup.string().required("Password is required."),
 });
 
-const redirectToAppropriateDashboard = (isB2BStudent, navigate) => {
+const redirectToAppropriateDashboard = (isB2BStudent, navigate, token, sessionId, studentData) => {
   const currentHost = window.location.hostname;
   const port = window.location.port ? `:${window.location.port}` : "";
   const protocol = window.location.protocol;
 
+  const authQueryParams = token
+    ? `?authToken=${encodeURIComponent(token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}${studentData ? `&studentData=${encodeURIComponent(JSON.stringify(studentData))}` : ""}`
+    : "";
+
   if (isB2BStudent) {
     if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-      window.location.href = `${protocol}//b2b.localhost${port}/user-main-page`;
+      window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
       return;
     } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.")) {
       const b2bHost = currentHost.replace(/^www\./, "");
-      window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page`;
+      window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
       return;
     }
   } else {
     if (currentHost.startsWith("b2b.localhost")) {
-      window.location.href = `${protocol}//localhost${port}/user-main-page`;
+      window.location.href = `${protocol}//localhost${port}/user-main-page${authQueryParams}`;
       return;
     } else if (currentHost.startsWith("b2b.") || currentHost.startsWith("campus.")) {
       const mainHost = currentHost.replace(/^(b2b|campus)\./, "");
-      window.location.href = `${protocol}//${mainHost}${port}/user-main-page`;
+      window.location.href = `${protocol}//${mainHost}${port}/user-main-page${authQueryParams}`;
       return;
     }
   }
@@ -84,7 +88,7 @@ const UserLogin = () => {
       const schoolAdminId = data.schoolAdmin || data.schoolAdminId || null;
       const schoolName = data.schoolName || data.school || null;
 
-      localStorage.setItem("studentInfo", JSON.stringify({
+      const studentInfoData = {
         _id: data._id,
         name: data.name,
         email: data.email,
@@ -98,7 +102,9 @@ const UserLogin = () => {
         schoolAdminId: schoolAdminId,
         schoolName: schoolName,
         isB2B: !!schoolAdminId,
-      }));
+      };
+
+      localStorage.setItem("studentInfo", JSON.stringify(studentInfoData));
 
       if (schoolAdminId) {
         localStorage.setItem("schoolAdminId", schoolAdminId);
@@ -121,7 +127,7 @@ const UserLogin = () => {
       localStorage.setItem("loginTime", Date.now());
 
       setLoading(false);
-      redirectToAppropriateDashboard(!!schoolAdminId, navigate);
+      redirectToAppropriateDashboard(!!schoolAdminId, navigate, data.token, sessionRes?.data?.sessionId, studentInfoData);
     } catch (err) {
       console.error("Login error:", err.response || err.message);
       setError(err.response?.data?.message || "Something went wrong");
@@ -245,7 +251,7 @@ const UserLogin = () => {
                 const schoolAdminId = res.data.schoolAdmin || res.data.schoolAdminId || null;
                 const schoolName = res.data.schoolName || res.data.school || null;
 
-                localStorage.setItem("studentInfo", JSON.stringify({
+                const studentInfoData = {
                   _id: res.data._id,
                   name: res.data.name,
                   email: res.data.email,
@@ -265,7 +271,9 @@ const UserLogin = () => {
                   isPremium: res.data.isPremium ?? false,
                   planType: res.data.planType ?? "Free",
                   premiumExpiration: res.data.premiumExpiration ?? null,
-                }));
+                };
+
+                localStorage.setItem("studentInfo", JSON.stringify(studentInfoData));
 
                 if (schoolAdminId) {
                   localStorage.setItem("schoolAdminId", schoolAdminId);
@@ -277,7 +285,7 @@ const UserLogin = () => {
                   navigate("/user-create-account");
                 } else {
                   // ✅ Same B2B/B2C redirect logic as email login
-                  redirectToAppropriateDashboard(!!schoolAdminId, navigate);
+                  redirectToAppropriateDashboard(!!schoolAdminId, navigate, res.data.token, null, studentInfoData);
                 }
 
               } catch (err) {

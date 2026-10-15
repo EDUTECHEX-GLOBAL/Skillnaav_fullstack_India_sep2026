@@ -1,20 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHeart,
-  faMapMarkerAlt,
-  faClock,
-  faIndianRupeeSign,
-  faBookmark,
-  faBriefcase,
-} from "@fortawesome/free-solid-svg-icons";
+import { faBookmark } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
+import JobCardItem from "./JobCardItem";
 
 const SavedJobs = () => {
   const { savedJobs, removeJob, getSavedJobs } = useTabContext();
   const [selectedJob, setSelectedJob] = useState(null);
-  const [removingId, setRemovingId] = useState(null);
   const userInfo = (JSON.parse(localStorage.getItem("studentInfo")) || JSON.parse(localStorage.getItem("userInfo"))) || {};
   const userId = userInfo?._id;
 
@@ -27,20 +20,7 @@ const SavedJobs = () => {
   }, [userId, getSavedJobs]);
 
   const handleRemove = async (jobId) => {
-    setRemovingId(jobId);
     await removeJob(jobId);
-    setRemovingId(null);
-  };
-
-  const getCompensationText = (job) => {
-    if (job?.internshipType === "STIPEND") {
-      return `$${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase()}`;
-    } else if (job?.internshipType === "FREE") {
-      return "Unpaid";
-    } else if (job?.internshipType === "PAID") {
-      return `Student Pays: ₹${job?.compensationDetails?.amount}`;
-    }
-    return "N/A";
   };
 
   if (selectedJob) {
@@ -51,17 +31,29 @@ const SavedJobs = () => {
     <>
       <style>{`
         .sj-wrapper {
-          padding: 28px 24px;
+          padding: 8px 0;
           font-family: 'Poppins', sans-serif;
           min-height: 100vh;
-          background: #f7f8fc;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        @media (min-width: 640px) {
+          .sj-wrapper {
+            padding: 16px 8px;
+          }
+        }
+        @media (min-width: 1024px) {
+          .sj-wrapper {
+            padding: 24px 16px;
+          }
         }
 
         .sj-header {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           margin-bottom: 24px;
+          flex-wrap: wrap;
         }
 
         .sj-header-icon {
@@ -78,27 +70,49 @@ const SavedJobs = () => {
         }
 
         .sj-header h2 {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 700;
           color: #1a1a2e;
           margin: 0;
+          line-height: 1.25;
+          white-space: nowrap;
+        }
+
+        @media (min-width: 640px) {
+          .sj-header h2 {
+            font-size: 22px;
+          }
         }
 
         .sj-count {
-          margin-left: 6px;
-          font-size: 13px;
-          font-weight: 500;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 600;
           color: #7c3aed;
           background: #ede9fe;
-          padding: 2px 10px;
-          border-radius: 20px;
+          padding: 4px 12px;
+          border-radius: 9999px;
+          white-space: nowrap;
+          line-height: 1;
+          flex-shrink: 0;
+          border: 1px solid #ddd6fe;
+          letter-spacing: 0.01em;
         }
 
         /* Grid */
         .sj-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 20px;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+          gap: 16px;
+          width: 100%;
+          min-width: 0;
+        }
+        @media (min-width: 640px) {
+          .sj-grid {
+            gap: 20px;
+          }
         }
 
         /* Card */
@@ -338,106 +352,16 @@ const SavedJobs = () => {
 
         {/* Grid or Empty */}
         {validSavedJobs.length > 0 ? (
-          <div className="sj-grid">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 w-full min-w-0">
             {validSavedJobs.map((job) =>
               job?.jobId?._id ? (
-                <div key={job.jobId._id} className="sj-card">
-                  {/* Remove button */}
-                  <button
-                    className={`sj-remove-btn ${removingId === job.jobId._id ? "removing" : ""}`}
-                    onClick={() => handleRemove(job.jobId._id)}
-                    title="Remove from saved"
-                  >
-                    <FontAwesomeIcon icon={faHeart} />
-                  </button>
-
-                  {/* Header */}
-                  <div className="sj-card-header">
-                    {job.jobId?.imgUrl ? (
-                      <img
-                        src={job.jobId.imgUrl}
-                        alt="Company Logo"
-                        className="sj-logo"
-                        onError={(e) => { e.target.style.display = "none"; }}
-                      />
-                    ) : (
-                      <div className="sj-logo-fallback">
-                        <FontAwesomeIcon icon={faBriefcase} />
-                      </div>
-                    )}
-                    <div className="sj-title-block">
-                      <p className="sj-job-title" title={job.jobId?.jobTitle}>
-                        {job.jobId?.jobTitle || "Unknown Title"}
-                      </p>
-                      <p className="sj-company" title={job.jobId?.companyName}>
-                        {job.jobId?.companyName || "Unknown Company"}
-                      </p>
-                      <p className="sj-company" style={{ fontSize: '11px', marginTop: '4px', whiteSpace: 'nowrap' }}>
-                        ID: {job.jobId?._id}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Info */}
-                  <div className="sj-info">
-                    <div className="sj-info-row">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} />
-                      <span
-                        className="sj-info-text"
-                        title={`${job.jobId?.location} • ${job.jobId?.type}`}
-                      >
-                        {job.jobId?.location || "Unknown Location"} • {job.jobId?.type || "N/A"}
-                      </span>
-                    </div>
-                    <div className="sj-info-row">
-                      <FontAwesomeIcon icon={faClock} />
-                      <span className="sj-info-text">
-                        {job.jobId?.startDate
-                          ? new Date(job.jobId.startDate).toLocaleDateString()
-                          : "N/A"}{" "}
-                        — {job.jobId?.endDateOrDuration || "N/A"}
-                      </span>
-                    </div>
-                    <div className="sj-info-row">
-                      <FontAwesomeIcon icon={faIndianRupeeSign} />
-                      <span className="sj-info-text" title={getCompensationText(job.jobId)}>
-                        {getCompensationText(job.jobId)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Skills */}
-                  <div className="sj-skills">
-                    {job.jobId?.qualifications?.length > 0 ? (
-                      <>
-                        {job.jobId.qualifications.slice(0, 2).map((q, idx) => (
-                          <span key={idx} className="sj-skill-tag" title={q}>
-                            {q}
-                          </span>
-                        ))}
-                        {job.jobId.qualifications.length > 2 && (
-                          <span className="sj-skill-more">
-                            +{job.jobId.qualifications.length - 2}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span style={{ fontSize: "12px", color: "#9ca3af" }}>
-                        No qualifications listed
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="sj-card-footer">
-                    <button
-                      className="sj-view-btn"
-                      onClick={() => setSelectedJob(job.jobId)}
-                    >
-                      View Details →
-                    </button>
-                  </div>
-                </div>
+                <JobCardItem
+                  key={job.jobId._id}
+                  job={job.jobId}
+                  isSaved={true}
+                  onToggleSave={() => handleRemove(job.jobId._id)}
+                  onViewDetails={() => setSelectedJob(job.jobId)}
+                />
               ) : null
             )}
           </div>

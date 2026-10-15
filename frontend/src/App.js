@@ -103,6 +103,7 @@ function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/vision" element={<VisionPage />} />
                 <Route path="/about" element={<VisionPage />} />
+                <Route path="/about-edutechex" element={<VisionPage />} />
                 <Route path="/about-skillnaav" element={<VisionPage />} />
                 <Route path="/visa" element={<VisaPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />

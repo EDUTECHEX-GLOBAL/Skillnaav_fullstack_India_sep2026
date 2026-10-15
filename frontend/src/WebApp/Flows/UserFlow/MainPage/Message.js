@@ -16,9 +16,9 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 font-poppins">
+    <div className="flex flex-col md:flex-row h-full min-h-[550px] bg-gray-100 font-poppins rounded-xl overflow-hidden shadow-sm">
       {/* Sidebar */}
-      <div className="w-1/4 border-r border-gray-300 bg-white p-4">
+      <div className="w-full md:w-1/3 lg:w-1/4 border-b md:border-b-0 md:border-r border-gray-300 bg-white p-4">
         {/* Sidebar Header */}
         <div className="mb-4">
           <div className="flex items-center mb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg">

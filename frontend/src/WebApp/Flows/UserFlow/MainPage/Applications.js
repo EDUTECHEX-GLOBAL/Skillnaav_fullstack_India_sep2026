@@ -313,9 +313,6 @@ const Applications = () => {
                       <p className="app-company" title={job.companyName}>
                         {job.companyName || "Unknown Company"}
                       </p>
-                      <p className="app-company" style={{ fontSize: '11px', marginTop: '4px', whiteSpace: 'nowrap' }}>
-                        ID: {job._id}
-                      </p>
                     </div>
                   </div>
 
@@ -370,18 +367,30 @@ const Applications = () => {
 ================================= */
 const sharedStyles = `
   .app-wrapper {
-    padding: 28px 24px;
+    padding: 8px 0;
     font-family: 'Poppins', sans-serif;
     min-height: 100vh;
-    background: #f7f8fc;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  @media (min-width: 640px) {
+    .app-wrapper {
+      padding: 16px 8px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .app-wrapper {
+      padding: 24px 16px;
+    }
   }
 
   /* Header */
   .app-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 24px;
+    flex-wrap: wrap;
   }
   .app-header-icon {
     width: 38px;
@@ -396,26 +405,48 @@ const sharedStyles = `
     flex-shrink: 0;
   }
   .app-header h2 {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: #1a1a2e;
     margin: 0;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+  @media (min-width: 640px) {
+    .app-header h2 {
+      font-size: 22px;
+    }
   }
   .app-count {
-    font-size: 13px;
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
     color: #7c3aed;
     background: #ede9fe;
-    padding: 2px 10px;
-    border-radius: 20px;
-    margin-left: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    line-height: 1;
+    flex-shrink: 0;
+    border: 1px solid #ddd6fe;
+    letter-spacing: 0.01em;
   }
 
   /* Grid */
   .app-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  @media (min-width: 640px) {
+    .app-grid {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
   }
 
   /* Card */

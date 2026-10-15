@@ -8,7 +8,17 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import loginImage from "../../../../assets-webapp/login-image-edutechex.png";
 import { GoogleLogin } from "@react-oauth/google";
-import { IN_STATES } from "../../../../constants/locations";
+import {
+  COUNTRY_OPTIONS,
+  getStateList,
+  getStateLabel,
+  getZipLabel,
+  getZipPlaceholder,
+  isValidPostalCode,
+  getPostalCodeError,
+  isValidCity,
+  getCityError,
+} from "../../../../constants/locations";
 import UserAgeGateConsent from "./UserProfileBuilding/UserAgeGateConsent";
 import { validateEmail, validateName } from "../../../../utils/validators";
 
@@ -429,6 +439,7 @@ const UnifiedUserRegistration = () => {
       console.error("Consent save failed:", err);
       const serverMsg = err?.response?.data?.message || err?.message;
       setErrorMessage(serverMsg || "Failed to save consent. Please try again.");
+      throw err;
     } finally {
       setSavingConsent(false);
     }
@@ -462,6 +473,9 @@ const UnifiedUserRegistration = () => {
       address,
     } = formData;
 
+    const isCityValid = isValidCity(city);
+    const isZipValid = isValidPostalCode(zip, country);
+
     // High school → grade required
     if (educationLevel === "highschool") {
       return Boolean(
@@ -470,7 +484,9 @@ const UnifiedUserRegistration = () => {
         country &&
         state &&
         city &&
+        isCityValid &&
         zip &&
+        isZipValid &&
         address
       );
     }
@@ -482,17 +498,25 @@ const UnifiedUserRegistration = () => {
       country &&
       state &&
       city &&
+      isCityValid &&
       zip &&
+      isZipValid &&
       address
     );
   };
 
-
-
   const handleStep2Submit = (e) => {
     e.preventDefault(); // Stop form default submission
     if (!validateStep2()) {
-      setErrorMessage("Please fill all required fields for your profile.");
+      if (formData.city && !isValidCity(formData.city)) {
+        setErrorMessage(getCityError(formData.city));
+        return;
+      }
+      if (formData.zip && !isValidPostalCode(formData.zip, formData.country)) {
+        setErrorMessage(getPostalCodeError(formData.zip, formData.country));
+        return;
+      }
+      setErrorMessage("Please fill all required fields correctly.");
       return;
     }
     setErrorMessage("");
@@ -508,12 +532,29 @@ const UnifiedUserRegistration = () => {
 
   const validateStep3 = () => {
     // Only validate the fields introduced in Step 3 that are REQUIRED
-    const { desiredField, linkedin, profilePic } = formData;
-    return Boolean(desiredField && linkedin && profilePic);
+    const { desiredField, linkedin, profilePic, portfolio } = formData;
+    const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i;
+    const linkedinRegex = /^(https?:\/\/)?((www|\w\w)\.)?linkedin\.com\/[^\s]+$/i;
+
+    const isLinkedinValid = Boolean(linkedin && linkedinRegex.test(linkedin.trim()));
+    const isPortfolioValid = !portfolio || urlRegex.test(portfolio.trim());
+
+    return Boolean(desiredField && isLinkedinValid && isPortfolioValid && profilePic);
   };
 
   const handleStep3Submit = async () => {
+    const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i;
+    const linkedinRegex = /^(https?:\/\/)?((www|\w\w)\.)?linkedin\.com\/[^\s]+$/i;
+
     if (!validateStep3()) {
+      if (!formData.linkedin || !linkedinRegex.test(formData.linkedin.trim())) {
+        setErrorMessage("Please enter a valid LinkedIn link (e.g. https://linkedin.com/in/username).");
+        return;
+      }
+      if (formData.portfolio && !urlRegex.test(formData.portfolio.trim())) {
+        setErrorMessage("Please enter a valid Portfolio link (e.g. https://yourportfolio.com).");
+        return;
+      }
       setErrorMessage("Please fill the required fields.");
       return;
     }
@@ -526,6 +567,20 @@ const UnifiedUserRegistration = () => {
 
         // 🔐 Skip auth-only fields
         if (key === "password" || key === "confirmPassword") return;
+
+        // Normalize links
+        if (key === "linkedin") {
+          const lk = value ? String(value).trim() : "";
+          fd.append("linkedin", /^https?:\/\//i.test(lk) ? lk : `https://${lk}`);
+          return;
+        }
+        if (key === "portfolio") {
+          const pf = value ? String(value).trim() : "";
+          if (pf) {
+            fd.append("portfolio", /^https?:\/\//i.test(pf) ? pf : `https://${pf}`);
+          }
+          return;
+        }
 
         // ✅ FIX 1: institutionName → universityName
         if (key === "institutionName") {
@@ -594,26 +649,10 @@ const UnifiedUserRegistration = () => {
 
 
   // --- Location/City Logic (from UserProfileForm.js) ---
-  const stateList =
-    formData.country === "India"
-      ? IN_STATES
-      : formData.country === "India"
-        ? IN_STATES
-        : [];
-
-  const stateLabel =
-    formData.country === "India"
-      ? "Province / Territory"
-      : formData.country === "India"
-        ? "State"
-        : "State / Province";
-
-  const zipLabel =
-    formData.country === "India"
-      ? "Postal Code"
-      : formData.country === "India"
-        ? "ZIP Code"
-        : "ZIP / Postal Code";
+  const stateList = getStateList(formData.country);
+  const stateLabel = getStateLabel(formData.country);
+  const zipLabel = getZipLabel(formData.country);
+  const zipPlaceholder = getZipPlaceholder(formData.country);
 
   const handleCountryChange = (value) => {
     // Reset state & city when country changes
@@ -879,12 +918,14 @@ const UnifiedUserRegistration = () => {
                 <h2 className="text-lg font-bold text-gray-700">LOCATION</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
-                {/* Country (US/CA only) */}
+                {/* Country */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Country *</label>
                   <select name="country" value={formData.country} onChange={(e) => handleCountryChange(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
-                    <option value="">Select</option>
-                    <option value="India">India</option>
+                    <option value="">Select Country</option>
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
                 {/* State / Province */}
@@ -898,25 +939,62 @@ const UnifiedUserRegistration = () => {
                 {/* City with suggestions */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700">City *</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleCityInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100" disabled={!formData.country} placeholder="Start typing city" autoComplete="off" required />
-               {citySuggestions.length > 0 && (
-  <ul className="absolute z-[9999] left-0 top-full w-full bg-white border border-gray-300 rounded-md shadow-xl mt-1 max-h-48 overflow-y-auto">
-    {citySuggestions.map((c) => (
-      <li
-        key={`${c.city}-${c.state}`}
-        onClick={() => handleCitySelect(c)}
-        className="cursor-pointer px-4 py-2 hover:bg-purple-100"
-      >
-        {c.city}, {c.state}
-      </li>
-    ))}
-  </ul>
-)}
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleCityInputChange}
+                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 ${
+                      formData.city && !isValidCity(formData.city)
+                        ? "border-red-500 bg-red-50/40 text-red-900"
+                        : "border-gray-300"
+                    }`}
+                    disabled={!formData.country}
+                    placeholder="Start typing city"
+                    autoComplete="off"
+                    required
+                  />
+                  {formData.city && !isValidCity(formData.city) && (
+                    <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+                      <span>⚠️</span> {getCityError(formData.city)}
+                    </p>
+                  )}
+                  {citySuggestions.length > 0 && (
+                    <ul className="absolute z-[9999] left-0 top-full w-full bg-white border border-gray-300 rounded-md shadow-xl mt-1 max-h-48 overflow-y-auto">
+                      {citySuggestions.map((c) => (
+                        <li
+                          key={`${c.city}-${c.state}`}
+                          onClick={() => handleCitySelect(c)}
+                          className="cursor-pointer px-4 py-2 hover:bg-purple-100"
+                        >
+                          {c.city}, {c.state}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 {/* ZIP / Postal Code */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">{zipLabel} *</label>
-                  <input type="text" name="zip" value={formData.zip} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder={formData.country === "India" ? "e.g., K1A 0B1" : "e.g., 94105"} autoComplete="postal-code" required />
+                  <input
+                    type="text"
+                    name="zip"
+                    value={formData.zip}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 ${
+                      formData.zip && !isValidPostalCode(formData.zip, formData.country)
+                        ? "border-red-500 bg-red-50/40 text-red-900"
+                        : "border-gray-300"
+                    }`}
+                    placeholder={zipPlaceholder}
+                    autoComplete="postal-code"
+                    required
+                  />
+                  {formData.zip && !isValidPostalCode(formData.zip, formData.country) && (
+                    <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+                      <span>⚠️</span> {getPostalCodeError(formData.zip, formData.country)}
+                    </p>
+                  )}
                 </div>
                 {/* Full Address */}
                 <div className="md:col-span-2 md:col-start-1">
@@ -987,12 +1065,43 @@ const UnifiedUserRegistration = () => {
               {/* LinkedIn Profile Input */}
               <div>
                 <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700">LinkedIn Profile *</label>
-                <input id="linkedin" type="text" name="linkedin" value={formData.linkedin} onChange={handleChange} required className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="Enter your LinkedIn profile" />
+                <input
+                  id="linkedin"
+                  type="url"
+                  name="linkedin"
+                  value={formData.linkedin}
+                  onChange={handleChange}
+                  required
+                  className={`mt-2 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 ${
+                    formData.linkedin && !/^(https?:\/\/)?((www|\w\w)\.)?linkedin\.com\/[^\s]+$/i.test(formData.linkedin.trim())
+                      ? "border-red-500 bg-red-50/40 text-red-900"
+                      : "border-gray-300"
+                  }`}
+                  placeholder="https://linkedin.com/in/username"
+                />
+                {formData.linkedin && !/^(https?:\/\/)?((www|\w\w)\.)?linkedin\.com\/[^\s]+$/i.test(formData.linkedin.trim()) && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">⚠️ Please enter a valid LinkedIn link (e.g. https://linkedin.com/in/username)</p>
+                )}
               </div>
               {/* Portfolio Website Input (Optional) */}
               <div>
                 <label htmlFor="portfolio" className="block text-sm font-medium text-gray-700">Portfolio Website (Optional)</label>
-                <input id="portfolio" type="text" name="portfolio" value={formData.portfolio} onChange={handleChange} className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" placeholder="Enter your Portfolio URL" />
+                <input
+                  id="portfolio"
+                  type="url"
+                  name="portfolio"
+                  value={formData.portfolio}
+                  onChange={handleChange}
+                  className={`mt-2 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 ${
+                    formData.portfolio && !/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i.test(formData.portfolio.trim())
+                      ? "border-red-500 bg-red-50/40 text-red-900"
+                      : "border-gray-300"
+                  }`}
+                  placeholder="https://yourportfolio.com"
+                />
+                {formData.portfolio && !/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i.test(formData.portfolio.trim()) && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">⚠️ Please enter a valid URL link (e.g. https://yourportfolio.com)</p>
+                )}
               </div>
               {/* Skills Input */}
               <div>

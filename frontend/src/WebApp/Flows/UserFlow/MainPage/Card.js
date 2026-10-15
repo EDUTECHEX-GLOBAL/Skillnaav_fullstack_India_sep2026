@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FaMapMarkerAlt, FaClock, FaRupeeSign, FaHeart } from "react-icons/fa";
 import axios from "../../../../api/axiosInstance";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+
+import JobCardItem from "./JobCardItem";
 
 // Cache
 const jobCache = {
@@ -202,150 +203,21 @@ const JobCard = ({
 
   if (error) return <p>{error}</p>;
 
-  const calculatePostedTime = (date) => {
-    const diff = Math.floor(
-      (new Date() - new Date(date)) / (1000 * 60 * 60 * 24),
-    );
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    return `${diff}d ago`;
-  };
-
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 w-full min-w-0">
         {filteredJobs.length > 0 ? (
-          filteredJobs.map((job, index) => {
-            const saved = isJobSaved(job._id);
-
-            return (
-              <div
-                key={job._id}
-                className="w-full p-4 border rounded-xl shadow-sm relative flex flex-col gap-3 hover:shadow-md transition-shadow"
-              >
-                {/* ── Top-right: type badge + save button ── */}
-                <div className="absolute top-3 right-3 flex items-center gap-2">
-                  {job.internshipType && (
-                    <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                      {job.internshipType}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => toggleSaveJob(job)}
-                    className={`transition ${saved ? "text-red-500" : "text-gray-300 hover:text-red-400"}`}
-                    aria-label={saved ? "Unsave job" : "Save job"}
-                  >
-                    <FaHeart />
-                  </button>
-                </div>
-
-                {/* ── AI rank badge (recommendation mode only) ── */}
-                {isRecommendation && (
-                  <div className="absolute top-3 left-3">
-                    <span className="text-[10px] font-bold bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">
-                      #{index + 1} Match
-                    </span>
-                  </div>
-                )}
-
-                {/* ── Company + title ── */}
-                <div className="flex items-start gap-3 mt-4">
-                  <img
-                    src={job.imgUrl}
-                    alt="Company Logo"
-                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/favicon-512x469.png";
-                    }}
-                  />
-                  <div className="flex-grow min-w-0 pr-16">
-                    <h5 className="text-base font-semibold text-gray-900 truncate">
-                      {job.jobTitle}
-                    </h5>
-                    <div className="flex items-center text-sm text-gray-400">
-                      <span className="truncate">{job.companyName}</span>
-                      <span className="mx-1">·</span>
-                      <span className="whitespace-nowrap">
-                        {calculatePostedTime(job.createdAt)}
-                      </span>
-                    </div>
-                    {/*Remove "whitespace-nowrap" add "break-all" for alignment in tabs - 07-08-2026*/}
-                    <p className="text-xs text-gray-400 mt-1 break-all">
-                      ID: {job._id}
-                    </p>
-                  </div>
-                </div>
-
-                {/* ── Meta: location, dates, compensation ── */}
-                <div className="space-y-1.5">
-                  <p className="flex items-center text-sm text-gray-500">
-                    <FaMapMarkerAlt className="mr-2 text-gray-400 flex-shrink-0" />
-                    {job.location}
-                  </p>
-                  <p className="flex items-center text-sm text-gray-500">
-                    <FaClock className="mr-2 text-gray-400 flex-shrink-0" />
-                    {job.startDate
-                      ? new Date(job.startDate).toLocaleDateString()
-                      : "—"}
-                    {" – "}
-                    {job.endDateOrDuration
-                      ? new Date(job.endDateOrDuration).toLocaleDateString()
-                      : "—"}
-                  </p>
-                  <p className="flex items-center text-sm text-gray-500">
-                    <FaRupeeSign className="mr-2 text-gray-400 flex-shrink-0" />
-                    {job.internshipType === "STIPEND"
-                      ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
-                      : job.internshipType === "FREE"
-                        ? "Unpaid / Free"
-                        : job.internshipType === "PAID"
-                          ? `Student Pays: ₹{job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
-                          : "N/A"}
-                  </p>
-                </div>
-
-                {/* ── Skill tags ── */}
-                <div className="flex flex-wrap gap-1.5">
-                  {job.qualifications?.slice(0, 3).map((q, i) => (
-                    <span
-                      key={i}
-                      className="text-xs bg-gray-100 text-gray-700 py-1 px-2.5 rounded-full"
-                    >
-                      {q}
-                    </span>
-                  ))}
-                  {job.qualifications?.length > 3 && (
-                    <span className="text-xs bg-gray-50 text-gray-400 px-2.5 py-1 rounded-full">
-                      +{job.qualifications.length - 3}
-                    </span>
-                  )}
-                </div>
-
-                {/* ── AI match reason (only present in recommendation mode + Claude returned one) ── */}
-                {isRecommendation && job.match_reason && (
-                  <div className="flex items-start gap-2 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2.5">
-                    <span className="text-purple-400 text-xs mt-0.5 flex-shrink-0">
-                      ✦
-                    </span>
-                    <p className="text-xs text-purple-700 leading-relaxed">
-                      {job.match_reason}
-                    </p>
-                  </div>
-                )}
-
-                {/* ── Footer: view details ── */}
-                <div className="mt-auto pt-1 border-t border-gray-50">
-                  <button
-                    onClick={() => onViewDetails(job)}
-                    className="text-purple-600 hover:text-purple-700 text-sm font-medium transition"
-                  >
-                    View details →
-                  </button>
-                </div>
-              </div>
-            );
-          })
+          filteredJobs.map((job, index) => (
+            <JobCardItem
+              key={job._id || index}
+              job={job}
+              isSaved={isJobSaved(job._id)}
+              onToggleSave={toggleSaveJob}
+              onViewDetails={onViewDetails}
+              isRecommendation={isRecommendation}
+              rankIndex={index}
+            />
+          ))
         ) : (
           <div className="col-span-2 flex flex-col items-center justify-center py-16 text-gray-400 gap-2">
             <p className="text-sm font-medium">No jobs found</p>

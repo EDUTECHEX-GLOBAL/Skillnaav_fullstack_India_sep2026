@@ -550,24 +550,19 @@ const CreateTicketDrawer = memo(
 
         {/* Drawer */}
         <div
-          className="drawer-panel relative bg-white shadow-2xl flex flex-col z-10"
-          style={{
-            width: "min(540px,96vw)",
-            height: "100dvh",
-            overflowY: "auto",
-          }}
+          className="drawer-panel relative bg-white shadow-2xl flex flex-col z-10 w-full sm:w-[540px] sm:max-w-[96vw] h-[100dvh] max-h-[100dvh] overflow-hidden"
         >
           {/* Header */}
           <div
-            className="flex items-center justify-between px-6 py-5 border-b border-white/20 shrink-0"
+            className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-5 border-b border-white/20 shrink-0"
             style={{ background: BRAND_GRAD }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                <FaHeadset className="text-white w-5 h-5" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <FaHeadset className="text-white w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h2 className="text-white font-bold text-base leading-tight">
+                <h2 className="text-white font-bold text-sm sm:text-base leading-tight">
                   {hasPrefill
                     ? "Raise Ticket for Internship"
                     : "Create Support Ticket"}
@@ -586,7 +581,7 @@ const CreateTicketDrawer = memo(
           </div>
 
           {/* Form body */}
-          <div className="flex-1 px-6 py-6 space-y-5 overflow-y-auto jira-scroll">
+          <div className="flex-1 min-h-0 px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5 overflow-y-auto jira-scroll">
             {hasPrefill && <InternshipBanner internship={prefillInternship} />}
 
             {/* Category — visual card picker */}
@@ -594,7 +589,7 @@ const CreateTicketDrawer = memo(
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Category <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                 {[
                   {
                     value: "Technical Issue",
@@ -659,7 +654,7 @@ const CreateTicketDrawer = memo(
                           setInputInternshipId("");
                         }
                       }}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center"
+                      className="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl border-2 transition-all text-center min-w-0"
                       style={{
                         borderColor: isSelected
                           ? color
@@ -678,26 +673,28 @@ const CreateTicketDrawer = memo(
                       }}
                     >
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
                         style={{
                           background: isSelected ? color : bg,
                           color: isSelected ? "#fff" : color,
                         }}
                       >
-                        {icon}
+                        {React.cloneElement(icon, {
+                          className: "w-4 h-4 sm:w-5 sm:h-5",
+                        })}
                       </div>
                       <span
-                        className="text-xs font-bold leading-tight"
+                        className="text-[11px] sm:text-xs font-bold leading-tight truncate w-full px-1"
                         style={{ color: isSelected ? color : "#374151" }}
                       >
                         {label}
                       </span>
                       {isSelected && (
                         <span
-                          className="w-4 h-4 rounded-full flex items-center justify-center"
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center"
                           style={{ background: color }}
                         >
-                          <FaCheckCircle className="text-white w-2.5 h-2.5" />
+                          <FaCheckCircle className="text-white w-2 h-2 sm:w-2.5 sm:h-2.5" />
                         </span>
                       )}
                     </button>
@@ -771,7 +768,7 @@ const CreateTicketDrawer = memo(
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Priority <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   {
                     key: "low",
@@ -816,7 +813,7 @@ const CreateTicketDrawer = memo(
                       key={key}
                       type="button"
                       onClick={() => setPriority(key)}
-                      className="relative flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-2 transition-all focus:outline-none overflow-hidden"
+                      className="relative flex flex-col items-center gap-1 py-2 sm:py-3 px-2 rounded-xl border-2 transition-all focus:outline-none overflow-hidden"
                       style={{
                         borderColor: isSelected ? color : "#e5e7eb",
                         background: isSelected ? bg : "#fff",
@@ -830,7 +827,7 @@ const CreateTicketDrawer = memo(
                         className="absolute top-0 left-0 right-0 h-1 rounded-t-lg"
                         style={{ background: isSelected ? bar : "#e5e7eb" }}
                       />
-                      <span className="text-lg mt-0.5">{emoji}</span>
+                      <span className="text-base sm:text-lg mt-0.5">{emoji}</span>
                       <span
                         className="text-xs font-black"
                         style={{ color: isSelected ? color : "#374151" }}
@@ -838,10 +835,9 @@ const CreateTicketDrawer = memo(
                         {label}
                       </span>
                       <span
-                        className="text-xs leading-tight text-center"
+                        className="text-[10px] sm:text-xs leading-tight text-center"
                         style={{
                           color: isSelected ? color : "#9ca3af",
-                          fontSize: "0.6rem",
                         }}
                       >
                         {desc}
@@ -881,13 +877,13 @@ const CreateTicketDrawer = memo(
               <textarea
                 value={initialMessage}
                 onChange={(e) => setInitialMessage(e.target.value)}
-                rows={hasPrefill ? 9 : 5}
+                rows={hasPrefill ? 6 : 4}
                 placeholder={
                   isInternshipCategory
                     ? "Describe the internship access issue in detail…"
                     : "Describe your issue clearly. Include steps to reproduce if applicable…"
                 }
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono resize-y"
+                className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono resize-y min-h-[90px]"
               />
               {hasPrefill && (
                 <p className="flex items-center gap-1 text-xs text-gray-400 mt-1.5">
@@ -907,7 +903,7 @@ const CreateTicketDrawer = memo(
               </label>
               <FileInputButton
                 onFilesSelected={onFilesSelected}
-                className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 sm:py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
               >
                 <FaPaperclip className="w-4 h-4" />
                 {attachments.length === 0
@@ -940,11 +936,11 @@ const CreateTicketDrawer = memo(
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center gap-3 shrink-0">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 flex items-center gap-3 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <button
               onClick={onClose}
               disabled={creatingTicket}
-              className="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-100 disabled:opacity-50 transition-colors"
+              className="px-4 sm:px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-100 disabled:opacity-50 transition-colors"
             >
               Cancel
             </button>

@@ -8,7 +8,7 @@ import chatbotIcon from "../assets-webapp/chat-bot.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Minimize2, X, ChevronUp, Mic, MicOff, MoreHorizontal, MessageSquare, PhoneOff } from 'lucide-react';
 
-export default function Chatbot() {
+export default function Chatbot({ isTextChatOpen = false }) {
   // Widget States: 'fab' (just button), 'collapsed' (preview card), 'expanded' (large card), 'fullscreen'
   const [widgetState, setWidgetState] = useState('collapsed');
   
@@ -214,12 +214,14 @@ export default function Chatbot() {
   const isMenu = widgetState === 'menu';
 
   let dialogStyle = {};
-  if (isFullscreen) {
+  if (isTextChatOpen) {
+    dialogStyle = { right: 24, bottom: 24, width: '0px', height: '0px', opacity: 0, overflow: 'hidden', boxSizing: 'border-box' };
+  } else if (isFullscreen) {
     dialogStyle = { left: 0, top: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', borderRadius: 0, maxWidth: '100vw', maxHeight: '100vh', boxSizing: 'border-box' };
   } else if (isExpanded) {
     dialogStyle = { right: 24, bottom: 24, width: '650px', height: '350px', borderRadius: '20px', maxWidth: 'calc(100vw - 48px)', maxHeight: 'calc(100vh - 48px)', boxSizing: 'border-box' };
   } else if (isCollapsed) {
-    dialogStyle = { right: 24, bottom: 24, width: '320px', height: '180px', borderRadius: '20px', maxWidth: 'min(400px, calc(100vw - 48px))', maxHeight: 'calc(100vh - 120px)', boxSizing: 'border-box' };
+    dialogStyle = { right: 24, bottom: 24, width: 'min(320px, calc(100vw - 48px))', height: '180px', borderRadius: '20px', maxWidth: 'min(400px, calc(100vw - 48px))', maxHeight: 'calc(100vh - 120px)', boxSizing: 'border-box' };
   } else {
     dialogStyle = { right: 24, bottom: 24, width: '0px', height: '0px', opacity: 0, overflow: 'hidden', boxSizing: 'border-box' };
   }
@@ -429,13 +431,13 @@ export default function Chatbot() {
 
       {/* MENU - Appears next to FAB when state is 'menu' */}
       <AnimatePresence>
-        {isMenu && (
+        {isMenu && !isTextChatOpen && (
           <motion.div 
-            initial={{ opacity: 0, x: 10, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 10, scale: 0.95 }}
-            className="fixed right-[100px] z-[9999] w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto origin-bottom-right box-border"
-            style={{ bottom: isCollapsed ? '220px' : '24px' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed right-4 sm:right-[90px] z-[9999] w-56 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto origin-bottom-right box-border"
+            style={{ bottom: isCollapsed ? '220px' : '96px' }}
           >
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 box-border">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Choose Assistant</p>
@@ -474,12 +476,12 @@ export default function Chatbot() {
 
       {/* FIXED FAB ICON */}
       <AnimatePresence>
-        {!isExpanded && !isFullscreen && (
+        {!isExpanded && !isFullscreen && !isTextChatOpen && (
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1, bottom: isCollapsed ? 220 : 24 }}
             exit={{ scale: 0 }}
-            className="fixed right-6 z-[9999] pointer-events-auto box-border flex flex-col gap-4 items-center transition-all duration-300"
+            className="fixed right-4 sm:right-6 z-[9999] pointer-events-auto box-border flex flex-col gap-4 items-center transition-all duration-300"
           >
             {/* Chatbot Menu FAB */}
             <button

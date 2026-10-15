@@ -38,7 +38,7 @@ const QuantumComputing = () => {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="p-4 font-poppins">
+    <div className="py-2 px-0 sm:p-4 font-poppins w-full min-w-0">
       {/* Page Title */}
       <h1 className="text-2xl font-bold mb-2">Quantum Computing Internships ({internships.length})</h1>
 

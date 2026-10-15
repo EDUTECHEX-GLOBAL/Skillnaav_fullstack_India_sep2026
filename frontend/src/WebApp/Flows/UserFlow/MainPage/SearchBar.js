@@ -3,10 +3,9 @@ import { TextField, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import axios from "../../../../api/axiosInstance";
-import { FaMapMarkerAlt, FaClock, FaRupeeSign, FaHeart } from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
-import { format } from "date-fns";
 import ApplyCards from "./ApplyCards";
+import JobCardItem from "./JobCardItem";
 
 // ── Filter config ─────────────────────────────────────────────────────────────
 const FILTER_GROUPS = [
@@ -60,6 +59,17 @@ const SearchBar = () => {
   const [, setIsPremium] = useState(false);
   const [planType, setPlanType] = useState("Freemium");
   const [showSavedJobPopup, setShowSavedJobPopup] = useState(false);
+  const [openDropdownKey, setOpenDropdownKey] = useState(null);
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      if (!e.target.closest(".filter-dropdown-container")) {
+        setOpenDropdownKey(null);
+      }
+    };
+    document.addEventListener("mousedown", handleGlobalClick);
+    return () => document.removeEventListener("mousedown", handleGlobalClick);
+  }, []);
 
   const [jobData, setJobData] = useState([]);
   const [page, setPage] = useState(1);
@@ -234,16 +244,6 @@ const SearchBar = () => {
     });
   };
 
-  const calculatePostedTime = (date) => {
-    if (!date) return "—";
-    const diff = Math.floor(
-      (new Date() - new Date(date)) / (1000 * 60 * 60 * 24),
-    );
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    return `${diff}d ago`;
-  };
-
   const isJobSaved = (jobId) =>
     savedJobs?.some(
       (savedJob) =>
@@ -300,19 +300,41 @@ const SearchBar = () => {
           <div className="bg-white border-b p-4 space-y-3">
             <TextField
               fullWidth
+              size="small"
               placeholder="Search for internships and jobs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "0.5rem",
+                  fontSize: "0.875rem",
+                  backgroundColor: "#ffffff",
+                  height: "40px",
+                  "& fieldset": {
+                    borderColor: "#d1d5db",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#9ca3af",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#14b8a6",
+                    borderWidth: "1.5px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  padding: "8px 12px",
+                },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon sx={{ color: "#6b7280", fontSize: "1.25rem" }} />
                   </InputAdornment>
                 ),
                 endAdornment: searchTerm && (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setSearchTerm("")}>
-                      <ClearIcon />
+                    <IconButton size="small" onClick={() => setSearchTerm("")}>
+                      <ClearIcon sx={{ fontSize: "1.1rem" }} />
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -321,30 +343,99 @@ const SearchBar = () => {
 
             {/* Filter dropdowns */}
             <div className="flex flex-wrap gap-3 pt-1">
-              {FILTER_GROUPS.map((group) => (
-                <div key={group.key} className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500 font-medium">
-                    {group.label}
-                  </label>
-                  <select
-                    value={activeFilters[group.key] ?? ""}
-                    onChange={(e) =>
-                      setActiveFilters((prev) => ({
-                        ...prev,
-                        [group.key]: e.target.value || null,
-                      }))
-                    }
-                    className="px-3 py-2 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer min-w-[130px]"
+              {FILTER_GROUPS.map((group) => {
+                const isOpen = openDropdownKey === group.key;
+                const selectedOpt = group.options.find(
+                  (opt) => opt.value === activeFilters[group.key]
+                );
+                const currentLabel = selectedOpt
+                  ? selectedOpt.label
+                  : `All ${group.label}s`;
+
+                return (
+                  <div
+                    key={group.key}
+                    className="filter-dropdown-container flex flex-col gap-1 relative min-w-[130px] flex-1 sm:flex-none"
                   >
-                    <option value="">All {group.label}s</option>
-                    {group.options.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
+                    <label className="text-xs text-gray-500 font-medium">
+                      {group.label}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdownKey(isOpen ? null : group.key)
+                      }
+                      className={`w-full px-3 py-2 rounded-lg text-sm border bg-white text-gray-700 flex items-center justify-between gap-2 cursor-pointer transition-all ${
+                        isOpen
+                          ? "border-teal-500 ring-2 ring-teal-500"
+                          : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
+                      <span className="truncate">{currentLabel}</span>
+                      <svg
+                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {isOpen && (
+                      <div className="absolute left-0 right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden py-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveFilters((prev) => ({
+                              ...prev,
+                              [group.key]: null,
+                            }));
+                            setOpenDropdownKey(null);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors cursor-pointer truncate ${
+                            !activeFilters[group.key]
+                              ? "bg-blue-600 text-white font-medium"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          All {group.label}s
+                        </button>
+                        {group.options.map((opt) => {
+                          const isSelected = activeFilters[group.key] === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                setActiveFilters((prev) => ({
+                                  ...prev,
+                                  [group.key]: opt.value,
+                                }));
+                                setOpenDropdownKey(null);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors cursor-pointer truncate ${
+                                isSelected
+                                  ? "bg-blue-600 text-white font-medium"
+                                  : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {hasActiveFilters && (
@@ -367,7 +458,7 @@ const SearchBar = () => {
                 Showing internships and jobs matching your query
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 w-full min-w-0">
                 {/* {filteredJobs.length > 0 ? ( */}
                 {/*comment the above condition add the below condition for correct loading effect while searching - 07-08-2026 */}
                 {loadingJobs && filteredJobs.length === 0 ? (
@@ -376,152 +467,18 @@ const SearchBar = () => {
                   </div>
                 ) : filteredJobs.length > 0 ? (
                   filteredJobs.map((job) => (
-                    <div
+                    <JobCardItem
                       key={job._id}
-                      className="relative border rounded-lg p-6 shadow-sm"
-                    >
-                      <div className="absolute top-2 right-2 flex items-center gap-2">
-                        {job.internshipType && (
-                          <span
-                            className={`px-3 py-1 text-xs md:text-sm font-semibold uppercase rounded-full ${
-                              job.internshipType === "FREE"
-                                ? "bg-green-100 text-green-700"
-                                : job.internshipType === "STIPEND"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : job.internshipType === "PAID"
-                                    ? "bg-red-100 text-red-700"
-                                    : ""
-                            }`}
-                          >
-                            {job.internshipType}
-                          </span>
-                        )}
-                        <button
-                          onClick={() => toggleSaveJob(job)}
-                          className={`transition ${
-                            isJobSaved(job._id)
-                              ? "text-red-500"
-                              : "text-gray-500 hover:text-red-500"
-                          }`}
-                          aria-label={
-                            isJobSaved(job._id) ? "Unsave job" : "Save job"
-                          }
-                        >
-                          <FaHeart />
-                        </button>
-                      </div>
-
-                      <div className="flex items-center mb-4">
-                        <img
-                          src={job.imgUrl}
-                          alt={`${job.companyName} logo`}
-                          className="w-12 h-12 rounded-full mr-4 object-cover"
-                          width="48"
-                          height="48"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/favicon-512x469.png";
-                          }}
-                        />
-                        <div className="flex-1 min-w-0 pr-12">
-                          <h3
-                            className="text-lg md:text-xl font-semibold truncate"
-                            title={job.jobTitle}
-                          >
-                            {job.jobTitle}
-                          </h3>
-                          <div className="flex items-center text-gray-600">
-                            <span className="truncate" title={job.companyName}>
-                              {job.companyName}
-                            </span>
-                            <span className="mx-1">•</span>
-                            <span className="whitespace-nowrap">
-                              {calculatePostedTime(job.createdAt)}
-                            </span>
-                          </div>
-                          {/*Remove "whitespace-nowrap" add "break-all" for alignment in tabs - 07-08-2026*/}
-                          <p className="text-xs text-gray-400 mt-1 break-all">
-                            ID: {job._id}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-gray-600 mb-4">
-                        <p className="flex items-center text-sm md:text-base">
-                          <FaMapMarkerAlt className="mr-2" />
-                          {job.location} {job.jobType}
-                        </p>
-                        <p className="flex items-center mt-2 text-sm md:text-base">
-                          <FaClock className="mr-2" />
-                          {job.startDate
-                            ? format(new Date(job.startDate), "dd MMM yyyy")
-                            : "—"}{" "}
-                          –{" "}
-                          {job.endDateOrDuration
-                            ? format(
-                                new Date(job.endDateOrDuration),
-                                "dd MMM yyyy",
-                              )
-                            : "—"}
-                        </p>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm md:text-base leading-none mt-2">
-                          <FaRupeeSign className="text-gray-600 w-4 h-4 flex-shrink-0" />
-                          <span className="leading-none">
-                            {job.internshipType === "STIPEND"
-                              ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
-                              : job.internshipType === "FREE"
-                                ? "Unpaid / Free"
-                                : job.internshipType === "PAID"
-                                  ? `Student Pays: ₹{job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
-                                  : "N/A"}
-                          </span>
-                        </div>
-                        <p className="flex items-center mt-2 text-sm md:text-base">
-                          <span className="font-medium text-gray-600">
-                            {job.internshipMode === "ONLINE"
-                              ? "Online"
-                              : job.internshipMode === "OFFLINE"
-                                ? "Offline"
-                                : "Hybrid"}
-                          </span>
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-wrap gap-2">
-                          {job.qualifications &&
-                            job.qualifications
-                              .slice(0, 2)
-                              .map((qualification, i) => (
-                                <span
-                                  key={i}
-                                  className="text-sm md:text-base bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
-                                >
-                                  {qualification}
-                                </span>
-                              ))}
-                          {job.qualifications &&
-                            job.qualifications.length > 2 && (
-                              <span className="text-sm md:text-base bg-gray-100 text-gray-700 py-1 px-3 rounded-full">
-                                +{job.qualifications.length - 2}
-                              </span>
-                            )}
-                        </div>
-                        <button
-                          className="text-purple-600 hover:underline text-sm md:text-base"
-                          onClick={() => handleViewDetails(job)}
-                        >
-                          View details
-                        </button>
-                      </div>
-                    </div>
+                      job={job}
+                      isSaved={isJobSaved(job._id)}
+                      onToggleSave={toggleSaveJob}
+                      onViewDetails={handleViewDetails}
+                    />
                   ))
                 ) : (
-                  <p className="text-center text-gray-500 col-span-full">
-                    {/* Add style to this text - 07-08-2026*/}
+                  <div className="text-center text-gray-500 col-span-full py-10">
                     <p className="text-gray-500">No jobs found</p>
-                  </p>
+                  </div>
                 )}
               </div>
             </section>

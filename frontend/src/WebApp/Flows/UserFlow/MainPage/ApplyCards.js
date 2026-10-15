@@ -6,6 +6,7 @@ import {
   FaHeadset,
   FaMapMarkerAlt,
   FaTrash,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
@@ -243,6 +244,7 @@ const ApplyCards = ({ job, onBack }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState(null);
   const dropdownRef = useRef(null);
+  const fileInputRef = useRef(null);
   const visibleCount = 2;
 
   useEffect(() => {
@@ -491,11 +493,13 @@ const ApplyCards = ({ job, onBack }) => {
   const handleGenerateAssessment = async () => {
     const userInfo = parseStoredJson("studentInfo", "userInfo");
     const studentId = userInfo?._id;
-    if (!studentId) return toast.error("Please log in first.");
+    if (!studentId) {
+      toast.error("Please log in first.");
+      return null;
+    }
 
     if (assessment) {
-      toast.error("You already have an assessment for this internship!");
-      return;
+      return assessment;
     }
 
     setLoadingAssessment(true);
@@ -504,11 +508,15 @@ const ApplyCards = ({ job, onBack }) => {
         internshipId: job._id,
         studentId,
       });
-      setAssessment(response.data.assessment);
+      const generated = response.data.assessment;
+      setAssessment(generated);
       toast.success("AI Assessment generated successfully!");
+      return generated;
     } catch (error) {
       console.error("Failed to fetch assessment:", error);
-      toast.error("Failed to generate assessment. Please try again later.");
+      const serverMsg = error?.response?.data?.message || "Failed to generate assessment. Please try again later.";
+      toast.error(serverMsg);
+      return null;
     } finally {
       setLoadingAssessment(false);
     }
@@ -568,37 +576,43 @@ const ApplyCards = ({ job, onBack }) => {
     existingResumes.find((item) => item.fileUrl === selectedResumeUrl)?.fileName || "No resume selected";
 
   return (
-    <div className="relative bg-white rounded-lg shadow-lg max-w-full mx-auto p-4 sm:p-6 lg:p-8 xl:p-12 overflow-auto">
-      <button className="text-gray-500 w-12 h-12 text-sm mb-4" onClick={onBack}>
-        &lt; back
+    <div className="relative bg-white rounded-lg shadow-lg w-full max-w-full mx-auto p-4 sm:p-6 lg:p-8 xl:p-12 overflow-hidden pb-24 sm:pb-12 break-words">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-700 font-semibold text-sm sm:text-base transition-all duration-200 border border-slate-200/80 hover:border-purple-200 shadow-xs group mb-5 cursor-pointer"
+        aria-label="Go back"
+      >
+        <FaArrowLeft className="text-xs sm:text-sm group-hover:-translate-x-1 transition-transform duration-200" />
+        <span>Back</span>
       </button>
 
-      <div className="flex flex-col md:flex-row items-start justify-between mb-4">
-        <div className="flex items-start mb-4 md:mb-0">
+      <div className="flex flex-col md:flex-row items-start justify-between mb-4 w-full min-w-0">
+        <div className="flex items-start mb-4 md:mb-0 w-full min-w-0">
           {job.imgUrl && (
-            <img src={job.imgUrl} alt="company-logo" className="rounded-full w-12 h-12 mr-4" />
+            <img src={job.imgUrl} alt="company-logo" className="rounded-full w-12 h-12 mr-4 shrink-0 object-cover" />
           )}
-          <div>
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">{job.jobTitle}</h2>
-            <p className="text-gray-500">{job.companyName}</p>
-            <p className="text-gray-400 text-sm mt-1 whitespace-nowrap">ID: {job._id}</p>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 break-words [overflow-wrap:anywhere]">{job.jobTitle}</h2>
+            <p className="text-gray-500 break-words [overflow-wrap:anywhere]">{job.companyName}</p>
+            <p className="text-gray-400 text-sm mt-1 break-all">ID: {job._id}</p>
 
             <div className="text-gray-500 mt-2 text-sm md:text-base flex items-center">
-              <FaMapMarkerAlt className="mr-2" />
-              <p>{job.location || "Location not specified"}</p>
+              <FaMapMarkerAlt className="mr-2 shrink-0" />
+              <p className="break-words [overflow-wrap:anywhere]">{job.location || "Location not specified"}</p>
             </div>
 
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
-              <p className="flex items-center">
-                <FontAwesomeIcon icon={faClock} className="mr-2" />
+              <p className="flex items-center break-words [overflow-wrap:anywhere]">
+                <FontAwesomeIcon icon={faClock} className="mr-2 shrink-0" />
                 {isNaN(Date.parse(job.startDate)) ? (job.startDate || "Date unknown") : format(new Date(job.startDate), "dd MMM yyyy")} -{" "}
                 {(job.endDateOrDuration || job.duration) ? (isNaN(Date.parse(job.endDateOrDuration || job.duration)) ? (job.endDateOrDuration || job.duration) : format(new Date(job.endDateOrDuration || job.duration), "dd MMM yyyy")) : "-"}
               </p>
             </div>
 
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
-              <FaRupeeSign className="mr-2" />
-              <p>
+              <FaRupeeSign className="mr-2 shrink-0" />
+              <p className="break-words [overflow-wrap:anywhere]">
                 {job.compensationDetails?.pdfExtractedCompensation
                   ? job.compensationDetails.pdfExtractedCompensation
                   : job.internshipType === "STIPEND"
@@ -680,25 +694,74 @@ const ApplyCards = ({ job, onBack }) => {
                 <p className="text-red-500 text-sm mt-1">Maximum 5 resumes allowed. Delete one to upload another.</p>
               )}
 
+              {/* Small compact file upload box with choose file aligned to the left */}
               <div className="mt-3">
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".pdf,.doc,.docx"
-                  disabled={isApplied || existingResumes.length >= 5}
+                  disabled={isApplied || existingResumes.length >= 5 || Boolean(selectedResumeUrl)}
                   onChange={handleFileChange}
-                  className={`block w-full text-sm ${
-                    isApplied || existingResumes.length >= 5 ? "text-gray-400 cursor-not-allowed" : "text-gray-500"
-                  }`}
+                  className="hidden"
                 />
 
-                {resume && (
-                  <button type="button" onClick={() => setResume(null)} className="text-red-500 text-sm hover:underline mt-2">
-                    Remove uploaded resume
+                <div
+                  onClick={() => {
+                    if (!isApplied && existingResumes.length < 5 && !selectedResumeUrl) {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  className={`w-full max-w-xl h-11 px-3 border border-gray-300 rounded-md bg-white flex items-center justify-start gap-3 transition-colors ${
+                    isApplied || existingResumes.length >= 5 || selectedResumeUrl
+                      ? "bg-gray-50 opacity-60 cursor-not-allowed"
+                      : "cursor-pointer hover:border-gray-400"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    disabled={isApplied || existingResumes.length >= 5 || Boolean(selectedResumeUrl)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isApplied && existingResumes.length < 5 && !selectedResumeUrl) {
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className={`px-3 py-1 text-xs sm:text-sm font-medium rounded border transition-colors ${
+                      isApplied || existingResumes.length >= 5 || selectedResumeUrl
+                        ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed"
+                        : "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300 cursor-pointer"
+                    }`}
+                  >
+                    Choose File
                   </button>
-                )}
+
+                  <span className="text-xs sm:text-sm text-gray-500 truncate max-w-[200px] sm:max-w-xs">
+                    {resume ? (
+                      <span className="text-gray-800 font-medium">{resume.name}</span>
+                    ) : (
+                      "No file chosen"
+                    )}
+                  </span>
+
+                  {resume && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setResume(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline ml-1"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
 
                 {selectedResumeUrl && (
-                  <p className="text-gray-500 text-sm mt-2">File upload disabled because a saved resume is selected.</p>
+                  <p className="text-gray-500 text-xs mt-1.5">
+                    File upload disabled because a saved resume is selected.
+                  </p>
                 )}
               </div>
 
@@ -734,8 +797,12 @@ const ApplyCards = ({ job, onBack }) => {
               {job.internshipType === "STIPEND" && (
                 <button
                   onClick={async () => {
-                    if (!assessment) await handleGenerateAssessment();
-                    setShowAssessmentModal(true);
+                    if (assessment) {
+                      setShowAssessmentModal(true);
+                    } else {
+                      const generated = await handleGenerateAssessment();
+                      if (generated) setShowAssessmentModal(true);
+                    }
                   }}
                   disabled={loadingAssessment}
                   className={`px-4 py-2 rounded-full font-semibold ${
@@ -961,29 +1028,91 @@ const ApplyCards = ({ job, onBack }) => {
 
       <hr className="my-4" />
 
-      <div className="mb-6">
+      <div className="mb-6 w-full min-w-0">
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">About the job</h3>
-        <p className="text-gray-600 leading-relaxed">{job.jobDescription || "No description available"}</p>
+        <p
+          className="text-gray-600 leading-relaxed whitespace-pre-wrap w-full max-w-full"
+          style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}
+        >
+          {job.jobDescription || "No description available"}
+        </p>
       </div>
 
-      <div>
+      <div className="w-full min-w-0">
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Skills required</h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-w-full">
           {(job.qualifications || []).map((qualification, index) => (
-            <span key={index} className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full">
+            <span
+              key={index}
+              className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full max-w-full"
+              style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}
+            >
               {qualification}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 w-full min-w-0">
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Contact Information</h3>
-          <div className="bg-gray-50 border rounded-lg p-3 md:p-4 text-sm md:text-base text-gray-700">
-            {job.contactInfo?.name || "Not provided"}
-            {job.contactInfo?.email ? `, ${job.contactInfo.email}` : ""}
-            {job.contactInfo?.phone ? `, ${job.contactInfo.phone}` : ""}
-          </div>
+        <div
+          className="bg-gray-50 border border-gray-200 rounded-lg p-3 md:p-4 text-sm md:text-base text-gray-700 space-y-3 w-full max-w-full overflow-hidden"
+          style={{
+            wordBreak: "break-all",
+            overflowWrap: "anywhere",
+            boxSizing: "border-box",
+          }}
+        >
+          {typeof job.contactInfo === "string" ? (
+            <div
+              className="text-gray-700 whitespace-pre-wrap"
+              style={{ wordBreak: "break-all", overflowWrap: "anywhere", maxWidth: "100%" }}
+            >
+              {job.contactInfo}
+            </div>
+          ) : (
+            <>
+              {job.contactInfo?.name && (
+                <div className="w-full min-w-0" style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}>
+                  <span className="font-semibold text-gray-900 block sm:inline sm:mr-2">Name:</span>
+                  <span
+                    className="text-gray-800 whitespace-pre-wrap"
+                    style={{ wordBreak: "break-all", overflowWrap: "anywhere", maxWidth: "100%" }}
+                  >
+                    {job.contactInfo.name}
+                  </span>
+                </div>
+              )}
+              {job.contactInfo?.email && (
+                <div className="w-full min-w-0" style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}>
+                  <span className="font-semibold text-gray-900 block sm:inline sm:mr-2">Email:</span>
+                  <a
+                    href={`mailto:${job.contactInfo.email}`}
+                    className="text-blue-600 hover:underline"
+                    style={{ wordBreak: "break-all", overflowWrap: "anywhere", maxWidth: "100%" }}
+                  >
+                    {job.contactInfo.email}
+                  </a>
+                </div>
+              )}
+              {job.contactInfo?.phone && (
+                <div className="w-full min-w-0" style={{ wordBreak: "break-all", overflowWrap: "anywhere" }}>
+                  <span className="font-semibold text-gray-900 block sm:inline sm:mr-2">Phone:</span>
+                  <a
+                    href={`tel:${job.contactInfo.phone}`}
+                    className="text-blue-600 hover:underline"
+                    style={{ wordBreak: "break-all", overflowWrap: "anywhere", maxWidth: "100%" }}
+                  >
+                    {job.contactInfo.phone}
+                  </a>
+                </div>
+              )}
+              {!job.contactInfo?.name && !job.contactInfo?.email && !job.contactInfo?.phone && (
+                <span className="text-gray-500">Not provided</span>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {showAssessmentModal && assessment && (

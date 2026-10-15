@@ -225,26 +225,28 @@ const ProfileForm = () => {
           {!isEditing ? (
             <button
               onClick={handleEditClick}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200"
+              className="h-9 sm:h-11 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition duration-150 self-start sm:self-auto text-xs sm:text-sm font-semibold shadow-sm hover:shadow active:scale-[0.98] whitespace-nowrap"
             >
               <PencilIcon className="h-4 w-4" />
               Edit Profile
             </button>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
               <button
+                type="button"
                 onClick={handleCancelClick}
-                className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200"
+                className="flex-1 sm:flex-initial h-9 sm:h-10 flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition duration-150 text-xs sm:text-sm font-semibold shadow-sm hover:border-gray-400 active:scale-[0.98] whitespace-nowrap min-w-0"
               >
-                <XMarkIcon className="h-4 w-4" />
-                Cancel
+                <XMarkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                <span>Cancel</span>
               </button>
               <button
+                type="button"
                 onClick={handleUpdateProfile}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200"
+                className="flex-1 sm:flex-initial h-9 sm:h-10 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl transition duration-150 text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-600/20 hover:shadow-md active:scale-[0.98] whitespace-nowrap min-w-0"
               >
-                <CheckIcon className="h-4 w-4" />
-                Save Changes
+                <CheckIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span>Save Changes</span>
               </button>
             </div>
           )}

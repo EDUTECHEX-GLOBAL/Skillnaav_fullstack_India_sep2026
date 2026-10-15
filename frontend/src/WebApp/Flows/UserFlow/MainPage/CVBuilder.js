@@ -15,37 +15,130 @@ const CVBuilder = ({ profile: propProfile, onClose }) => {
   const [error, setError] = useState(null);
   const [done, setDone] = useState(false);
 
-  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-  const userId = userInfo?._id;
+  const resolveUserId = () => {
+    // 1. From passed prop profile
+    if (propProfile?.userId) return propProfile.userId;
+    if (propProfile?._id) return propProfile._id;
+    if (propProfile?.id) return propProfile.id;
 
-const handleGenerate = async () => {
-  setLoading(true);
-  setError(null);
+    // 2. From studentInfo in localStorage
+    try {
+      const studentInfo = JSON.parse(localStorage.getItem("studentInfo") || "null");
+      if (studentInfo?._id) return studentInfo._id;
+      if (studentInfo?.userId) return studentInfo.userId;
+      if (studentInfo?.id) return studentInfo.id;
+    } catch {}
 
-  try {
-    const response = await axios.post(
-      `/api/cv/generate/${userId}`,
-      {}, // backend fetches profile itself
-      { responseType: "blob" }
-    );
+    // 3. From userInfo in localStorage
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo") || "null");
+      if (userInfo?._id) return userInfo._id;
+      if (userInfo?.userId) return userInfo.userId;
+      if (userInfo?.id) return userInfo.id;
+    } catch {}
 
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Edutechex_CV.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // 4. From user in localStorage
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      if (user?._id) return user._id;
+      if (user?.userId) return user.userId;
+      if (user?.id) return user.id;
+    } catch {}
 
-    setDone(true);
-  } catch (err) {
-    setError(err?.response?.data?.detail || "Failed to generate CV.");
-  } finally {
-    setLoading(false);
-  }
-};
+    // 5. Decode from userToken/token JWT if present
+    const token =
+      localStorage.getItem("userToken") ||
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("userToken");
+    if (token) {
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          if (payload?.id) return payload.id;
+          if (payload?._id) return payload._id;
+          if (payload?.userId) return payload.userId;
+        }
+      } catch {}
+    }
+
+    return null;
+  };
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError(null);
+
+    const userId = resolveUserId();
+    const token =
+      localStorage.getItem("userToken") ||
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("userToken");
+
+    if (!userId && !token) {
+      setError("User session not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const endpoint = userId ? `/api/cv/generate/${userId}` : `/api/cv/generate`;
+
+    try {
+      const response = await axios.post(
+        endpoint,
+        { userId }, // backend fetches profile itself
+        { responseType: "blob", headers }
+      );
+
+      // In case the response is a JSON error returned as a blob
+      if (response.data && response.data.type === "application/json") {
+        const text = await response.data.text();
+        const json = JSON.parse(text);
+        throw new Error(json.detail || json.message || "Failed to generate CV.");
+      }
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const userName = propProfile?.name || "Resume";
+      const safeName = String(userName).trim().replace(/\s+/g, "_");
+      link.download = `Edutechex_CV_${safeName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setDone(true);
+    } catch (err) {
+      let errMsg = "Failed to generate CV.";
+      if (err?.response?.data) {
+        if (err.response.data instanceof Blob) {
+          try {
+            const text = await err.response.data.text();
+            const parsed = JSON.parse(text);
+            errMsg = parsed.detail || parsed.message || text;
+          } catch {
+            errMsg = "Failed to generate CV. Please try again.";
+          }
+        } else if (err.response.data.detail) {
+          errMsg = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errMsg = err.response.data.message;
+        }
+      } else if (err.message) {
+        errMsg = err.message;
+      }
+      setError(errMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -123,41 +216,41 @@ const handleGenerate = async () => {
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-6 flex gap-3">
+        <div className="px-6 pb-6 flex items-center gap-3">
           <button
             onClick={onClose}
-            className="flex-1 border border-slate-200 text-slate-600 rounded-xl py-2.5 text-sm font-medium hover:bg-slate-50 transition-colors"
+            className="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-medium hover:bg-slate-50 transition-colors whitespace-nowrap"
           >
             {done ? "Close" : "Cancel"}
           </button>
           <button
             onClick={handleGenerate}
             disabled={loading || done}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all
+            className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs sm:text-sm font-semibold transition-all
               ${done
                 ? "bg-emerald-500 text-white"
                 : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-indigo-200 hover:shadow-md"
               } disabled:opacity-60`}
           >
             {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Generating...
-              </>
+              <span className="inline-flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                <span className="whitespace-nowrap">Generating...</span>
+              </span>
             ) : done ? (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <span className="inline-flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                 </svg>
-                Downloaded!
-              </>
+                <span className="whitespace-nowrap">Downloaded!</span>
+              </span>
             ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <span className="inline-flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
-                Download CV (PDF)
-              </>
+                <span className="whitespace-nowrap">Download CV (PDF)</span>
+              </span>
             )}
           </button>
         </div>

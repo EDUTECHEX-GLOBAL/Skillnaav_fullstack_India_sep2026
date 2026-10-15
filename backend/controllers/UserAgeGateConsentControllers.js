@@ -84,8 +84,10 @@ const saveUserAgeGateConsent = async (req, res) => {
             }
         }
 
-        // ✅ REPLACE WHOLE DOC with ONLY required fields (per your requirement)
-        const existing = await UserAgeGateConsent.findOne({ user: userObjectId }).lean();
+        // ✅ Find existing consent by user ID OR by email to prevent duplicate key index collisions
+        const existing = await UserAgeGateConsent.findOne({
+            $or: [{ user: userObjectId }, { userEmail: userEmail }],
+        }).lean();
 
         const wasReverifyRequested = !!existing?.reverificationRequested;
         const prevReverifyRequestedAt = existing?.reverificationRequestedAt || null;
@@ -100,8 +102,13 @@ const saveUserAgeGateConsent = async (req, res) => {
 
         // ✅ OVER_18: store ONLY these fields (no guardian fields at all)
         if (ageCategory === "OVER_18") {
-            // ✅ selfie must come from multer upload
-            if (!req.file || !req.file.location) {
+            const photoUrl =
+                req.file?.location ||
+                (req.file?.key
+                    ? `https://${process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_RESUME_BUCKET}.s3.${process.env.AWS_REGION || "us-east-2"}.amazonaws.com/${req.file.key}`
+                    : "");
+
+            if (!req.file || !photoUrl) {
                 return res.status(400).json({
                     success: false,
                     message: "Captured selfie is required for OVER_18.",
@@ -115,7 +122,7 @@ const saveUserAgeGateConsent = async (req, res) => {
                 ageGateCompleted: toBool(ageGateCompleted),
 
                 // ✅ store S3 link in Mongo
-                ageVerificationPhotoUrl: req.file.location,
+                ageVerificationPhotoUrl: photoUrl,
                 ageVerificationPhotoKey: req.file.key || "",
 
                 // ✅ clear reverify after new selfie
@@ -127,9 +134,7 @@ const saveUserAgeGateConsent = async (req, res) => {
                 createdAt,
                 updatedAt,
             };
-        }
-
-        else {
+        } else {
             // ✅ UNDER_18: store ONLY these fields
             replacement = {
                 user: userObjectId,
@@ -137,7 +142,6 @@ const saveUserAgeGateConsent = async (req, res) => {
                 ageCategory,
                 ageGateCompleted: toBool(ageGateCompleted),
 
-                // ✅ FIX: use the actual submitted value, not hardcoded true
                 guardianConsentAccepted: toBool(guardianConsentAccepted),
                 guardianConsentAcceptedAt: guardianConsentAcceptedAt
                     ? new Date(guardianConsentAcceptedAt)
@@ -162,12 +166,21 @@ const saveUserAgeGateConsent = async (req, res) => {
             };
         }
 
-        // ✅ Mongoose findOneAndUpdate with upsert — safe, robust, and maintains schema integrity
-        const consent = await UserAgeGateConsent.findOneAndUpdate(
-            { user: userObjectId },
-            { $set: replacement },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
+        // ✅ Safe upsert: update existing document if found by user or email, or create new
+        let consent;
+        if (existing?._id) {
+            consent = await UserAgeGateConsent.findByIdAndUpdate(
+                existing._id,
+                { $set: replacement },
+                { new: true, runValidators: true }
+            );
+        } else {
+            consent = await UserAgeGateConsent.findOneAndUpdate(
+                { $or: [{ user: userObjectId }, { userEmail: userEmail }] },
+                { $set: replacement },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+        }
 
         // ✅ Send guardian consent email immediately for UNDER_18 (non-blocking)
         if (ageCategory === "UNDER_18") {
@@ -191,6 +204,27 @@ const saveUserAgeGateConsent = async (req, res) => {
 
     } catch (err) {
         console.error("saveUserAgeGateConsent error:", err);
+        // Handle MongoDB E11000 duplicate key error gracefully
+        if (err.code === 11000) {
+            try {
+                const userId = req.user && (req.user._id || req.user.id);
+                const userObjectId =
+                    typeof userId === "string" ? new mongoose.Types.ObjectId(userId) : userId;
+                const userEmail = (req.user?.email || "").trim().toLowerCase();
+
+                await UserAgeGateConsent.deleteMany({
+                    $or: [{ user: userObjectId }, { userEmail }],
+                });
+                const consent = await UserAgeGateConsent.create({
+                    ...replacement,
+                    user: userObjectId,
+                    userEmail,
+                });
+                return res.status(200).json({ success: true, data: consent });
+            } catch (retryErr) {
+                console.error("Retry after E11000 failed:", retryErr);
+            }
+        }
         return res
             .status(500)
             .json({

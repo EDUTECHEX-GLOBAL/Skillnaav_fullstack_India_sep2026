@@ -441,6 +441,7 @@ const PostAJob = () => {
             value={formData.jobTitle}
             onChange={handleChange}
             required
+            maxLength={100}
             className={inputCls}
             placeholder="Enter job title"
             style={{ marginTop: "0px" }}
@@ -459,6 +460,7 @@ const PostAJob = () => {
             value={formData.companyName}
             onChange={handleChange}
             required
+            maxLength={100}
             className={inputCls}
             style={{ marginTop: "0px" }}
             placeholder="Enter company name"
@@ -606,10 +608,11 @@ const PostAJob = () => {
             value={formData.jobDescription}
             onChange={handleChange}
             required
+            maxLength={4000}
             rows="4"
             className={inputCls}
             style={{ marginTop: "0px" }}
-            placeholder="Describe the job responsibilities, requirements, etc."
+            placeholder="Describe the job responsibilities, requirements, etc. (max 4000 chars)"
           />
         </div>
 
@@ -726,6 +729,7 @@ const PostAJob = () => {
               type="text"
               value={qualInput}
               onChange={(e) => setQualInput(e.target.value)}
+              maxLength={50}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -764,8 +768,9 @@ const PostAJob = () => {
               value={formData.contactInfo.name}
               onChange={handleChange}
               required
+              maxLength={60}
               className={inputCls}
-              placeholder="Contact Name"
+              placeholder="Contact Name (max 60 chars)"
             />
             <input
               type="email"
@@ -773,8 +778,9 @@ const PostAJob = () => {
               value={formData.contactInfo.email}
               onChange={handleChange}
               required
+              maxLength={80}
               className={inputCls}
-              placeholder="Contact Email"
+              placeholder="Contact Email (max 80 chars)"
             />
             <input
               type="tel"
@@ -782,8 +788,9 @@ const PostAJob = () => {
               value={formData.contactInfo.phone}
               onChange={handleChange}
               required
+              maxLength={25}
               className={inputCls}
-              placeholder="Contact Phone"
+              placeholder="Contact Phone (max 25 chars)"
             />
           </div>
         </div>

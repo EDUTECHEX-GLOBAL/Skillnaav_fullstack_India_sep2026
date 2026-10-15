@@ -44,6 +44,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
   const streamRef = useRef(null);
 
   const [cameraError, setCameraError] = useState("");
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const [capturedPreview, setCapturedPreview] = useState("");
   const [capturedFile, setCapturedFile] = useState(null);
 
@@ -72,6 +73,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
       stream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
+    setIsCameraReady(false);
   };
 
   const startCamera = async () => {
@@ -79,6 +81,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError("Camera is not supported in this browser.");
+        setIsCameraReady(false);
         return;
       }
       // Stop existing stream if any before requesting new one
@@ -93,6 +96,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
           setCameraError("");
+          setIsCameraReady(true);
           videoRef.current?.play().catch((e) => {
             if (e.name !== "AbortError") {
               console.warn("Video play error:", e);
@@ -101,6 +105,11 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
         };
         videoRef.current.onplay = () => {
           setCameraError("");
+          setIsCameraReady(true);
+        };
+        videoRef.current.onplaying = () => {
+          setCameraError("");
+          setIsCameraReady(true);
         };
       }
     } catch (err) {
@@ -112,6 +121,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
       setCameraError(
         "Unable to access camera. Please allow camera permission and try again. (Camera works only on HTTPS or localhost.)"
       );
+      setIsCameraReady(false);
     }
   };
 
@@ -300,7 +310,12 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
           guardianEmail: guardianEmail.trim(),
           guardianRelationship,
         };
-        onComplete?.(payload);
+        try {
+          await onComplete?.(payload);
+        } catch (saveErr) {
+          const msg = saveErr?.response?.data?.message || saveErr?.message || "Failed to save consent. Please try again.";
+          setError(msg);
+        }
       } else {
         setGuardianOtpError("Invalid OTP. Please try again.");
       }
@@ -311,7 +326,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
     }
   };
 
-  const handleOver18Continue = () => {
+  const handleOver18Continue = async () => {
     resetError();
     if (!capturedFile) {
       return setError("Please capture a photo to continue.");
@@ -321,7 +336,12 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
       ageGateCompleted: true,
       ageVerificationPhoto: capturedFile,
     };
-    onComplete?.(payload);
+    try {
+      await onComplete?.(payload);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to save verification. Please try again.";
+      setError(msg);
+    }
   };
 
   const modalContent = (
@@ -564,14 +584,14 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
               <p className="text-sm text-gray-700">
                 Please take a clear selfie for age verification.
               </p>
-              {cameraError && (
+              {cameraError && !isCameraReady && (
                 <div className="p-3 rounded-md bg-yellow-100 text-yellow-800 text-sm border border-yellow-200">
                   {cameraError}
                 </div>
               )}
               {!capturedPreview ? (
                 <div className="w-full overflow-hidden rounded-lg border bg-black">
-                  <video ref={videoRef} className="w-full h-auto" playsInline muted />
+                  <video ref={videoRef} className="w-full h-auto" autoPlay playsInline muted />
                 </div>
               ) : (
                 <div className="w-full overflow-hidden rounded-lg border">
@@ -685,7 +705,7 @@ const UserAgeGateConsent = ({ open, onComplete, saving = false, mode = "DEFAULT"
               {!capturedPreview ? (
                 <button
                   type="button"
-                  disabled={saving || (!streamRef.current && !!cameraError)}
+                  disabled={saving || !isCameraReady}
                   onClick={capturePhoto}
                   className="w-full py-2.5 sm:py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-400 font-semibold text-sm sm:text-base transition"
                 >

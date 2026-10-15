@@ -4,7 +4,7 @@ import OfferLetterCard from "./OfferLetterCard";
 import { Skeleton } from "antd";
 
 const offerGridClassName =
-  "grid w-full gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))]";
+  "grid w-full gap-4 items-stretch [grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))]";
 
 const OfferLetters = () => {
   const [offers, setOffers] = useState([]);
@@ -68,7 +68,7 @@ const OfferLetters = () => {
       {loading && (
         <div className={offerGridClassName}>
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex flex-col h-full min-h-[420px] min-w-0 w-full p-4 border rounded shadow-sm bg-white">
+            <div key={i} className="flex flex-col min-w-0 w-full p-4 border rounded shadow-sm bg-white">
               <Skeleton active />
             </div>
           ))}

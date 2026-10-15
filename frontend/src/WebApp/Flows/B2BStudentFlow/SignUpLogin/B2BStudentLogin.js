@@ -100,12 +100,13 @@ const B2BStudentLogin = () => {
       const currentHost = window.location.hostname;
       const port = window.location.port ? `:${window.location.port}` : "";
       const protocol = window.location.protocol;
+      const authQueryParams = `?authToken=${encodeURIComponent(data.token)}${sessionRes?.data?.sessionId ? `&authSession=${encodeURIComponent(sessionRes.data.sessionId)}` : ""}`;
 
       if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-        window.location.href = `${protocol}//b2b.localhost${port}/user-main-page`;
+        window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
       } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.")) {
         const b2bHost = currentHost.replace(/^www\./, "");
-        window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page`;
+        window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
       } else {
         navigate("/user-main-page");
       }

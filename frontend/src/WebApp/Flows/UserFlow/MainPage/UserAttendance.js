@@ -71,7 +71,7 @@ const UserAttendance = () => {
           <p className="text-gray-500 font-medium">No active internships found to track attendance.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 w-full min-w-0">
           {acceptedOffers.map((offer) => {
             const iid = typeof offer.internshipId === "object" && offer.internshipId !== null
                 ? offer.internshipId._id || String(offer.internshipId)

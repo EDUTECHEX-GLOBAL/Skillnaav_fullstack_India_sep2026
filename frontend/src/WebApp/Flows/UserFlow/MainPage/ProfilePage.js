@@ -12,7 +12,7 @@ const ProfilePage = () => {
         <div className="max-w-4xl mx-auto px-4 flex gap-1 pt-3">
           <button
             onClick={() => setTab("basic")}
-            className={`px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all ${
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 transition-all ${
               tab === "basic"
                 ? "border-blue-600 text-blue-600 bg-blue-50"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -23,7 +23,7 @@ const ProfilePage = () => {
 
           <button
             onClick={() => setTab("career")}
-            className={`px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all ${
+            className={`px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 transition-all ${
               tab === "career"
                 ? "border-blue-600 text-blue-600 bg-blue-50"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"

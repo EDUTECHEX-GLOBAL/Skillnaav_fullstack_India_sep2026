@@ -2,12 +2,32 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const StudentProfile = require("../../models/webapp-models/SudentProfileModel");
 const Userwebapp = require("../../models/webapp-models/userModel");
 
-router.post("/generate/:userId", async (req, res) => {
+router.post(["/generate/:userId", "/generate"], async (req, res) => {
   try {
-    const { userId } = req.params;
+    let { userId } = req.params;
+
+    if (!userId || userId === "undefined" || userId === "null") {
+      userId = req.body?.userId;
+    }
+
+    if ((!userId || userId === "undefined" || userId === "null") && req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.replace(/^Bearer\s+/i, "");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.id || decoded._id || decoded.userId;
+      } catch (authErr) {
+        console.warn("Could not decode auth token in cv route:", authErr.message);
+      }
+    }
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ detail: "A valid User ID is required to generate a CV." });
+    }
 
     // Fetch both user and profile
     const [user, profile] = await Promise.all([
@@ -20,16 +40,23 @@ router.post("/generate/:userId", async (req, res) => {
     }
 
     // Flatten into the shape FastAPI CVRequest expects
-    const flatSkills = Array.isArray(user.skills)
-      ? user.skills
-      : [
-          ...(user.skills?.technical || []),
-          ...(user.skills?.soft || []),
-        ];
+    let flatSkills = [];
+    if (Array.isArray(user.skills)) {
+      flatSkills = user.skills
+        .map((s) => (typeof s === "object" ? s.name || s.skill || JSON.stringify(s) : String(s)))
+        .filter(Boolean);
+    } else if (user.skills && typeof user.skills === "object") {
+      flatSkills = [
+        ...(Array.isArray(user.skills.technical) ? user.skills.technical : []),
+        ...(Array.isArray(user.skills.soft) ? user.skills.soft : []),
+      ]
+        .map((s) => (typeof s === "object" ? s.name || s.skill || JSON.stringify(s) : String(s)))
+        .filter(Boolean);
+    }
 
     const payload = {
       // Flat personal fields from Userwebapp
-      name:           user.name           || "",
+      name:           user.name || user.username || "",
       email:          user.email          || "",
       phone:          user.phone          || "",
       linkedin:       user.linkedin       || "",
@@ -50,13 +77,14 @@ router.post("/generate/:userId", async (req, res) => {
 
     console.log("Sending to FastAPI:", JSON.stringify(payload, null, 2));
 
+    const fastapiBase = process.env.FASTAPI_BASE_URL || "http://localhost:8000";
     const fastapiRes = await axios.post(
-      `${process.env.FASTAPI_BASE_URL}/cv/generate`,
+      `${fastapiBase}/cv/generate`,
       payload,
       { responseType: "arraybuffer", timeout: 30000 }
     );
 
-    const safeName = (user.name || "Resume").replace(/\s+/g, "_");
+    const safeName = (user.name || user.username || "Resume").replace(/\s+/g, "_");
 
     res.set({
       "Content-Type": "application/pdf",
@@ -76,7 +104,7 @@ router.post("/generate/:userId", async (req, res) => {
     }
 
     res.status(err?.response?.status || 500).json({
-      detail: err.message || "CV generation failed.",
+      detail: err?.response?.data?.detail || err.message || "CV generation failed.",
     });
   }
 });

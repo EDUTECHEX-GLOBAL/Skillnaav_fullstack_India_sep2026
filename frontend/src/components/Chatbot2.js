@@ -213,6 +213,9 @@ const Chatbot2 = ({ featureIndex = [] }) => {
     setMessages((prev) => [...prev, userMsg]);
     setNewMsgIdx((prev) => (prev === null ? 0 : prev + 1));
     setInput("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "38px";
+    }
     setLoading(true);
 
     try {
@@ -254,6 +257,26 @@ const Chatbot2 = ({ featureIndex = [] }) => {
         .scrollbar-thin::-webkit-scrollbar { width: 4px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+        .chat-input-textarea {
+          height: 38px !important;
+          min-height: 38px !important;
+          max-height: 80px !important;
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 8px 12px !important;
+          background: transparent !important;
+          resize: none !important;
+          line-height: 20px !important;
+          font-size: 14px !important;
+          width: 100% !important;
+        }
+        .chat-input-textarea:focus {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
       `}</style>
 
       {/* ── Chat panel ── */}
@@ -271,8 +294,8 @@ const Chatbot2 = ({ featureIndex = [] }) => {
         }}
       >
         <div
-          className="w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
-          style={{ height: "520px" }}
+          className="w-[calc(100vw-32px)] max-w-[360px] sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
+          style={{ height: "min(520px, calc(100vh - 120px))" }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 flex-shrink-0">
@@ -354,17 +377,32 @@ const Chatbot2 = ({ featureIndex = [] }) => {
 
           {/* Input */}
           <div className="px-3 pb-3 pt-2 flex-shrink-0">
-            <div className={`flex items-center gap-2 bg-gray-50 border rounded-2xl px-3 py-2 transition-all duration-200 ${input ? "border-blue-400 ring-1 ring-blue-200" : "border-gray-200"}`}>
+            <div className={`flex items-center gap-1.5 bg-gray-50 border rounded-full px-2 py-1 transition-all duration-200 ${input ? "border-blue-500 ring-2 ring-blue-100 bg-white" : "border-gray-200"}`}>
               <textarea
                 ref={inputRef}
                 rows={1}
-                className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 resize-none outline-none leading-5 max-h-24 overflow-y-auto"
+                className="chat-input-textarea flex-1 text-gray-800 placeholder-gray-400 overflow-y-auto"
+                style={{
+                  height: "38px",
+                  minHeight: "38px",
+                  maxHeight: "80px",
+                  border: "none",
+                  outline: "none",
+                  boxShadow: "none",
+                  margin: 0,
+                  padding: "8px 12px",
+                  background: "transparent",
+                  resize: "none",
+                  lineHeight: "20px",
+                  fontSize: "14px",
+                  width: "100%",
+                }}
                 placeholder="Ask something…"
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
-                  e.target.style.height = "auto";
-                  e.target.style.height = Math.min(e.target.scrollHeight, 96) + "px";
+                  e.target.style.height = "38px";
+                  e.target.style.height = Math.min(Math.max(e.target.scrollHeight, 38), 80) + "px";
                 }}
                 onKeyDown={handleKeyDown}
                 disabled={loading}
@@ -372,20 +410,20 @@ const Chatbot2 = ({ featureIndex = [] }) => {
               <button
                 onClick={() => sendMessage()}
                 disabled={loading || !input.trim()}
-                className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 mr-0.5
                   ${input.trim() && !loading
-                    ? "bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-blue-200 hover:shadow-md active:scale-95"
-                    : "bg-gray-200 cursor-not-allowed opacity-60"
+                    ? "bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-blue-200 active:scale-95 text-white"
+                    : "bg-gray-200 cursor-not-allowed opacity-60 text-gray-400"
                   }`}
                 aria-label="Send"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />
                   <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
               </button>
             </div>
-            <p className="text-center text-gray-300 text-[10px] mt-1.5">Press Enter to send · Shift+Enter for new line</p>
+            <p className="text-center text-gray-400 text-[10px] mt-1 hidden sm:block">Press Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       </div>

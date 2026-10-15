@@ -318,16 +318,30 @@ router.post("/", async (req, res) => {
       ? location
       : [city, state, country].filter(Boolean).join(", ");
 
+    const sanitizeContactInfo = (ci) => {
+      if (!ci) return { name: "", email: "", phone: "" };
+      if (typeof ci === "string") return { name: ci.slice(0, 80), email: "", phone: "" };
+      return {
+        name: typeof ci.name === "string" ? ci.name.trim().slice(0, 80) : "",
+        email: typeof ci.email === "string" ? ci.email.trim().slice(0, 100) : "",
+        phone: typeof ci.phone === "string" ? ci.phone.trim().slice(0, 30) : "",
+      };
+    };
+
     const newInternship = new InternshipPosting({
-      jobTitle, companyName,
+      jobTitle: typeof jobTitle === "string" ? jobTitle.slice(0, 120) : jobTitle,
+      companyName: typeof companyName === "string" ? companyName.slice(0, 120) : companyName,
       location: composedLocation,
       country, state, city,
-      jobDescription, startDate, endDateOrDuration, duration,
+      jobDescription: typeof jobDescription === "string" ? jobDescription.slice(0, 5000) : jobDescription,
+      startDate, endDateOrDuration, duration,
       sector, internshipType,
       internshipMode: finalMode,
       classification,
       compensationDetails: finalComp,
-      qualifications, contactInfo, imgUrl, applicationOpen,
+      qualifications: Array.isArray(qualifications) ? qualifications.map((q) => String(q).slice(0, 60)) : qualifications,
+      contactInfo: sanitizeContactInfo(contactInfo),
+      imgUrl, applicationOpen,
       studentApplied: false,
       adminStatus: "pending",
       adminApproved: false,
@@ -373,14 +387,28 @@ router.put("/:id", async (req, res) => {
       $set.adminReviewed = false;
     }
 
-    if (jobTitle !== undefined) $set.jobTitle = jobTitle;
-    if (companyName !== undefined) $set.companyName = companyName;
-    if (jobDescription !== undefined) $set.jobDescription = jobDescription;
+    if (jobTitle !== undefined) $set.jobTitle = typeof jobTitle === "string" ? jobTitle.slice(0, 120) : jobTitle;
+    if (companyName !== undefined) $set.companyName = typeof companyName === "string" ? companyName.slice(0, 120) : companyName;
+    if (jobDescription !== undefined) $set.jobDescription = typeof jobDescription === "string" ? jobDescription.slice(0, 5000) : jobDescription;
     if (startDate !== undefined) $set.startDate = startDate;
     if (endDateOrDuration !== undefined) $set.endDateOrDuration = endDateOrDuration;
     if (duration !== undefined) $set.duration = duration;
-    if (qualifications !== undefined) $set.qualifications = qualifications;
-    if (contactInfo !== undefined) $set.contactInfo = contactInfo;
+    if (qualifications !== undefined) {
+      $set.qualifications = Array.isArray(qualifications) ? qualifications.map((q) => String(q).slice(0, 60)) : qualifications;
+    }
+    if (contactInfo !== undefined) {
+      if (!contactInfo) {
+        $set.contactInfo = { name: "", email: "", phone: "" };
+      } else if (typeof contactInfo === "string") {
+        $set.contactInfo = { name: contactInfo.slice(0, 80), email: "", phone: "" };
+      } else {
+        $set.contactInfo = {
+          name: typeof contactInfo.name === "string" ? contactInfo.name.trim().slice(0, 80) : "",
+          email: typeof contactInfo.email === "string" ? contactInfo.email.trim().slice(0, 100) : "",
+          phone: typeof contactInfo.phone === "string" ? contactInfo.phone.trim().slice(0, 30) : "",
+        };
+      }
+    }
     if (imgUrl !== undefined) $set.imgUrl = imgUrl;
     if (sector !== undefined) $set.sector = sector;
     if (classification !== undefined) $set.classification = classification;

@@ -53,7 +53,34 @@ const UserMainPageContent = () => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        let token = localStorage.getItem("userToken");
+        const incomingToken = searchParams.get("authToken") || searchParams.get("token");
+        const incomingSession = searchParams.get("authSession") || searchParams.get("sessionId");
+        const incomingStudentData = searchParams.get("studentData");
+
+        if (incomingToken) {
+          localStorage.setItem("userToken", incomingToken);
+          sessionStorage.setItem("userToken", incomingToken);
+          if (incomingSession) {
+            localStorage.setItem("sessionId", incomingSession);
+          }
+          if (incomingStudentData) {
+            try {
+              localStorage.setItem("studentInfo", incomingStudentData);
+            } catch (_) {}
+          }
+          // Clean sensitive auth query parameters from browser address bar
+          const newSearchParams = new URLSearchParams(window.location.search);
+          newSearchParams.delete("authToken");
+          newSearchParams.delete("token");
+          newSearchParams.delete("authSession");
+          newSearchParams.delete("sessionId");
+          newSearchParams.delete("studentData");
+          const cleanQuery = newSearchParams.toString();
+          const cleanUrl = `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}`;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+
+        let token = incomingToken || localStorage.getItem("userToken");
         if (!token) {
           token = sessionStorage.getItem("userToken");
           if (token) localStorage.setItem("userToken", token);
@@ -80,13 +107,28 @@ const UserMainPageContent = () => {
         localStorage.setItem("studentInfo", JSON.stringify(updatedUserInfo));
         window.dispatchEvent(new Event("userInfoUpdated"));
 
-        const reverifyRequested = !!consentRes.data?.data?.reverificationRequested;
-        setIsApproved(reverifyRequested ? false : profileRes.data.adminApproved);
+        const isSchoolAdminStudent = !!(
+          profileRes.data.schoolAdmin ||
+          profileRes.data.schoolAdminId ||
+          profileRes.data.isB2B
+        );
 
-        if (reverifyRequested) setShowReverifyModal(true);
+        const reverifyRequested = !!consentRes.data?.data?.reverificationRequested;
+
+        // School admin students are enrolled directly by their institution and go directly to the homepage
+        if (isSchoolAdminStudent) {
+          setIsApproved(true);
+        } else {
+          setIsApproved(reverifyRequested ? false : profileRes.data.adminApproved);
+          if (reverifyRequested) setShowReverifyModal(true);
+        }
 
         const openTab = searchParams.get("openTab");
-        if (openTab) handleSelectTab(openTab);
+        if (openTab) {
+          handleSelectTab(openTab);
+        } else if (isSchoolAdminStudent) {
+          handleSelectTab("home");
+        }
       } catch (error) {
         console.error("Failed to fetch user info:", error);
         localStorage.removeItem("userToken");
@@ -151,7 +193,11 @@ const UserMainPageContent = () => {
     <>
       <div className="flex flex-col h-screen font-poppins bg-gray-50">
         {/* Navbar */}
-        <Navbar onToggleSidebar={handleToggleSidebar} />
+        <Navbar
+          onToggleSidebar={handleToggleSidebar}
+          isSidebarOpen={isSidebarOpen}
+          onCloseSidebar={handleCloseSidebar}
+        />
 
         {/* Layout: Sidebar + Content */}
         <div className="flex flex-1 overflow-hidden relative">
@@ -199,7 +245,7 @@ const UserMainPageContent = () => {
 
             {/* Always render content underneath so blur shows something */}
             <div
-  className={!isApproved ? 'pointer-events-none select-none overflow-hidden h-full' : 'h-full'}
+  className={!isApproved ? 'pointer-events-none select-none overflow-hidden h-full w-full min-w-0' : 'h-full w-full min-w-0'}
   style={!isApproved ? { position: 'fixed', width: '100%' } : {}}
 >
   <BodyContent />
@@ -210,7 +256,7 @@ const UserMainPageContent = () => {
 
       {/* Upgrade popup */}
       {showUpgradePopup && (
-        <div className="fixed bottom-6 right-6 z-50 bg-white border border-purple-300 shadow-xl rounded-xl p-4 max-w-xs">
+        <div className="fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 z-50 bg-white border border-purple-300 shadow-xl rounded-xl p-4 max-w-xs sm:w-auto mx-auto sm:mx-0">
           <button
             onClick={handleDismissPopup}
             className="absolute top-2 right-3 text-gray-400 hover:text-gray-600 text-lg font-bold"
@@ -240,7 +286,7 @@ const UserMainPageContent = () => {
       {/* Chatbot widget */}
       {selectedTab !== "assessment" && (
         <>
-          <Chatbot />
+          <Chatbot isTextChatOpen={showTextChat} />
           {showTextChat && <UserTextChatbot onClose={() => setShowTextChat(false)} />}
         </>
       )}

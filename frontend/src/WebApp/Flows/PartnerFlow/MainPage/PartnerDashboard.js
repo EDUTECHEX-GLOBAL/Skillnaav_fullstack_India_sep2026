@@ -15,7 +15,11 @@ const PartnerDashboard = () => {
   return (
     <div className="flex flex-col h-screen font-poppins bg-gray-50">
       {/* Navbar */}
-      <Navbar onToggleSidebar={handleToggleSidebar} />
+      <Navbar
+        onToggleSidebar={handleToggleSidebar}
+        isSidebarOpen={isSidebarOpen}
+        onCloseSidebar={handleCloseSidebar}
+      />
 
       {/* Layout: Sidebar + Content */}
       <div className="flex flex-1 overflow-hidden relative">

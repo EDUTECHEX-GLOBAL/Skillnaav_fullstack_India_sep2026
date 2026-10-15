@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMapMarkerAlt,
-  faClock,
-  faIndianRupeeSign,
-  faHeart,
-  faGlobe,
-} from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "../../../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
 import Edutechexlogo from "../../../../assets/edutechex_logo_white (1).png";
-import { format } from "date-fns";
+import JobCardItem from "./JobCardItem";
 
 const Homeimage = "/Home-Image-Edutechex.png";
 
@@ -240,17 +232,6 @@ const Home = () => {
     }
   };
 
-  const calculatePostedTime = (date) => {
-    const postedDate = new Date(date);
-    const currentDate = new Date();
-    const differenceInDays = Math.floor(
-      (currentDate - postedDate) / (1000 * 60 * 60 * 24),
-    );
-    if (differenceInDays === 0) return "Today";
-    if (differenceInDays === 1) return "Yesterday";
-    return `${differenceInDays}d ago`;
-  };
-
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="font-poppins">
@@ -266,26 +247,26 @@ const Home = () => {
       ) : (
         // ── List view ────────────────────────────────────────────────────
         <>
-          {/* Header */}
-          <div className="relative w-full h-60">
+          {/* Header Banner */}
+          <div className="relative w-full rounded-none overflow-hidden shadow-sm bg-white mb-6 border border-gray-200 flex items-center justify-center">
             <img
               src={Homeimage}
-              alt="Finding Your Dream Job"
-              className="w-full h-full object-cover"
+              alt="Finding Your Dream Job Now Made Easier With Edutechex"
+              className="w-full h-auto object-contain block max-w-full rounded-none"
               fetchpriority="high"
-              width="1200"
-              height="240"
+              width="1132"
+              height="300"
             />
           </div>
 
           {/* Job cards */}
-          <section className="py-10 px-2 lg:px-4">
+          <section className="pt-2 pb-10 px-0 sm:px-2 lg:px-4">
             <h2 className="text-3xl font-bold mb-2">Find your next role</h2>
             <p className="text-gray-600 mb-6">
               Recommendations based on your profile
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 w-full min-w-0">
               {jobData.map((job) => {
                 const saved = savedJobs.some(
                   (savedJob) =>
@@ -295,155 +276,13 @@ const Home = () => {
                 );
 
                 return (
-                  <div
+                  <JobCardItem
                     key={job._id}
-                    className="relative border rounded-lg p-6 shadow-sm"
-                  >
-                    {/* Badge */}
-                    {job.internshipType && (
-                      <span
-                        className={`absolute top-2 right-2 px-3 py-1 text-xs font-semibold uppercase rounded-full ${
-                          job.internshipType === "FREE"
-                            ? "bg-green-100 text-green-700"
-                            : job.internshipType === "STIPEND"
-                              ? "bg-blue-100 text-blue-700"
-                              : job.internshipType === "PAID"
-                                ? "bg-red-100 text-red-700"
-                                : ""
-                        }`}
-                      >
-                        {job.internshipType}
-                      </span>
-                    )}
-
-                    {/* Save button */}
-                    <div className="absolute top-10 right-2">
-                      <button
-                        onClick={() => toggleSaveJob(job)}
-                        className={`transition ${
-                          saved
-                            ? "text-red-500"
-                            : "text-gray-500 hover:text-red-500"
-                        }`}
-                        aria-label={saved ? "Unsave job" : "Save job"}
-                      >
-                        <FontAwesomeIcon icon={faHeart} className="w-6 h-6" />
-                      </button>
-                    </div>
-
-                    {/* Company + title */}
-                    <div className="flex items-center mb-4">
-                      <img
-                        src={job.imgUrl}
-                        alt={`${job.companyName} logo`}
-                        className="w-12 h-12 rounded-full mr-4 object-cover"
-                        width="48"
-                        height="48"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/favicon-512x469.png";
-                        }}
-                      />
-                      <div className="flex-1 min-w-0 pr-12">
-                        <h3
-                          className="text-xl font-semibold truncate"
-                          title={job.jobTitle}
-                        >
-                          {job.jobTitle}
-                        </h3>
-                        <div className="flex items-center text-gray-600">
-                          <span className="truncate" title={job.companyName}>
-                            {job.companyName}
-                          </span>
-                          <span className="mx-1">•</span>
-                          <span className="whitespace-nowrap">
-                            {calculatePostedTime(job.createdAt)}
-                          </span>
-                        </div>
-                        {/*Remove "whitespace-nowrap" add "break-all" for alignment in tabs - 07-08-2026*/}
-                        <p className="text-xs text-gray-400 mt-1 break-all">
-                          ID: {job._id}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Meta */}
-                    <div className="text-gray-600 mb-4">
-                      <p>
-                        <FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location}{" "}
-                        {job.jobType}
-                      </p>
-                      <p className="flex items-center">
-                        <FontAwesomeIcon icon={faClock} className="mr-2" />
-                        {job.startDate
-                          ? format(new Date(job.startDate), "dd MMM yyyy")
-                          : "—"}{" "}
-                        –{" "}
-                        {job.endDateOrDuration
-                          ? format(
-                              new Date(job.endDateOrDuration),
-                              "dd MMM yyyy",
-                            )
-                          : "—"}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm md:text-base leading-none">
-                        <FontAwesomeIcon
-                          icon={faIndianRupeeSign}
-                          className="text-gray-600 w-4 h-4 flex-shrink-0"
-                        />
-                        <span className="leading-none">
-                          {job.internshipType === "STIPEND"
-                            ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency} per ${job.compensationDetails?.frequency?.toLowerCase()}`
-                            : job.internshipType === "FREE"
-                              ? "Unpaid / Free"
-                              : job.internshipType === "PAID"
-                                ? `Student Pays: ₹{job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
-                                : "N/A"}
-                        </span>
-                      </div>
-                      <p className="flex items-center mt-0">
-                        <FontAwesomeIcon
-                          icon={faGlobe}
-                          className="mr-2 text-gray-600"
-                        />
-                        <span className="font-medium text-gray-600">
-                          {job.internshipMode === "ONLINE"
-                            ? "Online"
-                            : job.internshipMode === "OFFLINE"
-                              ? "Offline"
-                              : "Hybrid"}
-                        </span>
-                      </p>
-                    </div>
-
-                    {/* Qualifications + View details */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-wrap gap-2">
-                        {job.qualifications &&
-                          job.qualifications.slice(0, 2).map((q, i) => (
-                            <span
-                              key={i}
-                              className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
-                            >
-                              {q}
-                            </span>
-                          ))}
-                        {job.qualifications &&
-                          job.qualifications.length > 2 && (
-                            <span className="text-sm bg-gray-100 text-gray-700 py-1 px-3 rounded-full">
-                              +{job.qualifications.length - 2}
-                            </span>
-                          )}
-                      </div>
-                      <button
-                        className="text-purple-600 hover:underline"
-                        onClick={() => handleViewDetails(job)}
-                      >
-                        View details
-                      </button>
-                    </div>
-                  </div>
+                    job={job}
+                    isSaved={saved}
+                    onToggleSave={toggleSaveJob}
+                    onViewDetails={handleViewDetails}
+                  />
                 );
               })}
             </div>

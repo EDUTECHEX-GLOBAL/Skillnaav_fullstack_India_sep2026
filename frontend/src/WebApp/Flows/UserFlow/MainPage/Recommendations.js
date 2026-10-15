@@ -171,7 +171,7 @@ const Recommendations = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 animate-pulse">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="border rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-3">
@@ -194,7 +194,7 @@ const Recommendations = () => {
 
   if (error) {
     return (
-      <div className="p-6 font-[Poppins]">
+      <div className="py-4 px-0 sm:p-6 w-full min-w-0 font-[Poppins]">
         <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
           <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-400 text-xl">!</div>
           <p className="text-red-600 font-medium">{error}</p>
@@ -205,7 +205,7 @@ const Recommendations = () => {
 
   if (!jobs.length) {
     return (
-      <div className="p-6 font-[Poppins]">
+      <div className="py-4 px-0 sm:p-6 w-full min-w-0 font-[Poppins]">
         <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
           <div className="text-4xl">🎯</div>
           <p className="text-gray-600 font-medium">No recommendations yet.</p>
@@ -225,7 +225,7 @@ const Recommendations = () => {
   const hasAiReasons = jobs.some(j => j.match_reason);
 
   return (
-    <div className="p-6 font-[Poppins]">
+    <div className="py-2 px-0 sm:py-4 sm:px-2 md:p-6 w-full min-w-0 font-[Poppins]">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -257,7 +257,7 @@ const Recommendations = () => {
 
       {/* AI badge — only shown when Claude actually returned match reasons */}
       {hasAiReasons && (
-        <div className="flex items-center gap-2.5 mb-5 px-4 py-2.5 bg-purple-50 border border-purple-100 rounded-xl w-fit">
+        <div className="flex items-center gap-2.5 mb-5 px-4 py-2.5 bg-purple-50 border border-purple-100 rounded-xl w-full sm:w-fit">
           <span className="text-purple-500 text-sm">✦</span>
           <p className="text-sm text-purple-700 font-medium">
             AI-personalised — ranked and explained for your profile

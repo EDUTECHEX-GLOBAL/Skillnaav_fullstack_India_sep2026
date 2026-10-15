@@ -8,7 +8,7 @@ import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
 
-const Navbar = ({ onToggleSidebar }) => {
+const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const { handleSelectTab, selectedTab } = useTabContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -82,7 +82,22 @@ const Navbar = ({ onToggleSidebar }) => {
     fetchNotifications();
   }, [userId]);
 
-  const handleUserClick = () => setIsDropdownOpen((prev) => !prev);
+  const handleUserClick = (e) => {
+    e?.stopPropagation();
+    if (onCloseSidebar) onCloseSidebar();
+    setIsDropdownOpen((prev) => !prev);
+  };
+
+  const handleHamburgerClick = () => {
+    setIsDropdownOpen(false);
+    if (onToggleSidebar) onToggleSidebar();
+  };
+
+  const handleNotificationClick = () => {
+    setIsDropdownOpen(false);
+    if (onCloseSidebar) onCloseSidebar();
+    handleSelectTab("notifications");
+  };
 
   const performLogout = () => {
     localStorage.removeItem("userToken");
@@ -155,6 +170,18 @@ const Navbar = ({ onToggleSidebar }) => {
     });
   };
 
+  // Close dropdown when mobile sidebar opens
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setIsDropdownOpen(false);
+    }
+  }, [isSidebarOpen]);
+
+  // Close dropdown on tab navigation
+  useEffect(() => {
+    setIsDropdownOpen(false);
+  }, [selectedTab]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -162,7 +189,11 @@ const Navbar = ({ onToggleSidebar }) => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const planStyles = {
@@ -177,7 +208,11 @@ const Navbar = ({ onToggleSidebar }) => {
     <div className="bg-white font-poppins border-b border-gray-200 sticky top-0 z-50 w-full">
       <div className="flex items-center justify-between px-4 sm:px-6 py-4">
         <div className="flex items-center space-x-4">
-          <button onClick={onToggleSidebar} className="text-gray-700 md:hidden">
+          <button
+            onClick={handleHamburgerClick}
+            className="text-gray-700 md:hidden p-1.5 focus:outline-none"
+            aria-label="Toggle navigation menu"
+          >
             <FontAwesomeIcon icon={faBars} className="text-xl" />
           </button>
           <img src={logo} alt="Edutechex Logo" className="h-10" />
@@ -188,7 +223,7 @@ const Navbar = ({ onToggleSidebar }) => {
           {/* 1st — Bell */}
           <div className="relative">
             <button
-              onClick={() => handleSelectTab("notifications")}
+              onClick={handleNotificationClick}
               className="relative focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition"
               aria-label="Open notifications"
             >
@@ -226,7 +261,7 @@ const Navbar = ({ onToggleSidebar }) => {
           {isDropdownOpen && (
             <div
               ref={dropdownRef}
-              className="absolute right-0 top-16 mt-2 bg-white shadow-xl rounded-xl border border-gray-200 z-50 w-auto min-w-[20rem]"
+              className="absolute right-0 top-16 mt-2 bg-white shadow-xl rounded-xl border border-gray-200 z-50 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[20rem] max-w-sm"
             >
               <div className="px-4 py-3 border-b rounded-t-xl">
                 <div className="flex items-center gap-2 text-black">

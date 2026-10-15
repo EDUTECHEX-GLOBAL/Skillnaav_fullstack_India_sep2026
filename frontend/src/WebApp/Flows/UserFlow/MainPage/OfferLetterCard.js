@@ -1293,7 +1293,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
   return (
     // NEW
-    <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-full min-h-[420px] min-w-0 w-full overflow-hidden">
+    <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col min-w-0 w-full overflow-hidden h-full">
 
       {/* 5. RENDER STIPEND MODAL */}
       {/* 5. RENDER STIPEND MODAL (Fixed) */}
@@ -1780,7 +1780,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                 <h3 className="text-sm font-semibold text-gray-900">
                   Contact Information
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">
+                <p className="mt-2 text-sm leading-6 text-gray-600 break-words break-all [overflow-wrap:anywhere]">
                   {job.contactInfo?.name || "Not provided"}
                   {job.contactInfo?.email ? `, ${job.contactInfo.email}` : ""}
                   {job.contactInfo?.phone ? `, ${job.contactInfo.phone}` : ""}
@@ -1804,7 +1804,8 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
 
 
-      <div className="mb-3 flex justify-end">
+      <div className="flex-1 flex flex-col">
+        <div className="mb-3 flex justify-end">
         <span
           className={`inline-flex max-w-full rounded-full px-3 py-1 text-xs font-medium leading-tight text-center whitespace-normal break-words ${offer.status === "Accepted"
             ? "bg-green-100 text-green-700"
@@ -1947,6 +1948,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
           <span className="text-xs font-bold text-emerald-700">Schedule Completed</span>
         </div>
       )}
+      </div>
 
       {/* VIEW SCHEDULE & LINK CALENDAR BUTTONS */}
       {offer.status.toLowerCase() === "accepted" && (
@@ -2137,7 +2139,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
 
       {/* ✅ ACTION BUTTONS */}
       {(offer.status.toLowerCase() === "sent" || isUnpaidAccepted) && !job.isDeleted && (
-        <div className="mt-auto space-y-4 pt-4">
+        <div className="mt-auto pt-4 space-y-3">
           {/* Status Indicator for STIPEND details */}
           {requiresStipendDetails && (
             <div

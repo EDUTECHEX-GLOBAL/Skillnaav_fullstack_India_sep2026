@@ -174,17 +174,16 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
       {/* Sidebar panel */}
       <div
         className={`
-          fixed md:sticky top-16
-          h-[calc(100vh-4rem)] bg-white shadow-lg font-poppins
-          z-[100] md:z-10
-          transform transition-all duration-300 ease-in-out
           ${
             isMobile
               ? isOpen
-                ? "translate-x-0 w-64"
-                : "-translate-x-full w-64"
-              : `translate-x-0 ${isDesktopOpen ? "w-64" : "w-14"}`
+                ? "fixed top-16 left-0 h-[calc(100vh-4rem)] z-[100] w-64 bg-white shadow-xl transform translate-x-0"
+                : "hidden"
+              : `sticky top-16 z-10 h-[calc(100vh-4rem)] bg-white shadow-lg ${
+                  isDesktopOpen ? "w-64" : "w-14"
+                }`
           }
+          font-poppins transition-all duration-300 ease-in-out
         `}
       >
         {/* Inner content — always 256px wide; parent clips when collapsed */}

@@ -14,7 +14,7 @@ import { io as ioClient } from "socket.io-client";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { partnerFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
 
-const Navbar = ({ onToggleSidebar }) => {
+const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const { handleSelectTab } = useTabContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -217,7 +217,12 @@ const Navbar = ({ onToggleSidebar }) => {
     });
   };
 
-  const handleUserClick = () => setIsDropdownOpen((prev) => !prev);
+  const handleUserClick = (e) => {
+    e?.stopPropagation();
+    setNotificationsOpen(false);
+    if (onCloseSidebar) onCloseSidebar();
+    setIsDropdownOpen((prev) => !prev);
+  };
 
   // Actual logout clears session and navigates away
   const performLogout = async () => {
@@ -300,6 +305,14 @@ const Navbar = ({ onToggleSidebar }) => {
     });
   };
 
+  // Close dropdowns when mobile sidebar opens
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setIsDropdownOpen(false);
+      setNotificationsOpen(false);
+    }
+  }, [isSidebarOpen]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -311,7 +324,11 @@ const Navbar = ({ onToggleSidebar }) => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const isPremiumExpired = userInfo.isPremium && userInfo.planType !== "Freemium" && userInfo.premiumExpiration && new Date(userInfo.premiumExpiration) <= new Date();
@@ -321,7 +338,15 @@ const Navbar = ({ onToggleSidebar }) => {
     <header className="bg-white font-poppins text-gray-800 py-3 sm:py-5 px-4 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center">
       {/* Left: Logo + hamburger */}
       <div className="flex items-center gap-3">
-        <button onClick={onToggleSidebar} className="md:hidden text-gray-700 focus:outline-none">
+        <button
+          onClick={() => {
+            setIsDropdownOpen(false);
+            setNotificationsOpen(false);
+            if (onToggleSidebar) onToggleSidebar();
+          }}
+          className="md:hidden text-gray-700 focus:outline-none p-1.5"
+          aria-label="Toggle navigation menu"
+        >
           <FontAwesomeIcon icon={faBars} className="text-xl" />
         </button>
         <img src={logo} alt="Edutechex Logo" className="h-8 sm:h-10 w-auto object-contain" width="120" height="56" />
@@ -351,7 +376,11 @@ const Navbar = ({ onToggleSidebar }) => {
         {/* Unread message notifications */}
         <div className="relative order-1" ref={notificationsRef}>
           <button
-            onClick={() => setNotificationsOpen((prev) => !prev)}
+            onClick={() => {
+              setIsDropdownOpen(false);
+              if (onCloseSidebar) onCloseSidebar();
+              setNotificationsOpen((prev) => !prev);
+            }}
             className="relative focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition"
             aria-label="Open unread message notifications"
           >
