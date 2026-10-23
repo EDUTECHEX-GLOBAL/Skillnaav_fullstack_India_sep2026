@@ -22,7 +22,7 @@ const TryforFree = () => {
     >
       <img
         src={edutechexlogo}
-        style={{ width: "210px", height: "auto" }}
+        style={{ width: "175px", height: "auto", marginBottom: "20px" }}
         alt="Edutechex Logo"
       />
 

@@ -5,6 +5,7 @@ import classroomImg from "../../../../assets-webapp/school-dashboard.png";
 import SchoolAdminForgotPassword from "./SchoolAdminForgotPassword";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "../../../../api/axiosInstance";
+import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
 
 const SchoolAdminLogin = () => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -13,6 +14,8 @@ const SchoolAdminLogin = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const navigate = useNavigate();
+  const { containerRef: googleBtnRef, buttonWidth: googleBtnWidth } =
+    useGoogleButtonWidth(384);
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -65,10 +68,10 @@ const SchoolAdminLogin = () => {
         />
       </div>
 
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-8">
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-white px-4 py-8 sm:p-8">
         <form
           onSubmit={handleLogin}
-          className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100"
+          className="w-full max-w-md bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100 my-auto"
         >
           <h2 className="text-3xl font-bold text-center mb-6 text-blue-700">
             School Admin Login
@@ -132,10 +135,12 @@ const SchoolAdminLogin = () => {
             <hr className="w-full border-gray-300" />
           </div>
 
-          <div className="flex justify-center mb-4">
+          <div ref={googleBtnRef} className="google-login-wrapper w-full mb-4">
             <GoogleLogin
-              width="400"
+              width={googleBtnWidth}
               size="large"
+              shape="rectangular"
+              text="signin_with"
               onSuccess={async (credentialResponse) => {
                 try {
                   const idToken = credentialResponse.credential;

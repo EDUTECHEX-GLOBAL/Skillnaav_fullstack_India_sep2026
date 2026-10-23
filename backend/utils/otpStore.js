@@ -2,7 +2,7 @@
 // Minimal in-memory OTP store with expiry and verified flag.
 
 const DEFAULT_TTL_MS =
-    (process.env.OTP_TTL_MIN ? Number(process.env.OTP_TTL_MIN) : 10) * 60 * 1000;
+    (process.env.OTP_TTL_MIN ? Number(process.env.OTP_TTL_MIN) : 5) * 60 * 1000;
 
 const store = new Map(); // email -> { code, expiresAt, verified, verifiedAt }
 

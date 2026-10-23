@@ -46,7 +46,7 @@ const schoolAdminSchema = new mongoose.Schema(
       contactPhone: { type: String },
       schoolType: {
         type: String,
-        enum: ["Public", "Catholic", "Private", "Charter"],
+        enum: ["Public", "Catholic", "Private", "Charter", "Government", "CBSE", "ICSE", "State Board", "International", "Other"],
       },
       schoolNumber: { type: String },
       languageOfInstruction: {

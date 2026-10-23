@@ -5,6 +5,7 @@ import { validateEmail, validateName, getEmailSuggestion } from "../utils/valida
 export default function Contact({ className = "" }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [organization, setOrganization] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -58,12 +59,14 @@ export default function Contact({ className = "" }) {
       await axios.post("/api/contact", {
         name,
         email,
+        organization,
         subject,
         message,
       });
       setSubmitted(true);
       setName("");
       setEmail("");
+      setOrganization("");
       setSubject("");
       setMessage("");
 
@@ -77,6 +80,7 @@ export default function Contact({ className = "" }) {
       setSubmitted(true);
       setName("");
       setEmail("");
+      setOrganization("");
       setSubject("");
       setMessage("");
 
@@ -295,8 +299,19 @@ export default function Contact({ className = "" }) {
             )}
           </div>
 
-          {/* Subject Field */}
+          {/* Organization / College Field (Optional) */}
           <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Organization / College / University (Optional)"
+                className="w-full py-3 px-4 bg-white rounded-md text-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                value={organization}
+                onChange={(e) => setOrganization(e.target.value)}
+              />
+            </div>
+
+            {/* Subject Field */}
+            <div className="mb-4">
             <input
               type="text"
               placeholder="Your Question About.."

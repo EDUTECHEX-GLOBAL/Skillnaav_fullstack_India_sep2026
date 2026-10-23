@@ -34,7 +34,7 @@ function TeamPage() {
   return (
     <>
    <Helmet>
-  <title>Our Team - Edutechex</title>
+  <title>Our Team - EDUTECHEX</title>
 
   <meta
     name="description"

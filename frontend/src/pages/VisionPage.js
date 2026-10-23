@@ -34,7 +34,7 @@ const VisionPage = () => {
   return (
     <div className="font-inter">
       <Helmet>
-        <title>Our Vision - Edutechex</title>
+        <title>Our Vision - EDUTECHEX</title>
 
         <meta
           name="description"

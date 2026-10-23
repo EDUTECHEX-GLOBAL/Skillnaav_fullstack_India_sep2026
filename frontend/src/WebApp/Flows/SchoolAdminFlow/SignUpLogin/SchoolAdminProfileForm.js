@@ -123,10 +123,10 @@ const SchoolAdminProfileForm = () => {
                 required
               >
                 <option value="">Select School Type</option>
-                <option value="Public">Public</option>
-                <option value="Catholic">Catholic</option>
                 <option value="Private">Private</option>
-                <option value="Charter">Charter</option>
+                <option value="Public">Public / Government</option>
+                <option value="Charter">Charter / Autonomous</option>
+                <option value="Catholic">Missionary / Minority</option>
               </select>
             </div>
 
@@ -147,7 +147,7 @@ const SchoolAdminProfileForm = () => {
               <input
                 type="text"
                 name="affiliation"
-                placeholder="Affiliation (e.g., TDSB)"
+                placeholder="Affiliation (e.g., CBSE, ICSE, State Board, AICTE)"
                 value={formData.affiliation}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md"
@@ -168,11 +168,11 @@ const SchoolAdminProfileForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">State / Union Territory</label>
               <input
                 type="text"
                 name="province"
-                placeholder="Province (e.g., Ontario)"
+                placeholder="State (e.g., Maharashtra, Karnataka, Delhi)"
                 value={formData.province}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-md"
@@ -181,15 +181,15 @@ const SchoolAdminProfileForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">PIN / Postal Code</label>
               <input
                 type="text"
                 name="postalCode"
-                placeholder="Postal Code (e.g., M5V 2T6)"
+                placeholder="PIN Code (e.g., 500081 or 110001)"
                 value={formData.postalCode}
                 onChange={handleChange}
-                pattern="[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d"
-                title="Format: A1A 1A1"
+                pattern="^[1-9][0-9]{5}$|^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$|^\d{5}(-\d{4})?$"
+                title="Format: 6-digit PIN code (e.g., 500081)"
                 className="w-full p-3 border border-gray-300 rounded-md"
                 required
               />
@@ -251,6 +251,8 @@ const SchoolAdminProfileForm = () => {
             >
               <option value="">Select Language</option>
               <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Bilingual">Bilingual / Regional</option>
             </select>
           </div>
         </div>

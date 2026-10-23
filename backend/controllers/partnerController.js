@@ -29,9 +29,9 @@ const generateOTP = () => {
 const checkEmailExists = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  if (!email) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
     res.status(400);
-    throw new Error("Email is required.");
+    throw new Error("Invalid email address.");
   }
 
   const partnerExists = await Partnerwebapp.findOne({ email });
@@ -45,9 +45,9 @@ const checkEmailExists = asyncHandler(async (req, res) => {
 const sendPartnerVerificationCode = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
     res.status(400);
-    throw new Error("Invalid email address.");
+    throw new Error("Invalid email address. Please provide an email with a valid domain.");
   }
 
   const existing = await Partnerwebapp.findOne({ email });
@@ -59,7 +59,7 @@ const sendPartnerVerificationCode = asyncHandler(async (req, res) => {
   }
 
   const otp = generateOTP();
-  const otpExpiration = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+  const otpExpiration = Date.now() + 5 * 60 * 1000; // OTP valid for 5 minutes
 
   // Store OTP in separate verification model
   await PartnerEmailVerification.findOneAndUpdate(
@@ -120,6 +120,22 @@ const registerPartner = asyncHandler(async (req, res) => {
   ) {
     res.status(400);
     throw new Error("Please fill all required text fields.");
+  }
+
+  const institutionNameRegex = /^[A-Za-z][A-Za-z0-9\s.,'&/()\-]{1,59}$/;
+  if (!institutionNameRegex.test(universityName?.trim())) {
+    res.status(400);
+    throw new Error(
+      "Invalid University or Company name. Must start with a letter and contain only letters, numbers, spaces, and basic punctuation.",
+    );
+  }
+
+  const institutionIdRegex = /^[A-Za-z0-9\-_]{3,25}$/;
+  if (!institutionIdRegex.test(institutionId?.trim())) {
+    res.status(400);
+    throw new Error(
+      "Invalid Institutional ID. Must be between 3 and 25 alphanumeric characters, hyphens, or underscores.",
+    );
   }
 
   // 2. Check for required file upload
@@ -272,6 +288,22 @@ const completePartnerProfile = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error(
       "University/Company name and Institutional ID are required.",
+    );
+  }
+
+  const institutionNameRegex = /^[A-Za-z][A-Za-z0-9\s.,'&/()\-]{1,59}$/;
+  if (!institutionNameRegex.test(universityName?.trim())) {
+    res.status(400);
+    throw new Error(
+      "Invalid University or Company name. Must start with a letter and contain only letters, numbers, spaces, and basic punctuation.",
+    );
+  }
+
+  const institutionIdRegex = /^[A-Za-z0-9\-_]{3,25}$/;
+  if (!institutionIdRegex.test(institutionId?.trim())) {
+    res.status(400);
+    throw new Error(
+      "Invalid Institutional ID. Must be between 3 and 25 alphanumeric characters, hyphens, or underscores.",
     );
   }
 

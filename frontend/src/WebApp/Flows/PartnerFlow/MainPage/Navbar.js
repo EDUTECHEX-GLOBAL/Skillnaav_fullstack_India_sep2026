@@ -1,7 +1,7 @@
 // frontend/src/WebApp/Flows/PartnerFlow/MainPage/Navbar.jsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSignOutAlt, faBars, faBell } from "@fortawesome/free-solid-svg-icons";
+import { faSignOutAlt, faBars, faBell, faUser } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../../assets/Edutech-logo.png";
 import defaultCompanyLogo from "../../../../assets/default-company-logo.png";
 
@@ -103,8 +103,20 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
       setUserInfo((prev) => ({ ...prev, ...updatedUser }));
     } catch (error) {
       console.error("Failed to fetch premium status:", error);
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("partnerToken");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("userInfo");
+        localStorage.removeItem("partnerInfo");
+        localStorage.removeItem("adminApproved");
+        localStorage.removeItem("partnerId");
+        localStorage.removeItem("loginTime");
+        sessionStorage.removeItem("partnerSelectedTab");
+        navigate("/partner/login");
+      }
     }
-  }, []);
+  }, [navigate]);
 
   // Sync on mount, on tab focus, on localStorage change, and on custom partnerUpdated events
   useEffect(() => {
@@ -335,25 +347,29 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const displayPlan = isPremiumExpired ? "Expired" : (userInfo.planType || "Loading");
 
   return (
-    <header className="bg-white font-poppins text-gray-800 py-3 sm:py-5 px-4 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center">
+    <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2">
       {/* Left: Logo + hamburger */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
         <button
           onClick={() => {
             setIsDropdownOpen(false);
             setNotificationsOpen(false);
             if (onToggleSidebar) onToggleSidebar();
           }}
-          className="md:hidden text-gray-700 focus:outline-none p-1.5"
+          className="md:hidden w-10 h-10 rounded-full border border-gray-200 bg-white text-teal-600 hover:bg-teal-50 transition flex items-center justify-center shadow-sm shrink-0"
           aria-label="Toggle navigation menu"
         >
-          <FontAwesomeIcon icon={faBars} className="text-xl" />
+          <FontAwesomeIcon icon={faBars} className="text-lg" />
         </button>
-        <img src={logo} alt="Edutechex Logo" className="h-8 sm:h-10 w-auto object-contain" width="120" height="56" />
+        <img
+          src={logo}
+          alt="Edutechex Logo"
+          className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+        />
       </div>
 
       {/* Right: User info + dropdown */}
-      <div className="relative flex items-center gap-2 sm:gap-3 ml-auto">
+      <div className="relative flex items-center gap-2 sm:gap-3 ml-auto shrink-0">
         {userInfo.name && (
           <div className="order-2 hidden sm:flex flex-col items-end min-w-[90px] min-h-[40px] justify-center">
             <span className="text-gray-800 text-sm">{userInfo.name}</span>
@@ -381,10 +397,10 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
               if (onCloseSidebar) onCloseSidebar();
               setNotificationsOpen((prev) => !prev);
             }}
-            className="relative focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition"
+            className="relative focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition shrink-0"
             aria-label="Open unread message notifications"
           >
-            <FontAwesomeIcon icon={faBell} className="w-4 h-4 text-gray-600" />
+            <FontAwesomeIcon icon={faBell} className="text-gray-700 text-lg" />
             {unreadSummary.totalUnread > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-bold flex items-center justify-center border-2 border-white">
                 {unreadSummary.totalUnread > 99 ? "99+" : unreadSummary.totalUnread}
@@ -446,12 +462,16 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
         </div>
 
         {/* Profile image / fallback icon */}
-        <button onClick={handleUserClick} className="order-3 focus:outline-none w-10 h-10 flex items-center justify-center flex-shrink-0">
-          <img
-            src={userInfo.profileImage || defaultCompanyLogo}
-            alt="Profile"
-            className="w-10 h-10 rounded-full object-cover border border-gray-300"
-          />
+        <button onClick={handleUserClick} className="order-3 focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition shrink-0 overflow-hidden">
+          {userInfo.profileImage ? (
+            <img
+              src={userInfo.profileImage}
+              alt="Profile"
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <FontAwesomeIcon icon={faUser} className="text-gray-700 text-lg" />
+          )}
         </button>
 
         {/* Dropdown */}

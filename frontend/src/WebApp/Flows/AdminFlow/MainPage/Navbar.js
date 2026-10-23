@@ -88,13 +88,13 @@ const Navbar = ({ onToggleSidebar, showMenuToggle }) => {
   };
 
   return (
-    <header className="h-[90px] bg-white border-b border-gray-200 px-4 lg:px-6 flex items-center justify-between shadow-sm shrink-0">
+    <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2">
       {/* Left */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
         {/* Mobile Hamburger only */}
         <button
           onClick={onToggleSidebar}
-          className={`${showMenuToggle ? "flex" : "hidden"} w-10 h-10 rounded-full border border-gray-200 bg-white text-teal-600 hover:bg-teal-50 transition items-center justify-center shadow-sm`}
+          className={`${showMenuToggle ? "flex" : "hidden"} w-10 h-10 rounded-full border border-gray-200 bg-white text-teal-600 hover:bg-teal-50 transition items-center justify-center shadow-sm shrink-0`}
         >
           <FontAwesomeIcon icon={faBars} className="text-lg" />
         </button>
@@ -102,8 +102,8 @@ const Navbar = ({ onToggleSidebar, showMenuToggle }) => {
         {/* Logo */}
         <img
           src={logo}
-          alt="Edutechex"
-          className="h-11 object-contain"
+          alt="Edutechex Logo"
+          className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
         />
       </div>
 

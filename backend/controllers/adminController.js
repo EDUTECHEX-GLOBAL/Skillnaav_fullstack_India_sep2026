@@ -86,9 +86,9 @@ const loginUser = async (req, res) => {
     // ✅ Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // ✅ Hash OTP + store expiry (10 minutes)
+    // ✅ Hash OTP + store expiry (5 minutes)
     user.loginOtpHash = await bcrypt.hash(otp, 10);
-    user.loginOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    user.loginOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
     // ✅ Respond immediately (no token yet)
@@ -144,8 +144,8 @@ const forgotPassword = async (req, res) => {
     if (user.resetPasswordOtpExpires) {
       const expiryTime = new Date(user.resetPasswordOtpExpires).getTime();
 
-      // OTP was originally created 10 minutes before expiry
-      const otpCreatedAt = expiryTime - 10 * 60 * 1000;
+      // OTP was originally created 5 minutes before expiry
+      const otpCreatedAt = expiryTime - 5 * 60 * 1000;
 
       const elapsedTime = now - otpCreatedAt;
 
@@ -162,10 +162,10 @@ const forgotPassword = async (req, res) => {
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Hash OTP and store with expiry (10 minutes)
+    // Hash OTP and store with expiry (5 minutes)
     const otpHash = await bcrypt.hash(otp, 10);
     user.resetPasswordOtpHash = otpHash;
-    user.resetPasswordOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    user.resetPasswordOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
     // ✅ Respond immediately (fast)
@@ -262,13 +262,13 @@ const resendLoginOtp = async (req, res) => {
     }
 
     // Prevent repeated resend requests within 60 seconds.
-    // loginOtpExpires is set to 10 minutes from the time the OTP was created.
+    // loginOtpExpires is set to 5 minutes from the time the OTP was created.
     const now = Date.now();
     const expiryTime = user.loginOtpExpires
       ? new Date(user.loginOtpExpires).getTime()
       : 0;
 
-    const otpCreatedAt = expiryTime - 10 * 60 * 1000;
+    const otpCreatedAt = expiryTime - 5 * 60 * 1000;
 
     if (expiryTime > now && now - otpCreatedAt < 60 * 1000) {
       const remainingSeconds = Math.ceil(
@@ -284,9 +284,9 @@ const resendLoginOtp = async (req, res) => {
     // Generate a new 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Hash OTP and store new expiry
+    // Hash OTP and store new expiry (5 minutes)
     user.loginOtpHash = await bcrypt.hash(otp, 10);
-    user.loginOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    user.loginOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
     await user.save();
 
@@ -392,7 +392,7 @@ const requestChangePasswordOtp = async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.resetPasswordOtpHash = await bcrypt.hash(otp, 10);
-    user.resetPasswordOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    user.resetPasswordOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
     res.status(200).json({ message: "OTP sent to your email." });

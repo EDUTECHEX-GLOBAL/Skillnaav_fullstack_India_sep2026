@@ -6,7 +6,7 @@ const StipendDetailsModal = ({ visible, onClose, onSubmit }) => {
     bankAccountName: "",
     bankAccountNumber: "",
     ifscOrSwift: "",
-    preferredCurrency: "USD",
+    preferredCurrency: "INR",
     notes: ""
   });
 
@@ -253,9 +253,9 @@ const StipendDetailsModal = ({ visible, onClose, onSubmit }) => {
               value={form.preferredCurrency}
               onChange={handleCurrencyChange}
             >
+              <option value="INR">INR (₹)</option>
               <option value="USD">USD ($)</option>
               <option value="CAD">CAD (C$)</option>
-              <option value="INR">INR (₹)</option>
               <option value="EUR">EUR (€)</option>
             </select>
           </div>

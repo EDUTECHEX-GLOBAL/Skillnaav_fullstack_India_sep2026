@@ -821,7 +821,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
   const requiresPayment = job?.internshipType === "PAID";
   const requiresStipendDetails = job?.internshipType === "STIPEND";
   const paymentAmount = job?.compensationDetails?.amount || 0;
-  const currency = String(job?.compensationDetails?.currency || "USD").toUpperCase();
+  const currency = String(job?.compensationDetails?.currency || "INR").toUpperCase();
 
   const isUnpaidAccepted =
     offer?.status?.toLowerCase() === "accepted" &&

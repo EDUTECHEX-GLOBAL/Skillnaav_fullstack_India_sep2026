@@ -34,7 +34,7 @@ function FeaturesPage() {
   return (
     <>
      <Helmet>
-  <title>Features - Edutechex</title>
+  <title>Features - EDUTECHEX</title>
 
   <meta
     name="description"

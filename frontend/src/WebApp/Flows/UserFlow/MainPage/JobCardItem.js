@@ -78,8 +78,8 @@ const JobCardItem = ({
     rawMode.charAt(0).toUpperCase() + rawMode.slice(1).toLowerCase();
 
   // Compensation details
-  const currency = job.compensationDetails?.currency || "";
-  const isRupee = currency.toUpperCase() === "INR" || currency === "₹";
+  const currency = job.compensationDetails?.currency || "INR";
+  const isRupee = !currency || currency.toUpperCase() === "INR" || currency === "₹";
   let compensationText = "Unpaid / Free";
   let useRupeeIcon = isRupee;
 
@@ -91,12 +91,16 @@ const JobCardItem = ({
     const freq = job.compensationDetails?.frequency
       ? ` / ${job.compensationDetails.frequency.toLowerCase().replace(/_/g, " ")}`
       : " / month";
-    const currSym = isRupee ? "₹" : "$";
+    const currSym = isRupee
+      ? "₹"
+      : (currency.toUpperCase() === "USD" || currency.toUpperCase() === "CAD")
+      ? "$"
+      : (currency.toUpperCase() === "EUR" ? "€" : (currency.toUpperCase() === "GBP" ? "£" : "₹"));
     compensationText = `${currSym}${amount}${freq}`;
   } else if (type === "PAID") {
     const amount = job.compensationDetails?.amount ?? "";
     const currSym = isRupee ? "₹" : "";
-    const currCode = !isRupee && currency ? ` ${currency}` : (!isRupee ? " USD" : "");
+    const currCode = !isRupee && currency ? ` ${currency}` : "";
     compensationText = `Student Pays: ${currSym}${amount}${currCode}`;
   }
 

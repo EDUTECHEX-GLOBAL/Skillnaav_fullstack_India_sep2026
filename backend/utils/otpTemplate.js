@@ -11,7 +11,7 @@ const generateOtpEmailHtml = (otp, type = "signing in to your Edutechex account"
       ${otpBlocks}
     </div>
     
-    <p style="color: #f43f5e; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin: 15px 0 20px;">EXPIRES IN 10 MINUTES</p>
+    <p style="color: #f43f5e; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin: 15px 0 20px;">EXPIRES IN 5 MINUTES</p>
     
     <a href="${process.env.FRONTEND_BASE_URL || 'https://edutechex.com'}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(90deg, #d946ef, #f97316); color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);">
       Open Edutechex

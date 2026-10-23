@@ -205,29 +205,33 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   if (selectedTab === "assessment") return null;
 
   return (
-    <div className="bg-white font-poppins border-b border-gray-200 sticky top-0 z-50 w-full">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4">
-        <div className="flex items-center space-x-4">
+    <>
+      <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 w-full">
+      <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
           <button
             onClick={handleHamburgerClick}
-            className="text-gray-700 md:hidden p-1.5 focus:outline-none"
+            className="md:hidden w-10 h-10 rounded-full border border-gray-200 bg-white text-teal-600 hover:bg-teal-50 transition flex items-center justify-center shadow-sm shrink-0"
             aria-label="Toggle navigation menu"
           >
-            <FontAwesomeIcon icon={faBars} className="text-xl" />
+            <FontAwesomeIcon icon={faBars} className="text-lg" />
           </button>
-          <img src={logo} alt="Edutechex Logo" className="h-10" />
+          <img
+            src={logo}
+            alt="Edutechex Logo"
+            className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+          />
         </div>
 
-        <div className="relative flex items-center space-x-5">
+        <div className="relative flex items-center gap-2 sm:gap-4 shrink-0">
 
           {/* 1st — Bell */}
           <div className="relative">
             <button
               onClick={handleNotificationClick}
-              className="relative focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition"
+              className="relative focus:outline-none w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition shrink-0"
               aria-label="Open notifications"
             >
-              <FontAwesomeIcon icon={faBell} className="w-4 h-4 text-gray-600" />
+              <FontAwesomeIcon icon={faBell} className="text-gray-700 text-lg" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-bold flex items-center justify-center border-2 border-white">
                   {unreadCount > 99 ? "99+" : unreadCount}
@@ -251,10 +255,12 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
               <img
                 src={getProfileImageUrl(userInfo.profileImage)}
                 alt="Profile"
-                className="w-9 h-9 rounded-full object-cover cursor-pointer shadow-md border-2 border-purple-300 hover:scale-105"
+                className="w-10 h-10 rounded-full object-cover cursor-pointer shadow-sm border border-gray-200 hover:scale-105"
               />
             ) : (
-              <FontAwesomeIcon icon={faUser} className="w-8 h-8 text-gray-800 cursor-pointer" />
+              <button className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition flex items-center justify-center cursor-pointer">
+                <FontAwesomeIcon icon={faUser} className="text-gray-700 text-lg" />
+              </button>
             )}
           </div>
 
@@ -288,7 +294,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
           )}
 
         </div>
-      </div>
+      </header>
 
       {showLogoutModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
@@ -316,7 +322,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

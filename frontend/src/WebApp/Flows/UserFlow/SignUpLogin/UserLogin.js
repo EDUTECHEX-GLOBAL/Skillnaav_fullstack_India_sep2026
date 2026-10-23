@@ -12,6 +12,7 @@ import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "../../../../api/axiosInstance";
 import { validateEmail } from "../../../../utils/validators";
+import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -62,6 +63,8 @@ const UserLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { containerRef: googleBtnRef, buttonWidth: googleBtnWidth } =
+    useGoogleButtonWidth(384);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -148,8 +151,8 @@ const UserLogin = () => {
       </div>
 
       {/* Right Section (Form) */}
-      <div className="flex flex-col items-center justify-center p-6 sm:p-8 w-full lg:w-1/2">
-        <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
+      <div className="flex flex-col items-center justify-center px-4 py-8 sm:p-8 w-full lg:w-1/2">
+        <div className="w-full max-w-md flex flex-col justify-center my-auto py-4">
           <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
             Dear Student, Welcome!
           </h1>
@@ -196,7 +199,7 @@ const UserLogin = () => {
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
+                      className="absolute inset-y-0 right-4 flex items-center justify-center text-gray-500 hover:text-gray-700 focus:outline-none"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       <FontAwesomeIcon
@@ -239,8 +242,10 @@ const UserLogin = () => {
             <hr className="w-full border-gray-300" />
           </div>
 
-          <GoogleLogin
-            onSuccess={async (credentialResponse) => {
+          <div ref={googleBtnRef} className="google-login-wrapper w-full">
+            <GoogleLogin
+              width={googleBtnWidth}
+              onSuccess={async (credentialResponse) => {
               try {
                 const idToken = credentialResponse.credential;
 
@@ -294,7 +299,11 @@ const UserLogin = () => {
               }
             }}
             onError={() => setError("Google login failed")}
+            size="large"
+            text="signin_with"
+            shape="rectangular"
           />
+          </div>
 
           <div className="flex justify-center mt-4">
             <p className="text-sm text-gray-600">

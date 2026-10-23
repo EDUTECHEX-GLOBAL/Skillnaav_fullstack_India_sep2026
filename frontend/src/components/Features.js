@@ -5,6 +5,9 @@ import Aerospace from "../assets/aerospace.jpg";
 import BlueButton from "../assets/blue-button.svg";
 import PinkButton from "../assets/pink-button.svg";
 import GreenButton from "../assets/green-button.svg";
+import PersonalizedCareerImg from "../assets/wmremove-transformed (14).jpeg";
+import InternshipMatchingImg from "../assets/WhatsApp Image 2026-10-16 at 10.22.55 AM.jpeg";
+import { staticFeaturesData } from "../data/websiteContentData";
 
 const buttonImages = {
   blue: BlueButton,
@@ -12,21 +15,15 @@ const buttonImages = {
   green: GreenButton,
 };
 
-// Define placeholder image sources
-const imageSources = ["../assets/Feature3Img.png", "../assets/Feature4Img.png"];
-
 const Features = () => {
   const { edutechexData } = useSelector((state) => state.root);
 
-  if (
-    !edutechexData ||
-    !edutechexData.features ||
-    edutechexData.features.length === 0
-  ) {
-    return null;
-  }
+  const rawFeatures =
+    edutechexData?.features?.length > 0
+      ? edutechexData.features
+      : staticFeaturesData;
 
-  const featuresData = edutechexData.features.map((feature, index) => {
+  const featuresData = rawFeatures.map((feature, index) => {
     const buttonColor =
       index === 0
         ? "text-blue-600"
@@ -39,14 +36,20 @@ const Features = () => {
         : index === 1
         ? buttonImages.pink
         : buttonImages.green;
-    const imgSrc =
-      index < imageSources.length ? imageSources[index] : Aerospace;
+    let featureImg;
+    if (index === 0 || feature.feature === "Personalized Career Pathways") {
+      featureImg = PersonalizedCareerImg;
+    } else if (index === 1 || feature.feature === "Internship Matching System") {
+      featureImg = InternshipMatchingImg;
+    } else {
+      featureImg = feature.featureImg || Aerospace;
+    }
 
     return {
       ...feature,
       buttonColor,
       buttonImg,
-      imgSrc,
+      featureImg,
     };
   });
 
@@ -66,7 +69,7 @@ const Features = () => {
             <img
               src={feature.featureImg}
               alt={`Feature ${index + 1}`}
-              className="w-full object-cover"
+              className="w-full object-cover rounded-xl shadow-md"
             />
           </div>
           <div className="sm:w-1/2 lg:py-8 lg:px-12">
@@ -85,26 +88,20 @@ const Features = () => {
                 feature.point2,
                 feature.point3,
                 feature.point4,
-              ].map((point, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center gap-2 text-gray-700 lg:text-lg"
-                >
-                  <span>
-                    <img src={Check} alt="Check" />
-                  </span>
-                  {point}
-                </li>
-              ))}
+              ]
+                .filter(Boolean)
+                .map((point, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2 text-gray-700 lg:text-lg"
+                  >
+                    <span>
+                      <img src={Check} alt="Check" />
+                    </span>
+                    {point}
+                  </li>
+                ))}
             </ul>
-            {/* <p
-              className={`flex items-center gap-5 pt-8 text-base lg:text-lg font-medium ${feature.buttonColor}`}
-            >
-              Learn More
-              <span>
-                <img src={feature.buttonImg} alt="Button" />
-              </span>
-            </p> */}
           </div>
         </div>
       ))}

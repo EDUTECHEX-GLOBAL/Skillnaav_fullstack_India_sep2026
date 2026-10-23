@@ -7,6 +7,7 @@ const navLinks = [
   { name: "Discover", href: "/" }, // homepage
   { name: "Vision", href: "/vision" },   // keep inside home
   { name: "Features", href: "/features" },
+  { name: "Team", href: "/team" },
   { name: "Pricing", href: "/pricing" },
   { name: "FAQs", href: "/faqs" },
   { name: "Contact", href: "/contact" },
@@ -22,11 +23,11 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white z-50">
-      <div className="flex items-center justify-between px-5 py-4 lg:container lg:mx-auto lg:px-20">
-        <div className="flex items-center gap-x-5">
-          <a href="/" aria-label="Home">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5 lg:container lg:mx-auto lg:px-20">
+        <div className="flex items-center gap-x-3 sm:gap-x-5 pl-0 sm:pl-3 min-w-0">
+          <a href="/" aria-label="Home" className="flex items-center min-w-0">
             <img
-              className="w-[150px]"
+              className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2 mt-1 sm:mt-1.5"
               src={EdutechexLogo}
               alt="Edutechex Logo"
             />

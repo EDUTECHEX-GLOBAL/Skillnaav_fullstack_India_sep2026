@@ -1,4 +1,5 @@
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const Userwebapp = require("../models/webapp-models/userModel");
 const Partnerwebapp = require("../models/webapp-models/partnerModel");
 const InternshipModel = require("../models/webapp-models/internshipPostModel");
@@ -142,25 +143,29 @@ const getDashboardCounts = asyncHandler(async (req, res) => {
   // Basic counts
   const usersCount = await Userwebapp.countDocuments(dateMatch);
   const partnersCount = await Partnerwebapp.countDocuments(dateMatch);
-  const paymentsCount = await PaymentModel.countDocuments(dateMatch);
+  const db = mongoose.connection.db;
+  const [p1, p2, p3, p4] = await Promise.all([
+    db.collection("payments").find(dateMatch || {}).toArray(),
+    db.collection("partnerpayments").find(dateMatch || {}).toArray(),
+    db.collection("internshippayments").find(dateMatch || {}).toArray(),
+    db.collection("schooladminpayments").find(dateMatch || {}).toArray(),
+  ]);
+  const allPaymentsCombined = [...p1, ...p2, ...p3, ...p4];
+  const paymentsCount = allPaymentsCombined.length;
   const internshipsCount = await InternshipModel.countDocuments(dateMatch);
   const applicationsCount =
     await ApplicationModel.countDocuments(applicationDateMatch); // Total applications
 
-  // 🔹 Total Revenue Calculation
-  const totalRevenueAgg = await PaymentModel.aggregate([
-    {
-      $match: dateMatch,
-    },
-    {
-      $group: {
-        _id: null,
-        totalRevenue: { $sum: { $toDouble: "$amount" } }, // Convert amount to number
-      },
-    },
-  ]);
-  const totalRevenue =
-    totalRevenueAgg.length > 0 ? totalRevenueAgg[0].totalRevenue : 0;
+  // 🔹 Total Revenue Calculation from all platform payments
+  const totalRevenue = allPaymentsCombined
+    .filter(
+      (p) =>
+        p.status === "COMPLETED" ||
+        p.status === "Success" ||
+        (p.paymentId && p.paymentId.startsWith("pay_")) ||
+        (p.razorpayPaymentId && p.razorpayPaymentId.startsWith("pay_"))
+    )
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
   const monthlyRevenue = await getMonthlyRevenue(dateMatch);
 

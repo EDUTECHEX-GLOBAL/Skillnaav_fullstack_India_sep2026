@@ -205,8 +205,11 @@ const Applications = () => {
   };
 
   const getCompensationText = (job) => {
-    if (job?.internshipType === "STIPEND")
-      return `$${job?.compensationDetails?.amount} ${job?.compensationDetails?.currency} / ${job?.compensationDetails?.frequency?.toLowerCase() || "mo"}`;
+    if (job?.internshipType === "STIPEND") {
+      const cur = (job?.compensationDetails?.currency || "INR").toUpperCase();
+      const sym = (cur === "USD" || cur === "CAD") ? "$" : (cur === "EUR" ? "€" : (cur === "GBP" ? "£" : "₹"));
+      return `${sym}${job?.compensationDetails?.amount || "—"} ${cur} / ${job?.compensationDetails?.frequency?.toLowerCase() || "mo"}`;
+    }
     if (job?.internshipType === "FREE") return "Unpaid / Free";
     if (job?.internshipType === "PAID")
       return `Student Pays: ₹${job?.compensationDetails?.amount}`;

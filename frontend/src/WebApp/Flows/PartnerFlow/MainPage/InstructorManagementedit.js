@@ -34,7 +34,8 @@ const IN_STATES = [
   "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
-const TIMEZONES_US_MX = [
+const TIMEZONES = [
+  "Asia/Kolkata",
   "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
   "America/Phoenix", "America/Anchorage", "America/Honolulu",
   "America/Toronto", "America/Vancouver", "America/Edmonton", "America/Winnipeg",
@@ -181,7 +182,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
   const [availStart, setAvailStart] = useState(item?.availableStart || "");
   const [availEnd, setAvailEnd] = useState(item?.availableEnd || "");
-  const [tz, setTz] = useState(item?.timezone || "America/Los_Angeles");
+  const [tz, setTz] = useState(item?.timezone || "Asia/Kolkata");
 
   const [prefSlots, setPrefSlots] = useState(
     Array.isArray(item?.preferableSlots)
@@ -800,9 +801,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                   value={tz}
                   onChange={(e) => setTz(e.target.value)}
                 >
-                  {TIMEZONES_US_MX.map((z) => (
+                  {TIMEZONES.map((z) => (
                     <option key={z} value={z}>
-                      {z}
+                      {z === "Asia/Kolkata" ? "Asia/Kolkata (IST)" : z}
                     </option>
                   ))}
                 </select>

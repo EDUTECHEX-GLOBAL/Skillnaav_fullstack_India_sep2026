@@ -13,6 +13,8 @@ import {
 import axios from "../../../../api/axiosInstance";
 import * as XLSX from 'xlsx';
 import CreateMeetingLink from './CreateMeetingLink';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const isPastDate = (dateString) => {
   const date = parseISO(dateString);
@@ -108,6 +110,196 @@ const renderLocationFields = (prefix, location, handleChange) => (
     </div>
   </div>
 );
+
+// ─── CustomTimePicker ────────────────────────────────────────────────────────
+// Top box: stylish bordered input box with clock icon
+// Down box: dropdown popup strictly matching the width of top box
+const CustomTimePicker = ({
+  value,
+  onChange,
+  name,
+  disabled = false,
+  required = false,
+  className = "",
+  placeholder = "HH:MM",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const [currHour, currMin] = (value || "").split(":");
+  const selectedHour =
+    currHour !== undefined && currHour !== "" ? currHour.padStart(2, "0") : "";
+  const selectedMin =
+    currMin !== undefined && currMin !== "" ? currMin.padStart(2, "0") : "";
+
+  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const setHour = (h) => {
+    const m = selectedMin || "00";
+    onChange({ target: { name, value: `${h}:${m}` } });
+  };
+
+  const setMinute = (m) => {
+    const h = selectedHour || "09";
+    onChange({ target: { name, value: `${h}:${m}` } });
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full ${isOpen ? "z-[80]" : "z-[1]"}`}
+    >
+      {/* Top Box: Clean bordered input field */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
+        className={`w-full flex items-center justify-between text-left px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm text-sm transition-all ${className} ${
+          isOpen
+            ? "ring-2 ring-indigo-500 border-indigo-500 shadow-sm"
+            : "hover:border-gray-400"
+        } ${
+          disabled
+            ? "opacity-60 cursor-not-allowed bg-gray-50 text-gray-400"
+            : "cursor-pointer text-gray-900"
+        }`}
+      >
+        <span className="flex items-center gap-2.5">
+          <FiClock className="text-gray-400 flex-shrink-0" />
+          <span
+            className={
+              value ? "text-gray-900 font-medium" : "text-gray-400 font-normal"
+            }
+          >
+            {value || placeholder}
+          </span>
+        </span>
+        <FiClock className="text-gray-400 text-sm flex-shrink-0" />
+      </button>
+
+      {/* Down Box (Dropdown Menu) - strictly w-full left-0 right-0 */}
+      {isOpen && (
+        <div
+          className="absolute z-[90] left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl p-2.5"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          <div className="grid grid-cols-2 text-center text-[11px] uppercase tracking-wider font-semibold text-gray-400 pb-1.5 border-b mb-1.5">
+            <span>Hour</span>
+            <span>Minute</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 h-44">
+            {/* Hours */}
+            <div className="overflow-y-auto pr-1 space-y-0.5">
+              {hours.map((h) => {
+                const isSelected = selectedHour === h;
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setHour(h)}
+                    className={`w-full py-1 text-xs text-center rounded transition-colors ${
+                      isSelected
+                        ? "bg-indigo-600 text-white font-semibold shadow-sm"
+                        : "text-gray-700 hover:bg-indigo-50"
+                    }`}
+                  >
+                    {h}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Minutes */}
+            <div className="overflow-y-auto pr-1 space-y-0.5">
+              {minutes.map((m) => {
+                const isSelected = selectedMin === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMinute(m)}
+                    className={`w-full py-1 text-xs text-center rounded transition-colors ${
+                      isSelected
+                        ? "bg-indigo-600 text-white font-semibold shadow-sm"
+                        : "text-gray-700 hover:bg-indigo-50"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="w-full mt-2 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+          >
+            Done
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── CustomDatePicker ────────────────────────────────────────────────────────
+const CustomDatePicker = ({
+  value,
+  onChange,
+  name,
+  disabled = false,
+  minDate,
+  maxDate,
+  className = "",
+  placeholder = "DD-MM-YYYY",
+}) => {
+  const parsedDate = value ? new Date(String(value).slice(0, 10) + "T00:00:00") : null;
+
+  return (
+    <div className="relative w-full">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 z-10">
+        <FiCalendar />
+      </div>
+      <DatePicker
+        selected={parsedDate}
+        onChange={(date) => {
+          if (!date) {
+            onChange({ target: { name, value: "" } });
+          } else {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, "0");
+            const d = String(date.getDate()).padStart(2, "0");
+            onChange({ target: { name, value: `${y}-${m}-${d}` } });
+          }
+        }}
+        disabled={disabled}
+        minDate={minDate}
+        maxDate={maxDate}
+        dateFormat="dd-MM-yyyy"
+        placeholderText={placeholder}
+        className={`block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm cursor-pointer ${className}`}
+        wrapperClassName="w-full"
+      />
+    </div>
+  );
+};
 
 const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' }) => {
   // Form fields
@@ -997,37 +1189,23 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Start Date
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <FiCalendar />
-                      </div>
-                      <input
-                        type="date"
-                        name="startDate"
-                        value={form.startDate}
-                        onChange={handleFormChange}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                      />
-                    </div>
+                    <CustomDatePicker
+                      name="startDate"
+                      value={form.startDate}
+                      onChange={handleFormChange}
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       End Date
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <FiCalendar />
-                      </div>
-                      <input
-                        type="date"
-                        name="endDate"
-                        value={form.endDate}
-                        onChange={handleFormChange}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                      />
-                    </div>
+                    <CustomDatePicker
+                      name="endDate"
+                      value={form.endDate}
+                      onChange={handleFormChange}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -1035,24 +1213,24 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
               {/* Work Hours Section */}
               <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Work Hours</h3>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="time"
-                    name="workHoursStart"
-                    value={form.workHoursStart}
-                    onChange={handleFormChange}
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    required
-                  />
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="w-full">
+                    <CustomTimePicker
+                      name="workHoursStart"
+                      value={form.workHoursStart}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
                   <span className="text-gray-500 font-medium">to</span>
-                  <input
-                    type="time"
-                    name="workHoursEnd"
-                    value={form.workHoursEnd}
-                    onChange={handleFormChange}
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    required
-                  />
+                  <div className="w-full">
+                    <CustomTimePicker
+                      name="workHoursEnd"
+                      value={form.workHoursEnd}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1141,25 +1319,20 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Slot {i + 1}: Start Time (24 Hours Format)
                                   </label>
-                                  <input
-                                    type="time"
-                                    value={slot.startTime}
-                                    onChange={(e) => updateSlot('online', i, 'startTime', e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
+                                  <CustomTimePicker
+                                      value={slot.startTime}
+                                      onChange={(e) => updateSlot('online', i, 'startTime', e.target.value)}
+                                    />
                                 </div>
 
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Slot {i + 1}: End Time (24 Hours Format)
                                   </label>
-                                  <input
-                                    type="time"
-                                    value={slot.endTime}
-                                    min={slot.startTime || undefined}
-                                    onChange={(e) => updateSlot('online', i, 'endTime', e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
+                                  <CustomTimePicker
+                                      value={slot.endTime}
+                                      onChange={(e) => updateSlot('online', i, 'endTime', e.target.value)}
+                                    />
                                 </div>
                               </div>
                             </div>
@@ -1259,25 +1432,20 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Slot {i + 1}: Start Time (24 Hours Format)
                                   </label>
-                                  <input
-                                    type="time"
-                                    value={slot.startTime}
-                                    onChange={(e) => updateSlot('offline', i, 'startTime', e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
+                                  <CustomTimePicker
+                                      value={slot.startTime}
+                                      onChange={(e) => updateSlot('offline', i, 'startTime', e.target.value)}
+                                    />
                                 </div>
 
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Slot {i + 1}: End Time (24 Hours Format)
                                   </label>
-                                  <input
-                                    type="time"
-                                    value={slot.endTime}
-                                    min={slot.startTime || undefined}
-                                    onChange={(e) => updateSlot('offline', i, 'endTime', e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
+                                  <CustomTimePicker
+                                      value={slot.endTime}
+                                      onChange={(e) => updateSlot('offline', i, 'endTime', e.target.value)}
+                                    />
                                 </div>
                               </div>
                             </div>
@@ -1349,25 +1517,20 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Slot {i + 1}: Start Time (24 Hours Format)
                                   </label>
-                                  <input
-                                    type="time"
-                                    value={slot.startTime}
-                                    onChange={(e) => updateSlot('hybrid', i, 'startTime', e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
+                                  <CustomTimePicker
+                                      value={slot.startTime}
+                                      onChange={(e) => updateSlot('hybrid', i, 'startTime', e.target.value)}
+                                    />
                                 </div>
 
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Slot {i + 1}: End Time (24 Hours Format)
                                   </label>
-                                  <input
-                                    type="time"
-                                    value={slot.endTime}
-                                    min={slot.startTime || undefined}
-                                    onChange={(e) => updateSlot('hybrid', i, 'endTime', e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  />
+                                  <CustomTimePicker
+                                      value={slot.endTime}
+                                      onChange={(e) => updateSlot('hybrid', i, 'endTime', e.target.value)}
+                                    />
                                 </div>
                               </div>
                             </div>
@@ -1966,17 +2129,15 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                               </div>
                               <div>
                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Date</label>
-                                 <input
-                                   type="date"
-                                   value={dateInputValue}
-                                   readOnly={readOnly}
-                                   onChange={(e) => {
-                                      const updated = [...mockInterviews];
-                                      updated[idx].date = e.target.value;
-                                      setMockInterviews(updated);
-                                   }}
-                                   className="block w-full px-2 py-1.5 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                 />
+                                 <CustomDatePicker
+                                    value={dateInputValue}
+                                    disabled={readOnly}
+                                    onChange={(e) => {
+                                       const updated = [...mockInterviews];
+                                       updated[idx].date = e.target.value;
+                                       setMockInterviews(updated);
+                                    }}
+                                  />
                               </div>
                               <div>
                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
@@ -2092,18 +2253,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                   <div className="space-y-3">
                     <div className="flex space-x-2">
                       <div className="flex-1">
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                            <FiCalendar size={16} />
-                          </div>
-                          <input
-                            type="date"
-                            name="newDate"
-                            value={form.newDate}
-                            onChange={handleFormChange}
-                            className="block w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                          />
-                        </div>
+                        <CustomDatePicker name="newDate" value={form.newDate} onChange={handleFormChange} />
                       </div>
                     </div>
                     <button

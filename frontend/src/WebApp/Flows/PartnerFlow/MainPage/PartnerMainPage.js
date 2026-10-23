@@ -36,14 +36,12 @@ const PartnerMainPage = () => {
         // Check if the token exists in localStorage
         const token = localStorage.getItem("token");
 
-        // If the token doesn't exist, handle it gracefully (redirect to login, etc.)
+        // If the token doesn't exist, handle it gracefully (redirect to partner login)
         if (!token) {
           console.error("No token found in localStorage.");
-          window.location.href = "/login"; // Redirect to login page
+          window.location.href = "/partner/login";
           return;
         }
-
-        console.log("Token:", token); // Log the token
 
         // Use axios to make the API request
         const response = await axios.get("/api/partners/profile", {
@@ -56,6 +54,19 @@ const PartnerMainPage = () => {
         setAdminApproved(response.data.adminApproved); // Set approval status based on the response
       } catch (error) {
         console.error("Error fetching partner info:", error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("partnerToken");
+          localStorage.removeItem("sessionId");
+          localStorage.removeItem("userInfo");
+          localStorage.removeItem("partnerInfo");
+          localStorage.removeItem("adminApproved");
+          localStorage.removeItem("partnerId");
+          localStorage.removeItem("loginTime");
+          sessionStorage.removeItem("partnerSelectedTab");
+          window.location.href = "/partner/login";
+          return;
+        }
       } finally {
         setLoading(false); // Stop loading once the data is fetched
       }

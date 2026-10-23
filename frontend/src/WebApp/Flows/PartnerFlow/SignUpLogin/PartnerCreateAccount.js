@@ -6,13 +6,35 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import axios from "../../../../api/axiosInstance";
 import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
 import { GoogleLogin } from "@react-oauth/google"; // 🔥 NEW
+import { validateEmail } from "../../../../utils/validators";
+import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
 
 // --- VALIDATION SCHEMAS ---
 
 // Step 1: Account Creation
 const step1ValidationSchema = Yup.object({
-  name: Yup.string().required("Full Name is Required"),
-  email: Yup.string().email("Invalid email address").required("Email is Required"),
+  name: Yup.string()
+    .trim()
+    .required("Full Name is Required")
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name cannot exceed 50 characters")
+    .matches(/^[A-Za-z]/, "Name must start with a letter")
+    .matches(/^[^0-9]*$/, "Name cannot contain numbers")
+    .matches(
+      /^[A-Za-z][A-Za-z\s'.-]*$/,
+      "Name can only contain letters, spaces, hyphens, or apostrophes"
+    ),
+  email: Yup.string()
+    .trim()
+    .required("Email is Required")
+    .test("is-valid-email", function (value) {
+      if (!value) return true;
+      const errorMsg = validateEmail(value);
+      if (errorMsg) {
+        return this.createError({ message: errorMsg });
+      }
+      return true;
+    }),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .matches(/[A-Z]/, "Must contain an uppercase letter")
@@ -27,8 +49,25 @@ const step1ValidationSchema = Yup.object({
 
 // Step 2 (Final Step): Institutional Info & Profile Picture
 const step2ValidationSchema = Yup.object({
-  universityName: Yup.string().required("University/Company Name is Required"),
-  institutionId: Yup.string().required("Institutional ID is Required"),
+  universityName: Yup.string()
+    .trim()
+    .required("University or Company name is required")
+    .min(2, "University or Company name must be at least 2 characters")
+    .max(60, "University or Company name cannot exceed 60 characters")
+    .matches(/^[A-Za-z]/, "University or Company name must start with a letter")
+    .matches(
+      /^[A-Za-z][A-Za-z0-9\s.,'&/()\-]*$/,
+      "University or Company name can only contain letters, numbers, spaces, and basic punctuation (&, ., ,, ', -, /)"
+    ),
+  institutionId: Yup.string()
+    .trim()
+    .required("Institutional ID is required")
+    .min(3, "Institutional ID must be at least 3 characters")
+    .max(25, "Institutional ID cannot exceed 25 characters")
+    .matches(
+      /^[A-Za-z0-9\-_]+$/,
+      "Institutional ID can only contain letters, numbers, and hyphens"
+    ),
 });
 
 
@@ -36,12 +75,15 @@ const PartnerSignUpFlow = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // 🔥 NEW: Track whether the partner came via Google signup
   const [isGoogleSignup, setIsGoogleSignup] = useState(false);
+  const { containerRef: googleBtnRef, buttonWidth: googleBtnWidth } =
+    useGoogleButtonWidth(384);
 
   // Timer state for Resend OTP button
   const [resendTimer, setResendTimer] = useState(0);
@@ -95,6 +137,13 @@ const PartnerSignUpFlow = () => {
 
   const handleStep1Submit = async (values, { setSubmitting }) => {
     setErrorMessage("");
+    setSuccessMessage("");
+    const emailErr = validateEmail(values.email);
+    if (emailErr) {
+      setErrorMessage(emailErr);
+      setSubmitting(false);
+      return;
+    }
     try {
       const check = await axios.post("/api/partners/check-email", {
         email: values.email.trim(),
@@ -130,12 +179,13 @@ const PartnerSignUpFlow = () => {
     if (resendTimer > 0) return;
 
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       await axios.post("/api/partners/send-verification-code", {
         email: formData.email,
       });
       startResendTimer();
-      setErrorMessage("New verification code sent to your email.");
+      setSuccessMessage("New verification code sent to your email.");
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Failed to resend OTP.");
     }
@@ -144,6 +194,7 @@ const PartnerSignUpFlow = () => {
   // VERIFY OTP
   const verifyOtpAndProceed = async (values, { setSubmitting }) => {
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       const verify = await axios.post("/api/partners/verify-otp", {
         email: formData.email,
@@ -165,6 +216,7 @@ const PartnerSignUpFlow = () => {
   // On success: creates partner account via Google, then skips OTP and goes straight to Step 2
   const handleGoogleSignup = async (credentialResponse) => {
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       const idToken = credentialResponse.credential;
 
@@ -325,43 +377,72 @@ const PartnerSignUpFlow = () => {
           >
             {({ isSubmitting }) => (
               <Form className="space-y-4">
-                <Field type="text" name="name" placeholder="Full Name" className="w-full p-3 border border-gray-300 rounded-lg" />
-                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
-
-                <Field type="email" name="email" placeholder="Email" className="w-full p-3 border border-gray-300 rounded-lg" />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-
-                <div className="relative">
+                <div>
                   <Field
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Password"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    type="text"
+                    name="name"
+                    placeholder="Full Name"
+                    maxLength={50}
+                    className="w-full mt-0 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2"
-                  >
-                    {showPassword ? (<EyeIcon className="h-5 w-5 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 text-gray-500" />)}
-                  </button>
+                  <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+                </div>
+
+                <div>
+                  <Field
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    className="w-full mt-0 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                </div>
+
+                <div>
+                  <div className="relative">
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="Password"
+                      className="w-full mt-0 p-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                   <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
                 </div>
 
-                <div className="relative">
-                  <Field
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder="Confirm Password"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2"
-                  >
-                    {showConfirmPassword ? (<EyeIcon className="h-5 w-5 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 text-gray-500" />)}
-                  </button>
+                <div>
+                  <div className="relative">
+                    <Field
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      placeholder="Confirm Password"
+                      className="w-full mt-0 p-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                   <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm mt-1" />
                 </div>
 
@@ -380,10 +461,14 @@ const PartnerSignUpFlow = () => {
                   <hr className="w-full border-gray-300" />
                 </div>
 
-                <div className="flex justify-center">
+                <div ref={googleBtnRef} className="google-login-wrapper w-full">
                   <GoogleLogin
                     onSuccess={handleGoogleSignup}
                     onError={() => setErrorMessage("Google sign-up failed")}
+                    size="large"
+                    text="signup_with"
+                    shape="rectangular"
+                    width={googleBtnWidth}
                   />
                 </div>
               </Form>
@@ -459,20 +544,43 @@ const PartnerSignUpFlow = () => {
                 {/* Display Name for context */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700"> Name </label>
-                  <p className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">{formData.name}</p>
+                  <p className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-900 text-sm">{formData.name}</p>
                 </div>
 
                 {/* University or Company Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> University or Company name </label>
-                  <Field type="text" name="universityName" placeholder="Tesla Inc" className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200" />
+                  <label className="block text-sm font-medium text-gray-700"> University or Company name </label>
+                  <Field
+                    type="text"
+                    name="universityName"
+                    placeholder="Tesla Inc"
+                    maxLength={60}
+                    autoComplete="off"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  />
                   <ErrorMessage name="universityName" component="div" className="text-red-500 text-sm mt-1" />
                 </div>
 
                 {/* Institutional ID */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Institutional ID </label>
-                  <Field type="text" name="institutionId" placeholder="XXXXXXXXXX" className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200" />
+                  <label className="block text-sm font-medium text-gray-700"> Institutional ID </label>
+                  <Field name="institutionId">
+                    {({ field, form }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="XXXXXXXXXX"
+                        maxLength={25}
+                        autoComplete="off"
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const sanitized = e.target.value.replace(/[^A-Za-z0-9\-_]/g, "");
+                          form.setFieldValue("institutionId", sanitized);
+                        }}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      />
+                    )}
+                  </Field>
                   <ErrorMessage name="institutionId" component="div" className="text-red-500 text-sm mt-1" />
                 </div>
 
@@ -553,11 +661,18 @@ const PartnerSignUpFlow = () => {
       </div>
 
       {/* Form Side */}
-      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
-        <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
+      <div className="flex flex-col items-center justify-center px-4 py-8 sm:p-8 w-full lg:w-1/2 bg-white">
+        <div className="w-full max-w-md flex flex-col justify-center my-auto py-4">
           <h1 className="text-2xl font-semibold mb-6 text-center">
             {step === 1 ? "Create an Account" : step === 1.5 ? "Verify OTP" : "Finalize Profile"}
           </h1>
+
+          {/* Success Message Display */}
+          {successMessage && (
+            <div className="mb-4 p-4 bg-green-100 text-green-800 border border-green-400 rounded">
+              {successMessage}
+            </div>
+          )}
 
           {/* Error Message Display */}
           {errorMessage && (
@@ -579,7 +694,11 @@ const PartnerSignUpFlow = () => {
           {step === 1.5 && (
             <button
               type="button"
-              onClick={() => setStep(1)}
+              onClick={() => {
+                setStep(1);
+                setErrorMessage("");
+                setSuccessMessage("");
+              }}
               className="mt-4 p-2 text-center text-teal-500 hover:underline"
             >
               &larr; Back to Account Details
@@ -589,7 +708,11 @@ const PartnerSignUpFlow = () => {
           {step === 2 && !isGoogleSignup && (
             <button
               type="button"
-              onClick={() => setStep(1.5)}
+              onClick={() => {
+                setStep(1.5);
+                setErrorMessage("");
+                setSuccessMessage("");
+              }}
               className="mt-4 p-2 text-center text-teal-500 hover:underline"
             >
               &larr; Back to OTP Verification

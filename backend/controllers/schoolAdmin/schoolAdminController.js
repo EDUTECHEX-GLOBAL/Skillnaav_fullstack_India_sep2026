@@ -1023,7 +1023,7 @@ const sendSchoolAdminVerificationCode = asyncHandler(async (req, res) => {
     throw new Error("Email already registered.");
   }
   const otp = generateOTP();
-  const otpExpiration = Date.now() + 10 * 60 * 1000;
+  const otpExpiration = Date.now() + 5 * 60 * 1000; // 5 minutes
   await SchoolAdminOTPVerification.findOneAndUpdate(
     { email },
     { otp, otpExpiration },

@@ -104,32 +104,36 @@ const SchoolAdminNavbar = React.memo(({ onLogout, onToggleSidebar }) => {
 
   return (
     <>
-    <nav className="w-full bg-white shadow-sm px-4 py-3 flex items-center justify-between z-50">
+    <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 w-full">
 
-      {/* Left: Hamburger (visible on ALL screens) + Logo */}
-      <div className="flex items-center gap-3">
-        {/* ✅ No md:hidden — visible on desktop too */}
+      {/* Left: Hamburger + Logo */}
+      <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
         <button
           onClick={onToggleSidebar}
-          className="text-gray-600 md:hidden mr-4"
+          className="md:hidden w-10 h-10 rounded-full border border-gray-200 bg-white text-teal-600 hover:bg-teal-50 transition flex items-center justify-center shadow-sm shrink-0"
           aria-label="Toggle sidebar"
         >
-          <FaBars className="text-xl" />
+          <FaBars className="text-lg" />
         </button>
 
-        <img src={logo} alt="Edutechex" className="h-10 w-auto" />
+        <img
+          src={logo}
+          alt="Edutechex Logo"
+          className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+        />
       </div>
 
-      {/* Right: Logout button — keep your existing logout button here */}
+      {/* Right: Logout button */}
       <button
         onClick={handleLogoutClick}
         disabled={isPending}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition"
+        className="w-10 h-10 sm:w-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg bg-gray-100 sm:bg-transparent hover:bg-red-50 text-red-500 transition flex items-center justify-center gap-2 shrink-0"
+        title="Logout"
       >
-        <FaSignOutAlt />
-        <span className="hidden sm:inline">Logout</span>
+        <FaSignOutAlt className="text-base" />
+        <span className="hidden sm:inline text-sm font-medium">Logout</span>
       </button>
-    </nav>
+    </header>
 
       {showLogoutModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">

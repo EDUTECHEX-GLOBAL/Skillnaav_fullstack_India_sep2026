@@ -47,15 +47,15 @@ function Home() {
 
       {/* ✅ ADDED: Helmet for homepage SEO — was completely missing before */}
       <Helmet>
-  <title>Edutechex - Navigate Your Skills</title>
+  <title>EDUTECHEX - Navigate Your Skills</title>
   <meta
     name="description"
-    content="Edutechex (also known as Edutechex) helps you discover internships, assign instructors, and manage your learning journey through an AI-powered platform."
+    content="EDUTECHEX helps you discover internships, assign instructors, and manage your learning journey through an AI-powered platform."
   />
   <link rel="canonical" href="https://www.edutechex.com/" />
 
   {/* Open Graph */}
-  <meta property="og:title" content="Edutechex - Navigate Your Skills" />
+  <meta property="og:title" content="EDUTECHEX - Navigate Your Skills" />
   <meta
     property="og:description"
     content="Discover internships, assign instructors, and manage schedules — all in one place."
@@ -66,7 +66,7 @@ function Home() {
 
   {/* Twitter */}
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Edutechex - Navigate Your Skills" />
+  <meta name="twitter:title" content="EDUTECHEX - Navigate Your Skills" />
   <meta
     name="twitter:description"
     content="Discover internships, assign instructors, and manage schedules — all in one place."

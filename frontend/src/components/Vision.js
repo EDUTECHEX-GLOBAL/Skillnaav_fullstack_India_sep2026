@@ -1,20 +1,15 @@
 import React from "react";
 import { useSelector } from "react-redux";
+import VisionImage from "../assets/vesion.jpeg";
+import { staticVisionData } from "../data/websiteContentData";
 
 const Vision = () => {
   const { edutechexData } = useSelector((state) => state.root);
 
-  // ✅ Also check that visionhead has at least one element
-  if (
-    !edutechexData ||
-    !edutechexData.visionhead ||
-    !edutechexData.visionpoint ||
-    edutechexData.visionhead.length === 0  // <-- ADD THIS CHECK
-  ) {
-    return null;
-  }
-
-  const { visionhead, visionpoint } = edutechexData;
+  const head = edutechexData?.visionhead?.[0] || staticVisionData;
+  const points = edutechexData?.visionpoint?.length
+    ? edutechexData.visionpoint
+    : staticVisionData.visionpoints;
 
   return (
     <section
@@ -25,7 +20,7 @@ const Vision = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="mb-8 md:mb-0">
             <img
-              src={visionhead[0].visionImg}
+              src={VisionImage}
               alt="Vision"
               className="rounded-lg shadow-lg object-cover w-full h-auto md:w-auto lg:w-auto"
             />
@@ -33,13 +28,13 @@ const Vision = () => {
 
           <div className="text-center md:text-left">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 lg:mb-6 text-center">
-              {visionhead[0].visionheading}
+              {head.visionheading || staticVisionData.visionheading}
             </h2>
             <p className="text-lg lg:text-xl font-medium mb-6 max-w-3xl mx-auto">
-              {visionhead[0].visionsub}
+              {head.visionsub || staticVisionData.visionsub}
             </p>
             <ul className="list-disc text-base lg:text-lg max-w-2xl mx-auto pl-5">
-              {visionpoint.map((point, index) => (
+              {points.map((point, index) => (
                 <li key={index} className="mb-3 font-normal">
                   {point.visionpoint}
                 </li>

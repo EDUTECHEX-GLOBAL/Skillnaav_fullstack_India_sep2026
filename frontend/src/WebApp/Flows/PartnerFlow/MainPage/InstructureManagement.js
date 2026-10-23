@@ -94,7 +94,8 @@ const IN_STATES = [
   "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
 ];
 
-const TIMEZONES_US_MX = [
+const TIMEZONES = [
+  "Asia/Kolkata",
   "America/New_York",
   "America/Chicago",
   "America/Denver",
@@ -194,11 +195,11 @@ const InstructureManagement = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [rateType, setRateType] = useState("");
-  const [currency, setCurrency] = useState("");
-  const [country, setCountry] = useState("");
+  const [currency, setCurrency] = useState("INR");
+  const [country, setCountry] = useState("India");
   const [stateProv, setStateProv] = useState("");
-  const [payoutMethod, setPayoutMethod] = useState("ACH (US Bank)");
-  const [tz, setTz] = useState("");
+  const [payoutMethod, setPayoutMethod] = useState("Bank Transfer (NEFT/RTGS)");
+  const [tz, setTz] = useState("Asia/Kolkata");
   const [viewing, setViewing] = useState(null);
   const [editing, setEditing] = useState(null);
   const [qualification, setQualification] = useState("");
@@ -1238,9 +1239,9 @@ const InstructureManagement = () => {
                           <option value="" disabled={tz !== ""}>
                             Select
                           </option>
-                          {TIMEZONES_US_MX.map((z) => (
+                          {TIMEZONES.map((z) => (
                             <option key={z} value={z}>
-                              {z}
+                              {z === "Asia/Kolkata" ? "Asia/Kolkata (IST)" : z}
                             </option>
                           ))}
                         </select>

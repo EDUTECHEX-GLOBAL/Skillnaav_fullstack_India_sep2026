@@ -5,6 +5,12 @@ import axios from "../../../../api/axiosInstance";
 import edutechex_logo_white from "../../../../assets/edutechex_logo_white (1).png";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { IN_STATES } from "../../../../constants/locations";
+import {
+  validateJobTitle,
+  validateCompanyName,
+} from "../../../../utils/validators";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 const SuccessModal = ({ onOk }) => (
   <div
     className="fixed inset-0 z-[9999] flex items-center justify-center"
@@ -81,6 +87,122 @@ const SuccessModal = ({ onOk }) => (
   </div>
 );
 
+// CustomSelect ensures the dropdown menu ("down box") matches the exact width of the trigger ("top box")
+const CustomSelect = ({
+  name,
+  value,
+  onChange,
+  options,
+  placeholder = "Select an option",
+  required = false,
+  error = "",
+  className = "",
+  disabled = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const selectedOption = options.find(
+    (opt) => String(opt.value) === String(value)
+  );
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const handleOptionClick = (val) => {
+    onChange({ target: { name, value: val } });
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className={`relative w-full ${isOpen ? "z-[60]" : "z-[1]"}`}>
+      {/* Top Box (Trigger) */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full h-12 box-border p-3 border rounded-lg bg-white text-gray-900 flex justify-between items-center text-left text-sm font-poppins transition-all focus:outline-none focus:ring-2 ${
+          isOpen
+            ? "border-teal-500 ring-2 ring-teal-500"
+            : error
+              ? "border-red-500 focus:ring-red-400"
+              : "border-gray-300 hover:border-gray-400 focus:ring-teal-500"
+        } ${disabled ? "opacity-60 cursor-not-allowed bg-gray-50" : "cursor-pointer"} ${className}`}
+        style={{ marginTop: "0px" }}
+      >
+        <span
+          className={`truncate pr-2 ${
+            selectedOption
+              ? "text-gray-900 font-medium"
+              : "text-gray-400 font-normal"
+          }`}
+        >
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <svg
+          className={`w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-teal-600" : ""
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {/* Down Box (Dropdown Menu) - strictly w-full left-0 right-0 */}
+      {isOpen && (
+        <div
+          className="absolute z-[70] left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto py-1"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          {options.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-gray-400 text-center">
+              No options available
+            </div>
+          ) : (
+            options.map((opt) => {
+              const isSelected = String(value) === String(opt.value);
+              return (
+                <div
+                  key={opt.value}
+                  onClick={() => handleOptionClick(opt.value)}
+                  className={`px-4 py-2.5 text-xs sm:text-sm cursor-pointer transition-colors break-words leading-relaxed ${
+                    isSelected
+                      ? "bg-teal-50 text-teal-700 font-semibold"
+                      : "text-gray-700 hover:bg-teal-50/70 hover:text-teal-700"
+                  }`}
+                >
+                  {opt.label}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PostAJob = () => {
   const { saveJob, handleSelectTab } = useTabContext();
 
@@ -145,6 +267,15 @@ const PostAJob = () => {
   const [freemiumAlert, setFreemiumAlert] = useState("");
   const cityDebounceRef = useRef(null);
 
+  const [fieldErrors, setFieldErrors] = useState({
+    jobTitle: "",
+    companyName: "",
+  });
+  const [touchedFields, setTouchedFields] = useState({
+    jobTitle: false,
+    companyName: false,
+  });
+
   const stateList = formData.country === "India" ? IN_STATES : [];
   const stateLabel =
     formData.country === "India" ? "State / Union Territory" : "State";
@@ -201,6 +332,20 @@ const PostAJob = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "jobTitle") {
+      setTouchedFields((prev) => ({ ...prev, jobTitle: true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        jobTitle: validateJobTitle(value),
+      }));
+    } else if (name === "companyName") {
+      setTouchedFields((prev) => ({ ...prev, companyName: true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        companyName: validateCompanyName(value),
+      }));
+    }
+
     setFormData((prev) => {
       if (name === "internshipType") {
         return {
@@ -230,6 +375,23 @@ const PostAJob = () => {
       }
       return { ...prev, [name]: value };
     });
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (name === "jobTitle") {
+      setTouchedFields((prev) => ({ ...prev, jobTitle: true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        jobTitle: validateJobTitle(value),
+      }));
+    } else if (name === "companyName") {
+      setTouchedFields((prev) => ({ ...prev, companyName: true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        companyName: validateCompanyName(value),
+      }));
+    }
   };
 
   const handleFileUpload = async (event) => {
@@ -332,11 +494,82 @@ const PostAJob = () => {
       adminApproved: false,
       applicationOpen: true,
     });
+    setFieldErrors({ jobTitle: "", companyName: "" });
+    setTouchedFields({ jobTitle: false, companyName: false });
     setPreviewUrl(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const titleErr = validateJobTitle(formData.jobTitle);
+    const compErr = validateCompanyName(formData.companyName);
+
+    if (titleErr || compErr) {
+      setFieldErrors({
+        jobTitle: titleErr,
+        companyName: compErr,
+      });
+      setTouchedFields({
+        jobTitle: true,
+        companyName: true,
+      });
+      setErrorMessage(titleErr || compErr);
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+
+    if (!formData.sector) {
+      setErrorMessage("Please select a Sector.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.classification) {
+      setErrorMessage("Please select an Internship Classification.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.country) {
+      setErrorMessage("Please select a Country.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.state) {
+      setErrorMessage(`Please select a ${stateLabel}.`);
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.city || !formData.city.trim()) {
+      setErrorMessage("Please enter a City.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.jobDescription || !formData.jobDescription.trim()) {
+      setErrorMessage("Please enter a Job Description.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.startDate) {
+      setErrorMessage("Please select a Start Date.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.endDateOrDuration) {
+      setErrorMessage("Please select an End Date.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.mode) {
+      setErrorMessage("Please select a Mode of Internship.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+    if (!formData.internshipType) {
+      setErrorMessage("Please select an Internship Type.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
+
     const pid = localStorage.getItem("partnerId");
     if (!pid) {
       console.error("No partner ID");
@@ -423,7 +656,7 @@ const PostAJob = () => {
     "!mt-0 w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-white";
 
   return (
-    <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
+    <div className="max-w-4xl font-poppins mx-auto px-4 py-6 sm:p-6 bg-white rounded-lg shadow-lg mt-4 sm:mt-8">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">
         Post an Internship
       </h2>
@@ -432,7 +665,7 @@ const PostAJob = () => {
         {/* Job Title */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Job Title
+            Job Title <span className="text-red-500">*</span>
           </label>
           {/*Add the style attribute for alignment - 04-08-2026 */}
           <input
@@ -440,18 +673,28 @@ const PostAJob = () => {
             name="jobTitle"
             value={formData.jobTitle}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
             maxLength={100}
-            className={inputCls}
+            className={`${inputCls} ${
+              touchedFields.jobTitle && fieldErrors.jobTitle
+                ? "!border-red-500 focus:!ring-red-400 bg-red-50/20"
+                : ""
+            }`}
             placeholder="Enter job title"
             style={{ marginTop: "0px" }}
           />
+          {touchedFields.jobTitle && fieldErrors.jobTitle && (
+            <p className="text-red-500 text-xs sm:text-sm mt-1 font-medium">
+              {fieldErrors.jobTitle}
+            </p>
+          )}
         </div>
 
         {/* Company Name */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Company Name
+            Company Name <span className="text-red-500">*</span>
           </label>
           {/*Add the style attribute for alignment - 04-08-2026 */}
           <input
@@ -459,33 +702,34 @@ const PostAJob = () => {
             name="companyName"
             value={formData.companyName}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
             maxLength={100}
-            className={inputCls}
+            className={`${inputCls} ${
+              touchedFields.companyName && fieldErrors.companyName
+                ? "!border-red-500 focus:!ring-red-400 bg-red-50/20"
+                : ""
+            }`}
             style={{ marginTop: "0px" }}
             placeholder="Enter company name"
           />
+          {touchedFields.companyName && fieldErrors.companyName && (
+            <p className="text-red-500 text-xs sm:text-sm mt-1 font-medium">
+              {fieldErrors.companyName}
+            </p>
+          )}
         </div>
 
         {/* Sector */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">Sector</label>
-          <select
+          <CustomSelect
             name="sector"
             value={formData.sector}
             onChange={handleChange}
-            required
-            className={inputCls}
-          >
-            <option value="" disabled hidden>
-              Select a Sector
-            </option>
-            {topSectors.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            options={topSectors.map((s) => ({ value: s.id, label: s.name }))}
+            placeholder="Select a Sector"
+          />
         </div>
 
         {/* Classification */}
@@ -493,20 +737,17 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Internship Classification
           </label>
-          <select
+          <CustomSelect
             name="classification"
             value={formData.classification}
             onChange={handleChange}
-            required
-            className={inputCls}
-          >
-            <option value="" disabled hidden>
-              Select Classification
-            </option>
-            <option value="Basic">Basic</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
+            options={[
+              { value: "Basic", label: "Basic" },
+              { value: "Intermediate", label: "Intermediate" },
+              { value: "Advanced", label: "Advanced" },
+            ]}
+            placeholder="Select Classification"
+          />
         </div>
 
         {/* Location */}
@@ -519,8 +760,7 @@ const PostAJob = () => {
               <label htmlFor="country" className="block text-gray-700 text-sm">
                 Country *
               </label>
-              <select
-                id="country"
+              <CustomSelect
                 name="country"
                 value={formData.country}
                 onChange={(e) => {
@@ -531,14 +771,9 @@ const PostAJob = () => {
                   }));
                   setCitySuggestions([]);
                 }}
-                required
-                className={locationInputCls}
-              >
-                <option value="" disabled hidden>
-                  Select Country
-                </option>
-                <option value="India">India</option>
-              </select>
+                options={[{ value: "India", label: "India" }]}
+                placeholder="Select Country"
+              />
             </div>
 
             <div className="flex flex-col gap-1">
@@ -546,23 +781,13 @@ const PostAJob = () => {
               <label htmlFor="state" className="block text-gray-700 text-sm">
                 {stateLabel} *
               </label>
-              <select
-                id="state"
+              <CustomSelect
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                required
-                className={locationInputCls}
-              >
-                <option value="" disabled hidden>
-                  Select {stateLabel}
-                </option>
-                {stateList.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+                options={stateList.map((s) => ({ value: s, label: s }))}
+                placeholder={`Select ${stateLabel}`}
+              />
             </div>
 
             <div className="relative flex flex-col gap-1">
@@ -581,11 +806,11 @@ const PostAJob = () => {
                 className={`${locationInputCls} relative z-[15]`}
               />
               {citySuggestions.length > 0 && (
-                <ul className="absolute z-[20] left-0 top-full w-full mt-2 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                <ul className="absolute z-[20] left-0 right-0 w-full mt-2 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
                   {citySuggestions.map((city) => (
                     <li
                       key={city.wikiDataId || city.id || city.name}
-                      className="px-4 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700"
+                      className="px-4 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700 break-words"
                       onClick={() => handleCitySelect(city.name)}
                     >
                       {city.name}
@@ -621,21 +846,34 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Start Date
           </label>
-          {/*Add the style attribute for alignment - 04-08-2026 */}
-          <input
-            type="date"
-            name="startDate"
-            value={formData.startDate}
-            onChange={handleChange}
-            required
-            min={(() => {
-              const d = new Date();
-              d.setMonth(d.getMonth() + 1);
-              return d.toISOString().split("T")[0];
-            })()}
-            className={inputCls}
-            style={{ marginTop: "0px" }}
-          />
+          <div className="relative w-full">
+            <DatePicker
+              selected={
+                formData.startDate ? new Date(formData.startDate + "T00:00:00") : null
+              }
+              onChange={(date) => {
+                if (!date) {
+                  handleChange({ target: { name: "startDate", value: "" } });
+                } else {
+                  const y = date.getFullYear();
+                  const m = String(date.getMonth() + 1).padStart(2, "0");
+                  const d = String(date.getDate()).padStart(2, "0");
+                  handleChange({
+                    target: { name: "startDate", value: `${y}-${m}-${d}` },
+                  });
+                }
+              }}
+              minDate={(() => {
+                const d = new Date();
+                d.setMonth(d.getMonth() + 1);
+                return d;
+              })()}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="Select start date (YYYY-MM-DD)"
+              className="w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-poppins text-sm cursor-pointer"
+              wrapperClassName="w-full"
+            />
+          </div>
         </div>
 
         {/* End Date */}
@@ -643,21 +881,40 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             End Date
           </label>
-          {/*Add the style attribute for alignment - 04-08-2026 */}
-          <input
-            type="date"
-            name="endDateOrDuration"
-            value={formData.endDateOrDuration}
-            onChange={handleChange}
-            required
-            min={(() => {
-              const base = formData.startDate ? new Date(formData.startDate) : new Date();
-              base.setMonth(base.getMonth() + 1);
-              return base.toISOString().split("T")[0];
-            })()}
-            className={inputCls}
-            style={{ marginTop: "0px" }}
-          />
+          <div className="relative w-full">
+            <DatePicker
+              selected={
+                formData.endDateOrDuration
+                  ? new Date(formData.endDateOrDuration + "T00:00:00")
+                  : null
+              }
+              onChange={(date) => {
+                if (!date) {
+                  handleChange({
+                    target: { name: "endDateOrDuration", value: "" },
+                  });
+                } else {
+                  const y = date.getFullYear();
+                  const m = String(date.getMonth() + 1).padStart(2, "0");
+                  const d = String(date.getDate()).padStart(2, "0");
+                  handleChange({
+                    target: { name: "endDateOrDuration", value: `${y}-${m}-${d}` },
+                  });
+                }
+              }}
+              minDate={(() => {
+                const base = formData.startDate
+                  ? new Date(formData.startDate + "T00:00:00")
+                  : new Date();
+                base.setMonth(base.getMonth() + 1);
+                return base;
+              })()}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="Select end date (YYYY-MM-DD)"
+              className="w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-poppins text-sm cursor-pointer"
+              wrapperClassName="w-full"
+            />
+          </div>
         </div>
 
         {/* Calculated Duration */}
@@ -682,20 +939,17 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Mode of Internship
           </label>
-          <select
+          <CustomSelect
             name="mode"
             value={formData.mode}
             onChange={handleChange}
-            required
-            className={inputCls}
-          >
-            <option value="" disabled hidden>
-              Select Mode
-            </option>
-            <option value="Online">Online</option>
-            <option value="Offline">Offline</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
+            options={[
+              { value: "Online", label: "Online" },
+              { value: "Offline", label: "Offline" },
+              { value: "Hybrid", label: "Hybrid" },
+            ]}
+            placeholder="Select Mode"
+          />
         </div>
 
         {/* Qualifications */}
@@ -842,20 +1096,18 @@ const PostAJob = () => {
           />
 
           {/* Select for Free / Stipend */}
-          <select
+          <CustomSelect
+            name="internshipType"
             value={
               formData.internshipType === "PAID" ? "" : formData.internshipType
             }
             onChange={handleChange}
-            name="internshipType"
-            className={inputCls}
-          >
-            <option value="" disabled hidden>
-              Select Internship Type
-            </option>
-            <option value="FREE">Free</option>
-            <option value="STIPEND">Stipend</option>
-          </select>
+            options={[
+              { value: "FREE", label: "Free" },
+              { value: "STIPEND", label: "Stipend" },
+            ]}
+            placeholder="Select Internship Type"
+          />
 
           {/* Description banner for Free or Stipend */}
           {(formData.internshipType === "FREE" ||
@@ -961,18 +1213,13 @@ const PostAJob = () => {
               <label className="block text-gray-700 font-medium mb-2">
                 Currency
               </label>
-              <select
+              <CustomSelect
                 name="compensationDetails.currency"
                 value={formData.compensationDetails.currency}
                 onChange={handleChange}
-                required
-                className={inputCls}
-              >
-                <option value="" disabled hidden>
-                  Select Currency
-                </option>
-                <option value="INR">INR</option>
-              </select>
+                options={[{ value: "INR", label: "INR" }]}
+                placeholder="Select Currency"
+              />
             </div>
 
             {/* Frequency is always One Time - hidden */}

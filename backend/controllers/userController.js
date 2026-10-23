@@ -38,12 +38,12 @@ const validatePostalCode = (code, country = "") => {
 
 const getPostalCodeError = (country = "") => {
   const c = country ? country.trim() : "";
+  if (c === "India" || c === "IN" || !c) return "Please enter a valid 6-digit Indian PIN Code (e.g., 500081).";
   if (c === "United States" || c === "US") return "Please enter a valid 5-digit US ZIP Code (e.g., 75001 or 75001-1234).";
-  if (c === "India" || c === "IN") return "Please enter a valid 6-digit Indian PIN Code (e.g., 500081).";
   if (c === "Canada" || c === "CA") return "Please enter a valid Canadian Postal Code (e.g., K1A 0B1).";
   if (c === "United Kingdom" || c === "GB") return "Please enter a valid UK Postcode (e.g., SW1A 1AA).";
   if (c === "Australia" || c === "AU") return "Please enter a valid 4-digit Australian Postal Code (e.g., 2000).";
-  return "Please enter a valid ZIP / Postal Code (3-10 numbers or letters).";
+  return "Please enter a valid PIN / Postal Code (6 digits for India or 3-10 numbers/letters).";
 };
 
 const validateCity = (city) => {
@@ -689,7 +689,7 @@ const sendSignupVerificationCode = asyncHandler(async (req, res) => {
     }
   }
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiration = Date.now() + 10 * 60 * 1000;
+  const otpExpiration = Date.now() + 5 * 60 * 1000; // 5 minutes
   await EmailVerification.findOneAndUpdate(
     { email },
     { otp, otpExpiration },
@@ -887,7 +887,7 @@ const sendAgeGateVerificationCode = asyncHandler(async (req, res) => {
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiration = Date.now() + 10 * 60 * 1000; // 10 minutes
+  const otpExpiration = Date.now() + 5 * 60 * 1000; // 5 minutes
 
   await EmailVerification.findOneAndUpdate(
     { email },

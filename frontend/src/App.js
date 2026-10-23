@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
@@ -9,6 +9,37 @@ import FeedbackProvider from "./context/FeedbackContext";
 import GlobalEdutechexFavicon from "./components/GlobalEdutechexFavicon";
 import EdutechexTabBrandingLayout from "./components/EdutechexTabBrandingLayout";
 import ScrollToTop from "./components/ScrollToTop";
+import axios from "./api/axiosInstance";
+
+// Dedicated visitor tracker for all public route views
+const VisitorTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const path = location.pathname || "/";
+    if (path.startsWith("/admin")) return;
+
+    const track = async () => {
+      try {
+        const key = `edutechex_track_${path}`;
+        const last = sessionStorage.getItem(key);
+        const now = Date.now();
+        if (!last || now - Number(last) > 20 * 1000) {
+          sessionStorage.setItem(key, String(now));
+          await axios.post("/api/contact/track-visitor", {
+            page: path,
+          });
+        }
+      } catch (err) {
+        // silent
+      }
+    };
+    track();
+  }, [location.pathname]);
+
+  return null;
+};
 
 // ---------- LAZY IMPORTS ----------
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -69,6 +100,7 @@ function App() {
   return (
     <FeedbackProvider>
      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <VisitorTracker />
         <ScrollToTop />
         <GlobalEdutechexFavicon />
         <Suspense fallback={<PageLoader />}>

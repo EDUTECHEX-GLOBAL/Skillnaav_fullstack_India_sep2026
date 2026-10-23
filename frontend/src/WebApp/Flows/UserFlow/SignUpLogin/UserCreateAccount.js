@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import loginImage from "../../../../assets-webapp/login-image-edutechex.png";
 import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
 import {
   COUNTRY_OPTIONS,
   getStateList,
@@ -46,6 +47,9 @@ const UnifiedUserRegistration = () => {
     const saved = sessionStorage.getItem(SESSION_KEY_STEP);
     return saved ? parseFloat(saved) : 1;
   });
+
+  const { containerRef: googleBtnRef, buttonWidth: googleBtnWidth } =
+    useGoogleButtonWidth(384);
 
   const [errorMessage, setErrorMessage]           = useState("");
   const [otp, setOtp]                             = useState("");
@@ -717,21 +721,53 @@ const UnifiedUserRegistration = () => {
           <h1 className="text-2xl font-semibold mb-6 text-center">Create an account</h1>
           {/* Account Form */}
           <div className="mb-4">
-            <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
+            <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} maxLength={50} className="w-full p-3 border border-gray-300 rounded-lg" />
           </div>
           <div className="mb-4">
             <input type="email" name="email" placeholder="Gmail Address" value={formData.email} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
           </div>
           <div className="mb-4 relative">
-            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3">
-              {showPassword ? (<EyeIcon className="h-5 w-5 mt-4 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />)}
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full p-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeIcon className="h-5 w-5" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5" />
+              )}
             </button>
           </div>
           <div className="mb-4 relative">
-            <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg" />
-            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3">
-              {showConfirmPassword ? (<EyeIcon className="h-5 w-5 mt-4 text-gray-500" />) : (<EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />)}
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full p-3 pr-11 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700"
+              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+            >
+              {showConfirmPassword ? (
+                <EyeIcon className="h-5 w-5" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5" />
+              )}
             </button>
           </div>
           <button type="button" onClick={handleStep1Submit} className="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 mb-4">
@@ -1163,8 +1199,8 @@ const UnifiedUserRegistration = () => {
         </div>
       )}
 
-      <div className={`flex flex-col items-center justify-center p-6 sm:p-8 w-full ${(currentStep === 1 || currentStep === 1.5) ? 'lg:w-1/2' : ''} bg-white mx-auto`}>
-        <div className={`w-full max-w-md ${(currentStep !== 1 && currentStep !== 1.5) ? 'lg:max-w-2xl' : ''} flex flex-col justify-center min-h-screen lg:min-h-full`}>
+      <div className={`flex flex-col items-center justify-center px-4 py-8 sm:p-8 w-full ${(currentStep === 1 || currentStep === 1.5) ? 'lg:w-1/2' : ''} bg-white mx-auto`}>
+        <div className={`w-full max-w-md ${(currentStep !== 1 && currentStep !== 1.5) ? 'lg:max-w-2xl' : ''} flex flex-col justify-center my-auto py-4`}>
 
           {errorMessage && (
             <div className="mb-4 p-4 bg-red-100 text-red-800 border border-red-400 rounded">
@@ -1189,8 +1225,13 @@ const UnifiedUserRegistration = () => {
                 <hr className="w-full border-gray-300" />
               </div>
 
-              <GoogleLogin
-                onSuccess={async (credentialResponse) => {
+              <div ref={googleBtnRef} className="google-login-wrapper w-full">
+                <GoogleLogin
+                  size="large"
+                  text="signup_with"
+                  shape="rectangular"
+                  width={googleBtnWidth}
+                  onSuccess={async (credentialResponse) => {
                   try {
                     const idToken = credentialResponse.credential;
 
@@ -1220,6 +1261,7 @@ const UnifiedUserRegistration = () => {
                   }
                 }}
               />
+              </div>
 
               <p className="text-center text-gray-500 font-medium text-base mt-6">
                 Already have an account?{" "}

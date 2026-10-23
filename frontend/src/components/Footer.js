@@ -6,6 +6,7 @@ import TwitterIcon from "../assets/X_custom.png";
 import FeedIcon from "../assets/youtube.png";
 import LinkedinIcon from "../assets/linkedin_custom.png";
 import { validateEmail, getEmailSuggestion } from "../utils/validators";
+import axios from "../api/axiosInstance";
 
 export default function Footer() {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -23,7 +24,7 @@ export default function Footer() {
     };
   }, []);
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
 
     if (emailTimerRef.current) clearTimeout(emailTimerRef.current);
@@ -33,6 +34,12 @@ export default function Footer() {
     if (error) {
       setEmailError(error);
       return;
+    }
+
+    try {
+      await axios.post("/api/contact/subscribe", { email });
+    } catch (err) {
+      console.error("Subscription request error:", err);
     }
 
     setEmailError("");

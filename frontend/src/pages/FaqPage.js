@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "../api/axiosInstance";
 import { SetEdutechexData, HideLoading } from "../redux/rootSlice";
 
+import { staticFaqData } from "../data/websiteContentData";
+
 function FaqPage() {
   const dispatch = useDispatch();
   const { edutechexData } = useSelector((state) => state.root);
@@ -30,20 +32,20 @@ function FaqPage() {
     }
   }, [edutechexData, dispatch]);
 
-  const faqSchema =
-    edutechexData?.faqcard?.map((item) => ({
-      "@type": "Question",
-      name: item.faq,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })) || [];
+  const cards = edutechexData?.faqcard?.length ? edutechexData.faqcard : staticFaqData.faqcard;
+  const faqSchema = cards.map((item) => ({
+    "@type": "Question",
+    name: item.faq,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  }));
 
   return (
     <>
       <Helmet>
-        <title>FAQs - Edutechex</title>
+        <title>FAQs - EDUTECHEX</title>
 
         <meta
           name="description"

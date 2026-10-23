@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { validateUniversityOrCompanyName, validateInstitutionId } from "../../../../../utils/validators";
 
 const PartnerProfile = () => {
   const [universityName, setuniversityName] = useState("");
@@ -58,6 +59,18 @@ const PartnerProfile = () => {
       return;
     }
 
+    const univErr = validateUniversityOrCompanyName(completeProfileData.universityName);
+    if (univErr) {
+      alert(univErr);
+      return;
+    }
+
+    const idErr = validateInstitutionId(completeProfileData.institutionId);
+    if (idErr) {
+      alert(idErr);
+      return;
+    }
+
     // Log the complete profile data to the console in a readable format
     console.table(completeProfileData);
     // or use:
@@ -89,29 +102,33 @@ const PartnerProfile = () => {
         <form onSubmit={handleSubmit}>
           {/* University or Company Name */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
               University or Company name
             </label>
             <input
               type="text"
               placeholder="Tesla Inc"
               value={universityName}
+              maxLength={60}
               onChange={(e) => setuniversityName(e.target.value)}
-              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200"
+              autoComplete="off"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200"
             />
           </div>
 
           {/* Institutional ID */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
               Institutional ID
             </label>
             <input
               type="text"
               placeholder="XXXXXXXXXX"
               value={institutionId}
-              onChange={(e) => setInstitutionId(e.target.value)}
-              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200"
+              maxLength={25}
+              onChange={(e) => setInstitutionId(e.target.value.replace(/[^A-Za-z0-9\-_]/g, ""))}
+              autoComplete="off"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200"
             />
           </div>
 

@@ -35,6 +35,148 @@ export const validateName = (name) => {
     return "Name must be at least 2 characters long.";
   }
 
+  if (trimmed.length > 50) {
+    return "Name cannot exceed 50 characters.";
+  }
+
+  return "";
+};
+
+/**
+ * Validates a University or Company name.
+ * - Must start with an alphabetic letter
+ * - Length between 2 and 60 characters
+ * - Only allowed characters: letters, numbers, spaces, and basic punctuation (&, ., ,, ', -, /, ())
+ *
+ * @param {string} name - The university/company name to validate.
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateUniversityOrCompanyName = (name) => {
+  if (!name || !name.trim()) {
+    return "University or Company name is required.";
+  }
+
+  const trimmed = name.trim();
+
+  if (trimmed.length < 2) {
+    return "University or Company name must be at least 2 characters.";
+  }
+
+  if (trimmed.length > 60) {
+    return "University or Company name cannot exceed 60 characters.";
+  }
+
+  if (!/^[A-Za-z]/.test(trimmed)) {
+    return "University or Company name must start with a letter.";
+  }
+
+  if (!/^[A-Za-z][A-Za-z0-9\s.,'&/()\-]*$/.test(trimmed)) {
+    return "University or Company name can only contain letters, numbers, spaces, and basic punctuation (&, ., ,, ', -, /).";
+  }
+
+  return "";
+};
+
+/**
+ * Validates a Job Title.
+ * - Must start with an alphabetic letter (A-Z or a-z)
+ * - Length between 3 and 100 characters
+ * - Only letters, numbers, spaces, and standard punctuation (&, ., ,, ', -, /, +, ())
+ * - Disallows special symbols like #, $, %, ^, *, @, !, ~, <, >, etc.
+ *
+ * @param {string} title - The job title to validate.
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateJobTitle = (title) => {
+  if (!title || !title.trim()) {
+    return "Job title is required.";
+  }
+
+  const trimmed = title.trim();
+
+  if (trimmed.length < 3) {
+    return "Job title must be at least 3 characters.";
+  }
+
+  if (trimmed.length > 100) {
+    return "Job title cannot exceed 100 characters.";
+  }
+
+  if (!/^[A-Za-z]/.test(trimmed)) {
+    return "Job title must start with a letter.";
+  }
+
+  if (!/^[A-Za-z][A-Za-z0-9\s.,'&/()\-+]*$/.test(trimmed)) {
+    return "Job title can only contain letters, numbers, spaces, and basic punctuation (&, ., ,, ', -, /, +, ()).";
+  }
+
+  return "";
+};
+
+/**
+ * Validates a Company Name.
+ * - Must start with an alphabetic letter (A-Z or a-z)
+ * - Length between 2 and 100 characters
+ * - Only letters, numbers, spaces, and standard punctuation (&, ., ,, ', -, /, ())
+ * - Disallows special symbols like #, $, %, ^, *, @, !, etc.
+ *
+ * @param {string} name - The company name to validate.
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateCompanyName = (name) => {
+  if (!name || !name.trim()) {
+    return "Company name is required.";
+  }
+
+  const trimmed = name.trim();
+
+  if (trimmed.length < 2) {
+    return "Company name must be at least 2 characters.";
+  }
+
+  if (trimmed.length > 100) {
+    return "Company name cannot exceed 100 characters.";
+  }
+
+  if (!/^[A-Za-z]/.test(trimmed)) {
+    return "Company name must start with a letter.";
+  }
+
+  if (!/^[A-Za-z][A-Za-z0-9\s.,'&/()\-]*$/.test(trimmed)) {
+    return "Company name can only contain letters, numbers, spaces, and basic punctuation (&, ., ,, ', -, /).";
+  }
+
+  return "";
+};
+
+/**
+ * Validates an Institutional ID.
+ * - Alphanumeric with optional hyphens and underscores
+ * - Length between 3 and 25 characters
+ * - No special characters like #, $, %, ^, &, *, (, )
+ *
+ * @param {string} id - The institutional ID to validate.
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateInstitutionId = (id) => {
+  if (!id || !id.trim()) {
+    return "Institutional ID is required.";
+  }
+
+  const trimmed = id.trim();
+
+  if (trimmed.length < 3) {
+    return "Institutional ID must be at least 3 characters.";
+  }
+
+  if (trimmed.length > 25) {
+    return "Institutional ID cannot exceed 25 characters.";
+  }
+
+  if (!/^[A-Za-z0-9\-_]+$/.test(trimmed)) {
+    return "Institutional ID can only contain letters, numbers, hyphens, and underscores.";
+  }
+
   return "";
 };
 

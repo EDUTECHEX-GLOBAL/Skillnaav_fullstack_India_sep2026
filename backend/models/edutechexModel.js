@@ -202,6 +202,14 @@ const contactSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    organization: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
     subject: {
       type: String,
       required: true,

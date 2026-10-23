@@ -1,14 +1,14 @@
 export const COUNTRIES = {
-  US: "United States",
   IN: "India",
+  US: "United States",
   CA: "Canada",
   GB: "United Kingdom",
   AU: "Australia",
 };
 
 export const COUNTRY_OPTIONS = [
-  "United States",
   "India",
+  "United States",
   "Canada",
   "United Kingdom",
   "Australia",
@@ -138,7 +138,7 @@ export const getZipLabel = (country = "") => {
 
 export const getZipPlaceholder = (country = "") => {
   const config = POSTAL_CODE_PATTERNS[country] || POSTAL_CODE_PATTERNS[country?.trim()];
-  return config?.placeholder || "e.g., 75001 or 500081";
+  return config?.placeholder || "e.g., 500081 or 110001";
 };
 
 export const isValidPostalCode = (code, country = "") => {
@@ -183,7 +183,7 @@ export const getCityError = (city) => {
   if (!city || typeof city !== "string" || !city.trim()) return null;
   const trimmed = city.trim();
   if (/\d/.test(trimmed)) {
-    return "City name cannot contain numbers. Please enter text only (e.g., Dallas, New York).";
+    return "City name cannot contain numbers. Please enter text only (e.g., Mumbai, Bengaluru, Delhi).";
   }
   if (!/^[a-zA-Z\u00C0-\u024F\s.'\-]{2,60}$/.test(trimmed)) {
     return "Please enter a valid city name (letters only, min 2 characters).";

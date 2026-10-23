@@ -367,6 +367,17 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleBackToOtp = () => {
+    setOtpVerified(false);
+    setStep(2);
+    setError("");
+    setMessage("");
+    if (timeLeft <= 0) {
+      setCanResend(true);
+      setResendCooldown(0);
+    }
+  };
+
   useEffect(() => {
     if (message.includes("successfully updated")) {
       const timer = setTimeout(() => onClose(), 2500);
@@ -1040,6 +1051,23 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
                 style={btnBase}
               >
                 {isLoading ? "Updating…" : "Reset password"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleBackToOtp}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  color: "#6b7280",
+                  textAlign: "center",
+                  padding: "4px",
+                  fontFamily: "inherit",
+                }}
+              >
+                ← Back to code
               </button>
             </form>
           )}

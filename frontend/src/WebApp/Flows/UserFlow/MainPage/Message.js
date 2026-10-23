@@ -56,7 +56,7 @@ const ChatInterface = () => {
       </div>
 
       {/* Chat Content */}
-      <div className="w-3/4 flex flex-col">
+      <div className="w-full md:w-3/4 flex flex-col">
         {/* Messages */}
         <div className="flex flex-col space-y-4 overflow-y-auto flex-grow bg-gray-50 p-4 rounded-lg shadow-lg">
           <div className="flex items-start space-x-3">
@@ -100,8 +100,8 @@ const ChatInterface = () => {
 
         {/* File Upload Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xs">
               <div className="flex flex-col items-center bg-gray-100 rounded-lg p-6">
                 <FaFileAlt className="text-purple-600 mb-4" size={40} />
                 <label className="text-purple-600 cursor-pointer mb-4">

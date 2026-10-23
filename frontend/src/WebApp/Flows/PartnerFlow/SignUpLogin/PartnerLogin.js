@@ -9,6 +9,7 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
 import ForgotPasswordModal from "../SignUpLogin/PartnerforgotPassword";
 import { GoogleLogin } from "@react-oauth/google"; // 🔥 NEW
+import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -21,6 +22,8 @@ const PartnerLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { containerRef: googleBtnRef, buttonWidth: googleBtnWidth } =
+    useGoogleButtonWidth(384);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -110,8 +113,8 @@ const PartnerLogin = () => {
       </div>
 
       {/* Right Section */}
-      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 rounded-lg">
-        <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
+      <div className="flex flex-col items-center justify-center px-4 py-8 sm:p-8 w-full lg:w-1/2 rounded-lg">
+        <div className="w-full max-w-md flex flex-col justify-center my-auto py-4">
           <h1 className="text-2xl font-extrabold mb-6 text-center text-gray-800">
             Dear Partner, Welcome Back!
           </h1>
@@ -143,7 +146,7 @@ const PartnerLogin = () => {
                       type="email"
                       name="email"
                       placeholder="Enter your email"
-                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                      className="w-full mt-0 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
                     <ErrorMessage
                       name="email"
@@ -158,12 +161,13 @@ const PartnerLogin = () => {
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter your password"
-                      className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                      className="w-full mt-0 p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-600 hover:text-gray-800"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       <FontAwesomeIcon
                         icon={showPassword ? faEyeSlash : faEye}
@@ -224,11 +228,17 @@ const PartnerLogin = () => {
             <hr className="w-full border-gray-300" />
           </div>
 
-          {/* 🔥 NEW: Google Login Button */}
-          <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => setError("Google login failed")}
-          />
+          {/* 🔥 Google Login Button */}
+          <div ref={googleBtnRef} className="google-login-wrapper w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => setError("Google login failed")}
+              size="large"
+              text="signin_with"
+              shape="rectangular"
+              width={googleBtnWidth}
+            />
+          </div>
 
           {/* Sign Up */}
           <p className="text-center text-sm mt-4">

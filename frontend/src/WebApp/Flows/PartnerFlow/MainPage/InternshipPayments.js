@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
 import Modal from "react-modal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,6 +17,7 @@ import {
   faXmark,
   faChevronLeft,
   faChevronRight,
+  faChevronDown,
   faHashtag,
   faUser,
   faEnvelope,
@@ -28,6 +29,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 Modal.setAppElement("#root");
+
+const STATUS_OPTIONS = [
+  { value: "ALL", label: "All Statuses" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CREATED", label: "Pending" },
+  { value: "FAILED", label: "Failed" },
+  { value: "CANCELLED", label: "Cancelled" },
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (d) =>
@@ -285,9 +294,31 @@ const InternshipPayments = () => {
 
   // Modal filters + pagination
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const MODAL_PER_PAGE = 10;
+
+  // Close status dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(e.target)
+      ) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    if (statusDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [statusDropdownOpen]);
 
   const partnerId = localStorage.getItem("partnerId");
 
@@ -367,6 +398,7 @@ const InternshipPayments = () => {
     setSelectedInternship(null);
     setPayments([]);
     setPaymentError(null);
+    setStatusDropdownOpen(false);
   };
 
   // ── Modal filter + pagination ─────────────────────────────────────────────
@@ -684,21 +716,69 @@ const InternshipPayments = () => {
                 </button>
               )}
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CREATED">Pending</option>
-              <option value="FAILED">Failed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
+            {/* Custom Status Dropdown - Down box matches top box width exactly */}
+            <div className="relative w-full sm:w-44 shrink-0" ref={statusDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setStatusDropdownOpen((prev) => !prev)}
+                className={`w-full flex items-center justify-between py-2 px-3 bg-white border rounded-lg text-sm transition cursor-pointer select-none ${
+                  statusDropdownOpen
+                    ? "border-indigo-400 ring-2 ring-indigo-300"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                style={{ fontFamily: "'Poppins', sans-serif" }}
+                aria-haspopup="listbox"
+                aria-expanded={statusDropdownOpen}
+              >
+                <span className="truncate text-gray-800 font-medium">
+                  {STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label || "All Statuses"}
+                </span>
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  className={`text-xs text-gray-400 transition-transform duration-200 shrink-0 ml-2 ${
+                    statusDropdownOpen ? "rotate-180 text-indigo-500" : ""
+                  }`}
+                />
+              </button>
+
+              {statusDropdownOpen && (
+                <div
+                  className="absolute left-0 right-0 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden py-1"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                  role="listbox"
+                >
+                  {STATUS_OPTIONS.map((opt) => {
+                    const isSelected = statusFilter === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter(opt.value);
+                          setPage(1);
+                          setStatusDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm transition flex items-center justify-between cursor-pointer ${
+                          isSelected
+                            ? "bg-indigo-600 text-white font-medium"
+                            : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                        }`}
+                        role="option"
+                        aria-selected={isSelected}
+                      >
+                        <span className="truncate">{opt.label}</span>
+                        {isSelected && (
+                          <FontAwesomeIcon
+                            icon={faCircleCheck}
+                            className="text-xs text-white shrink-0 ml-2"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Payment error */}

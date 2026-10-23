@@ -80,7 +80,7 @@ const BodyContent = () => {
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-4 md:p-6 min-h-full">
+      <div className="p-2 sm:p-4 md:p-6 min-h-full">
         {content}
       </div>
     </div>

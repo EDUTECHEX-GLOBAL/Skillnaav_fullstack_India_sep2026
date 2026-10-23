@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-export const EDUTECHEX_TAB_TITLE = "Edutechex - Navigate Your Skills";
+export const EDUTECHEX_TAB_TITLE = "EDUTECHEX - Navigate Your Skills";
 const FAVICON_VERSION = "20260929";
 const buildAssetPath = (fileName) =>
   `${process.env.PUBLIC_URL}/${fileName}?v=${FAVICON_VERSION}`;
@@ -129,7 +129,7 @@ export const applyEdutechexFavicon = () => {
 };
 
 export const getEdutechexPageTitle = (pageTitle) =>
-  pageTitle ? `${pageTitle} | Edutechex` : EDUTECHEX_TAB_TITLE;
+  pageTitle ? `${pageTitle} | EDUTECHEX` : EDUTECHEX_TAB_TITLE;
 
 export const useEdutechexFavicon = () => {
   const location = useLocation();

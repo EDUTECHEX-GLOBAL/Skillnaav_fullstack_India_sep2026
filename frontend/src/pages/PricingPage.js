@@ -34,7 +34,7 @@ function PricingPage() {
   return (
     <>
       <Helmet>
-  <title>Pricing - Edutechex</title>
+  <title>Pricing - EDUTECHEX</title>
 
   <meta
     name="description"

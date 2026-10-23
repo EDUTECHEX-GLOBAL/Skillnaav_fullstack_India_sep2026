@@ -3,17 +3,20 @@ import React, { useState } from "react";
 import * as Accordion from "@radix-ui/react-accordion";
 import Plus from "../assets/Plus.svg";
 import { useSelector } from "react-redux";
+import { staticFaqData } from "../data/websiteContentData";
 
 const Faq = ({ className = "" }) => {
   const { edutechexData } = useSelector((state) => state.root);
   const [openItem, setOpenItem] = useState("item-1");
 
-  if (!edutechexData || !edutechexData.faq || edutechexData.faq.length === 0) {
-    return null;
-  }
-
-  const { faqheading, faqsubheading } = edutechexData.faq[0];
-  const { faqcard } = edutechexData;
+  const faqheading =
+    edutechexData?.faq?.[0]?.faqheading || staticFaqData.faqheading;
+  const faqsubheading =
+    edutechexData?.faq?.[0]?.faqsubheading || staticFaqData.faqsubheading;
+  const faqcard =
+    edutechexData?.faqcard?.length > 0
+      ? edutechexData.faqcard
+      : staticFaqData.faqcard;
 
   return (
     <div
@@ -47,7 +50,7 @@ const Faq = ({ className = "" }) => {
                   className="bg-[#E3F1FF] p-[16px] rounded-[8px]"
                 >
                   <Accordion.Header>
-                    <Accordion.Trigger className="flex w-full items-center justify-between">
+                    <Accordion.Trigger className="flex w-full items-center justify-between cursor-pointer">
                       <p className="text-left text-[#172026] text-[16px] font-medium leading-[24px] lg:text-[18px]">
                         {item.faq}
                       </p>

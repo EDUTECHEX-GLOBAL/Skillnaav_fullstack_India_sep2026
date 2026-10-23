@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendarAlt,
@@ -19,6 +21,96 @@ import {
   faBriefcase,
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
+
+
+// Custom Time Picker (Width strictly bound to trigger input box)
+const RescheduleTimePicker = ({ value, onChange, placeholder = "HH:MM" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const [currHour, currMin] = (value || "").split(":");
+  const selectedHour = currHour !== undefined && currHour !== "" ? currHour.padStart(2, "0") : "";
+  const selectedMin = currMin !== undefined && currMin !== "" ? currMin.padStart(2, "0") : "";
+
+  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className={`relative w-full ${isOpen ? "z-[80]" : "z-[1]"}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between text-left bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
+      >
+        <span className="flex items-center gap-2">
+          <FontAwesomeIcon icon={faClock} className="text-slate-400" />
+          <span className={value ? "text-slate-800" : "text-slate-400"}>{value || placeholder}</span>
+        </span>
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute z-[90] left-0 right-0 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          <div className="grid grid-cols-2 text-center text-[10px] uppercase font-bold text-slate-400 pb-1 border-b mb-1.5">
+            <span>Hour</span>
+            <span>Minute</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 h-40">
+            <div className="overflow-y-auto pr-1 space-y-0.5">
+              {hours.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => onChange({ target: { value: `${h}:${selectedMin || '00'}` } })}
+                  className={`w-full py-1 text-xs text-center rounded ${selectedHour === h ? 'bg-indigo-600 text-white font-bold' : 'text-slate-700 hover:bg-indigo-50'}`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+            <div className="overflow-y-auto pr-1 space-y-0.5">
+              {minutes.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => onChange({ target: { value: `${selectedHour || '09'}:${m}` } })}
+                  className={`w-full py-1 text-xs text-center rounded ${selectedMin === m ? 'bg-indigo-600 text-white font-bold' : 'text-slate-700 hover:bg-indigo-50'}`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="w-full mt-2 py-1 text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg"
+          >
+            Done
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Reusable Statistics Card Component
 const StatCard = ({
@@ -1191,14 +1283,25 @@ const MockInterviewResults = () => {
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                   Date
                 </label>
-                <input
-                  type="date"
-                  value={editFormData.date}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, date: e.target.value })
-                  }
-                  className="bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
-                />
+                <div className="relative w-full">
+                  <DatePicker
+                    selected={editFormData.date ? new Date(editFormData.date + "T00:00:00") : null}
+                    onChange={(date) => {
+                      if (!date) {
+                        setEditFormData({ ...editFormData, date: "" });
+                      } else {
+                        const y = date.getFullYear();
+                        const m = String(date.getMonth() + 1).padStart(2, "0");
+                        const d = String(date.getDate()).padStart(2, "0");
+                        setEditFormData({ ...editFormData, date: `${y}-${m}-${d}` });
+                      }
+                    }}
+                    dateFormat="dd-MM-yyyy"
+                    placeholderText="DD-MM-YYYY"
+                    className="w-full bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
+                    wrapperClassName="w-full"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1206,8 +1309,7 @@ const MockInterviewResults = () => {
                   <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                     Start Time
                   </label>
-                  <input
-                    type="time"
+                  <RescheduleTimePicker
                     value={editFormData.startTime}
                     onChange={(e) =>
                       setEditFormData({
@@ -1215,15 +1317,13 @@ const MockInterviewResults = () => {
                         startTime: e.target.value,
                       })
                     }
-                    className="bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                     End Time
                   </label>
-                  <input
-                    type="time"
+                  <RescheduleTimePicker
                     value={editFormData.endTime}
                     onChange={(e) =>
                       setEditFormData({
@@ -1231,7 +1331,6 @@ const MockInterviewResults = () => {
                         endTime: e.target.value,
                       })
                     }
-                    className="bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 cursor-pointer"
                   />
                 </div>
               </div>

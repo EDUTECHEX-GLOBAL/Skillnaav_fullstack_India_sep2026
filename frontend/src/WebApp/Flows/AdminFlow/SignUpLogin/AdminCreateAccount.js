@@ -9,11 +9,32 @@ import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import adminImage from "../../../../assets-webapp/partner.jpg"; // Adjust path as necessary
+import { validateEmail } from "../../../../utils/validators";
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
-  name: Yup.string().required("Required"),
-  email: Yup.string().email("Invalid email address").required("Required"),
+  name: Yup.string()
+    .trim()
+    .required("Full Name is Required")
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name cannot exceed 50 characters")
+    .matches(/^[A-Za-z]/, "Name must start with a letter")
+    .matches(/^[^0-9]*$/, "Name cannot contain numbers")
+    .matches(
+      /^[A-Za-z][A-Za-z\s'.-]*$/,
+      "Name can only contain letters, spaces, hyphens, or apostrophes"
+    ),
+  email: Yup.string()
+    .trim()
+    .required("Required")
+    .test("is-valid-email", function (value) {
+      if (!value) return true;
+      const errorMsg = validateEmail(value);
+      if (errorMsg) {
+        return this.createError({ message: errorMsg });
+      }
+      return true;
+    }),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .required("Required"),
@@ -99,6 +120,7 @@ const AdminCreateAccount = () => {
                       type="text"
                       name="name"
                       placeholder="Full Name"
+                      maxLength={50}
                       className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                       aria-label="Full Name"
                     />
