@@ -206,7 +206,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
 
   return (
     <>
-      <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 w-full">
+    <header className="bg-white font-poppins text-gray-800 h-[72px] px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 w-full box-border flex-shrink-0">
       <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
           <button
             onClick={handleHamburgerClick}
@@ -218,7 +218,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
           <img
             src={logo}
             alt="Edutechex Logo"
-            className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+            className="h-[42px] sm:h-[46px] w-auto max-w-[160px] sm:max-w-[190px] object-contain ml-0.5 sm:ml-2"
           />
         </div>
 
@@ -267,7 +267,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
           {isDropdownOpen && (
             <div
               ref={dropdownRef}
-              className="absolute right-0 top-16 mt-2 bg-white shadow-xl rounded-xl border border-gray-200 z-50 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[20rem] max-w-sm"
+              className="absolute right-0 top-full mt-2 bg-white shadow-xl rounded-xl border border-gray-200 z-50 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[20rem] max-w-sm"
             >
               <div className="px-4 py-3 border-b rounded-t-xl">
                 <div className="flex items-center gap-2 text-black">

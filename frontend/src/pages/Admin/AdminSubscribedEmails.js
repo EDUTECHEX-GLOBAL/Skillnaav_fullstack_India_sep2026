@@ -109,10 +109,6 @@ const AdminSubscribedEmails = () => {
             <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
               SUBSCRIBED EMAILS
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Live Monitoring ({lastUpdated})
-            </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
             {appliedStart || appliedEnd
@@ -125,10 +121,14 @@ const AdminSubscribedEmails = () => {
           <button
             onClick={() => fetchLiveSubscribers(true)}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
             title="Refresh subscribers from database"
           >
-            <FaSyncAlt className={`text-xs ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <FaSyncAlt
+              className={`text-xs text-slate-400 group-hover:text-blue-600 transition-colors duration-200 ${
+                loading ? "animate-spin text-blue-600" : "group-hover:rotate-180 transition-transform duration-500"
+              }`}
+            />
             <span>{loading ? "Refreshing..." : "Refresh"}</span>
           </button>
 

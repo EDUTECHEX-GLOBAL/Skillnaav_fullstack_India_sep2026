@@ -32,7 +32,17 @@ function AdminPricing() {
     return <Skeleton active />;
   }
 
-  const { pricing, pricingcard } = pricingData;
+  const { pricing, pricingcard: rawPricingCard } = pricingData;
+
+  const pricingcard = (rawPricingCard || []).map((card) => {
+    let subhead = card.plantypesubhead;
+    if (subhead === "Ideal for individual students") {
+      subhead = "Basic Free Access";
+    } else if (subhead === "Student Plan") {
+      subhead = "Premium Student Access";
+    }
+    return { ...card, plantypesubhead: subhead };
+  });
 
   // Check if pricing array exists and has at least one item
   if (!pricing || pricing.length === 0) {

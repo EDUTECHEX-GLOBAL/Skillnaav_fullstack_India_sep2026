@@ -182,10 +182,6 @@ const AdminNewsletter = () => {
             <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
               NEWSLETTER & BROADCASTS
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Live Auto-Sync ({lastUpdated})
-            </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Send announcements, updates, and digests to your contacts and subscribers

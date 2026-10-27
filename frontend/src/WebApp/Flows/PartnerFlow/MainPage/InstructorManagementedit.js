@@ -1,6 +1,6 @@
 //File: InstructorManagementedit.js
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import axios from "../../../../api/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,15 +13,373 @@ import {
   faIndianRupeeSign,
   faClipboardList,
   faPlus,
+  faChevronDown,
+  faCheck,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  validateName,
+  validateEmail,
+  getEmailSuggestion,
+  validateIndianMobile,
+  extractIndianMobileDigits,
+  formatIndianMobile,
+  validateIndianPinCode,
+  extractIndianPinCodeDigits,
+} from "../../../../utils/validators";
 
 /* ─── Shared style tokens ─── */
 const inputCls =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white/95 px-4 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-50 file:to-sky-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700";
+  "!mt-0 w-full h-11 rounded-xl border border-slate-200 bg-white/95 px-4 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-50 file:to-sky-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 file:cursor-pointer file:align-middle";
+const fileInputCls =
+  "!mt-0 w-full h-11 rounded-xl border border-slate-200 bg-white/95 px-3 py-[5px] text-sm text-slate-800 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 cursor-pointer flex items-center file:mr-3 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-50 file:to-sky-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 file:cursor-pointer file:align-middle";
 const textareaCls =
-  "w-full rounded-xl border border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 min-h-[7rem] resize-y";
+  "!mt-0 w-full rounded-xl border border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 min-h-[7rem] resize-y";
 const labelCls =
   "block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5";
+
+const IndiaFlag = () => (
+  <svg
+    className="w-[18px] h-[13px] rounded-[2px] shadow-xs shrink-0 object-cover"
+    viewBox="0 0 640 480"
+    aria-hidden="true"
+  >
+    <path fill="#FF9933" d="M0 0h640v160H0z" />
+    <path fill="#FFFFFF" d="M0 160h640v160H0z" />
+    <path fill="#128807" d="M0 320h640v160H0z" />
+    <circle cx="320" cy="240" r="28" fill="#000080" />
+    <circle cx="320" cy="240" r="23" fill="#FFFFFF" />
+    <circle cx="320" cy="240" r="7" fill="#000080" />
+  </svg>
+);
+
+// ─── CustomSelect ─────────────────────────────────────────────────────────────
+// Ensures the dropdown menu ("down box") strictly matches the width of the trigger ("top box")
+const CustomSelect = forwardRef(({
+  name,
+  value,
+  defaultValue = "",
+  onChange,
+  options = [],
+  placeholder = "Select",
+  required = false,
+  disabled = false,
+  className = "",
+  error = "",
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const containerRef = useRef(null);
+  const hiddenInputRef = useRef(null);
+
+  const currentValue = value !== undefined ? value : internalValue;
+
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setInternalValue(defaultValue);
+    }
+  }, [defaultValue]);
+
+  const setRefs = (el) => {
+    hiddenInputRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  const normalizedOptions = useMemo(() => {
+    return options.map((opt) =>
+      typeof opt === "object" && opt !== null && "value" in opt
+        ? opt
+        : { value: opt, label: opt }
+    );
+  }, [options]);
+
+  const selectedOption = normalizedOptions.find(
+    (opt) => String(opt.value) === String(currentValue)
+  );
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (val) => {
+    setInternalValue(val);
+    if (onChange) {
+      onChange({ target: { name, value: val } });
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full ${isOpen ? "z-[60]" : "z-[1]"}`}
+    >
+      <input
+        type="hidden"
+        name={name}
+        value={currentValue || ""}
+        required={required}
+        ref={setRefs}
+      />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full h-11 rounded-xl border bg-white/95 px-4 text-sm shadow-sm transition-all duration-200 flex items-center justify-between text-left focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 ${
+          isOpen
+            ? "border-violet-400 ring-4 ring-violet-500/10"
+            : error
+              ? "!border-rose-400 focus:!border-rose-500"
+              : "border-slate-200"
+        } ${disabled ? "opacity-60 cursor-not-allowed bg-slate-50" : "cursor-pointer"} ${className}`}
+      >
+        <span
+          className={`truncate pr-2 ${
+            selectedOption && selectedOption.value !== ""
+              ? "text-slate-800 font-medium"
+              : "text-slate-400 font-normal"
+          }`}
+        >
+          {selectedOption && selectedOption.value !== ""
+            ? selectedOption.label
+            : placeholder}
+        </span>
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          className={`text-xs text-slate-400 shrink-0 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-violet-600" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute z-[80] left-0 right-0 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto py-1 divide-y divide-slate-50"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          {normalizedOptions.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-slate-400 text-center">
+              No options available
+            </div>
+          ) : (
+            normalizedOptions.map((opt) => {
+              const isSelected = String(currentValue) === String(opt.value);
+              return (
+                <div
+                  key={opt.value}
+                  onClick={() => handleSelect(opt.value)}
+                  className={`px-4 py-2.5 text-xs sm:text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? "bg-violet-50 text-violet-700 font-semibold"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && opt.value !== "" && (
+                    <span className="text-violet-600 text-xs font-bold">✓</span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ─── CustomTimeSelect ─────────────────────────────────────────────────────────
+// Time picker dropdown matching the exact width of the top box
+const CustomTimeSelect = forwardRef(({
+  name,
+  value,
+  defaultValue = "",
+  onChange,
+  placeholder = "--:--",
+  required = false,
+  disabled = false,
+  className = "",
+  error = "",
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const currentValue = value !== undefined ? value : internalValue;
+
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setInternalValue(defaultValue);
+    }
+  }, [defaultValue]);
+
+  const setRefs = (el) => {
+    inputRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const [currentHour, currentMin] = (currentValue && currentValue.includes(":"))
+    ? currentValue.split(":")
+    : ["", ""];
+
+  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+  const handleHourSelect = (h) => {
+    const m = currentMin || "00";
+    const newVal = `${h}:${m}`;
+    setInternalValue(newVal);
+    if (onChange) onChange({ target: { name, value: newVal } });
+  };
+
+  const handleMinSelect = (m) => {
+    const h = currentHour || "09";
+    const newVal = `${h}:${m}`;
+    setInternalValue(newVal);
+    if (onChange) onChange({ target: { name, value: newVal } });
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full ${isOpen ? "z-[60]" : "z-[1]"}`}
+    >
+      <input
+        type="hidden"
+        name={name}
+        value={currentValue || ""}
+        required={required}
+        ref={setRefs}
+      />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full h-11 rounded-xl border bg-white/95 px-4 text-sm shadow-sm transition-all duration-200 flex items-center justify-between text-left focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 ${
+          isOpen
+            ? "border-violet-400 ring-4 ring-violet-500/10"
+            : error
+              ? "!border-rose-400 focus:!border-rose-500"
+              : "border-slate-200"
+        } ${disabled ? "opacity-60 cursor-not-allowed bg-slate-50" : "cursor-pointer"} ${className}`}
+      >
+        <span className={currentValue ? "text-slate-800 font-medium" : "text-slate-400 font-normal"}>
+          {currentValue || placeholder}
+        </span>
+        <FontAwesomeIcon
+          icon={faClock}
+          className={`text-xs transition-colors ${
+            isOpen ? "text-violet-600" : "text-slate-400"
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute z-[80] left-0 right-0 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-in"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          <div className="grid grid-cols-2 bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider py-1.5 text-center">
+            <span>Hour (24h)</span>
+            <span>Minute</span>
+          </div>
+
+          <div className="grid grid-cols-2 divide-x divide-slate-100 h-44">
+            <div className="overflow-y-auto py-1 scrollbar-thin">
+              {hours.map((h) => {
+                const isSelected = currentHour === h;
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => handleHourSelect(h)}
+                    className={`w-full py-1.5 text-xs text-center font-medium transition-colors ${
+                      isSelected
+                        ? "bg-violet-600 text-white font-bold"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-700"
+                    }`}
+                  >
+                    {h}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="overflow-y-auto py-1 scrollbar-thin">
+              {minutes.map((m) => {
+                const isSelected = currentMin === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleMinSelect(m)}
+                    className={`w-full py-1.5 text-xs text-center font-medium transition-colors ${
+                      isSelected
+                        ? "bg-violet-600 text-white font-bold"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-700"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="p-2 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                setInternalValue("");
+                if (onChange) onChange({ target: { name, value: "" } });
+              }}
+              className="text-[11px] font-semibold text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="px-3 py-1 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
 
 const dayOpts = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -106,14 +464,14 @@ const FormSection = ({ title, icon, children }) => {
         {icon && <FontAwesomeIcon icon={icon} className={theme.icon} />}
         {title}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-5">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 sm:gap-x-5 gap-y-5">{children}</div>
     </div>
   );
 };
 
 /* ─── Field wrapper ─── */
 const Field = ({ label, required, span = 1, children }) => (
-  <div className={span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : ""}>
+  <div className={`flex flex-col justify-start ${span === 2 ? "sm:col-span-2 md:col-span-2" : span === 3 ? "sm:col-span-3 md:col-span-3" : ""}`}>
     <label className={labelCls}>
       {label} {required && <span className="text-rose-500">*</span>}
     </label>
@@ -140,6 +498,11 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const [pendingFormData, setPendingFormData] = useState(null);
   const [pendingId, setPendingId] = useState(null);
   const [portalTarget, setPortalTarget] = useState(null);
+  const [alertInfo, setAlertInfo] = useState(null);
+
+  const showAlert = (message, type = "success", title) => {
+    setAlertInfo({ message, type, title });
+  };
 
   const itemId = useMemo(() => item?._id || item?.id, [item]);
 
@@ -147,9 +510,44 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
   const [country, setCountry] = useState(initialCountry);
   const [stateProv, setStateProv] = useState(item?.state || "");
   const [city, setCity] = useState(item?.city || "");
-  const [postalCode, setPostalCode] = useState(item?.postalCode || "");
+  const [postalCode, setPostalCode] = useState(() => extractIndianPinCodeDigits(item?.postalCode));
+  const [postalError, setPostalError] = useState("");
   const [address1, setAddress1] = useState(item?.address1 || "");
   const [address2, setAddress2] = useState(item?.address2 || "");
+
+  const phoneRef = useRef(null);
+  const altPhoneRef = useRef(null);
+  const postalRef = useRef(null);
+  const emailRef = useRef(null);
+  const firstNameRef = useRef(null);
+  const lastNameRef = useRef(null);
+  const [firstName, setFirstName] = useState(() => item?.firstName || "");
+  const [lastName, setLastName] = useState(() => item?.lastName || "");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
+  const [email, setEmail] = useState(() => (item?.email || "").trim());
+  const [emailError, setEmailError] = useState("");
+  const [emailSuggestion, setEmailSuggestion] = useState("");
+  const [phone, setPhone] = useState(() => extractIndianMobileDigits(item?.phone));
+  const [altPhone, setAltPhone] = useState(() => extractIndianMobileDigits(item?.altPhone));
+  const [phoneError, setPhoneError] = useState("");
+  const [altPhoneError, setAltPhoneError] = useState("");
+
+  useEffect(() => {
+    setFirstName(item?.firstName || "");
+    setLastName(item?.lastName || "");
+    setFirstNameError("");
+    setLastNameError("");
+    setEmail((item?.email || "").trim());
+    setEmailError("");
+    setEmailSuggestion("");
+    setPhone(extractIndianMobileDigits(item?.phone));
+    setAltPhone(extractIndianMobileDigits(item?.altPhone));
+    setPostalCode(extractIndianPinCodeDigits(item?.postalCode));
+    setPhoneError("");
+    setAltPhoneError("");
+    setPostalError("");
+  }, [item, open]);
 
   const [currency, setCurrency] = useState(item?.currency || "INR");
 
@@ -234,27 +632,50 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
     (prefStartRefs.current || []).forEach((el) => el?.setCustomValidity(""));
     (prefEndRefs.current || []).forEach((el) => el?.setCustomValidity(""));
 
-    const form = e.currentTarget;
-    form.querySelector('[name="country"]')?.setCustomValidity("");
-    form.querySelector('[name="state"]')?.setCustomValidity("");
-    form.querySelector('[name="city"]')?.setCustomValidity("");
-    form.querySelector('[name="postalCode"]')?.setCustomValidity("");
-    form.querySelector('[name="address1"]')?.setCustomValidity("");
+      const form = e.currentTarget;
+      form.querySelector('[name="country"]')?.setCustomValidity("");
+      form.querySelector('[name="state"]')?.setCustomValidity("");
+      form.querySelector('[name="city"]')?.setCustomValidity("");
+      form.querySelector('[name="postalCode"]')?.setCustomValidity("");
+      form.querySelector('[name="address1"]')?.setCustomValidity("");
+      firstNameRef.current?.setCustomValidity("");
+      lastNameRef.current?.setCustomValidity("");
 
-    if (!country) form.querySelector('[name="country"]')?.setCustomValidity("Please fill in this field.");
-    if (!stateProv) form.querySelector('[name="state"]')?.setCustomValidity("Please fill in this field.");
-    if (!city) form.querySelector('[name="city"]')?.setCustomValidity("Please fill in this field.");
-    if (!postalCode) form.querySelector('[name="postalCode"]')?.setCustomValidity("Please fill in this field.");
-    if (!address1) form.querySelector('[name="address1"]')?.setCustomValidity("Please fill in this field.");
+      if (!country) form.querySelector('[name="country"]')?.setCustomValidity("Please fill in this field.");
+      if (!stateProv) form.querySelector('[name="state"]')?.setCustomValidity("Please fill in this field.");
+      if (!city) form.querySelector('[name="city"]')?.setCustomValidity("Please fill in this field.");
+      form.querySelector('[name="postalCode"]')?.setCustomValidity("");
+      postalRef.current?.setCustomValidity("");
+      if (!address1) form.querySelector('[name="address1"]')?.setCustomValidity("Please fill in this field.");
 
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      setSubmitting(false);
-      return;
-    }
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        setSubmitting(false);
+        return;
+      }
 
-    try {
-      const fd = new FormData(form);
+      try {
+        const fd = new FormData(form);
+
+      const fName = (firstName || fd.get("firstName") || "").trim();
+      const fnErr = validateName(fName);
+      if (fnErr) {
+        setFirstNameError(fnErr);
+        firstNameRef.current?.setCustomValidity(fnErr);
+        firstNameRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const lName = (lastName || fd.get("lastName") || "").trim();
+      const lnErr = validateName(lName);
+      if (lnErr) {
+        setLastNameError(lnErr);
+        lastNameRef.current?.setCustomValidity(lnErr);
+        lastNameRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
       const availableDays = fd.getAll("availableDays");
 
       if (availableDays.length === 0) {
@@ -269,6 +690,57 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
       const start = fd.get("availableStart");
       const end = fd.get("availableEnd");
+
+      emailRef.current?.setCustomValidity("");
+      phoneRef.current?.setCustomValidity("");
+      altPhoneRef.current?.setCustomValidity("");
+      postalRef.current?.setCustomValidity("");
+
+      const emailErr = validateEmail(email);
+      if (emailErr) {
+        setEmailError(emailErr);
+        setEmailSuggestion(getEmailSuggestion(email) || "");
+        emailRef.current?.setCustomValidity(emailErr);
+        emailRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const pinErr = validateIndianPinCode(postalCode, true);
+      if (pinErr) {
+        setPostalError(pinErr);
+        postalRef.current?.setCustomValidity(pinErr);
+        postalRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const pErr = validateIndianMobile(phone, true);
+      if (pErr) {
+        setPhoneError(pErr);
+        phoneRef.current?.setCustomValidity(pErr);
+        phoneRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+      if (altPhone) {
+        const apErr = validateIndianMobile(altPhone, false);
+        if (apErr) {
+          setAltPhoneError(apErr);
+          altPhoneRef.current?.setCustomValidity(apErr);
+          altPhoneRef.current?.reportValidity();
+          setSubmitting(false);
+          return;
+        }
+        if (phone === altPhone) {
+          const dupErr = "Alternate phone cannot be the same as primary mobile number.";
+          setAltPhoneError(dupErr);
+          altPhoneRef.current?.setCustomValidity(dupErr);
+          altPhoneRef.current?.reportValidity();
+          setSubmitting(false);
+          return;
+        }
+      }
 
       if (start && end && end <= start) {
         endRef.current?.setCustomValidity("End Time must be AFTER Start Time.");
@@ -330,13 +802,13 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
       const payload = {
         firstName: fd.get("firstName") || "",
         lastName: fd.get("lastName") || "",
-        email: (fd.get("email") || "").trim(),
-        phone: fd.get("phone") || "",
-        altPhone: fd.get("altPhone") || "",
+        email: (email || fd.get("email") || "").trim(),
+        phone: formatIndianMobile(phone),
+        altPhone: altPhone ? formatIndianMobile(altPhone) : "",
         country,
         state: fd.get("state") || "",
         city: fd.get("city") || "",
-        postalCode: fd.get("postalCode") || "",
+        postalCode: extractIndianPinCodeDigits(postalCode),
         address1: fd.get("address1") || "",
         address2: fd.get("address2") || "",
         qualification: fd.get("qualification") || "",
@@ -391,7 +863,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
       const emailForOtp = payload.email;
       if (!emailForOtp) {
-        alert("Email is required to send OTP.");
+        showAlert("Email is required to send OTP.", "error");
         setSubmitting(false);
         return;
       }
@@ -404,7 +876,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
       setOtpOpen(true);
     } catch (err) {
       console.error("Edit start failed:", err);
-      alert(err?.response?.data?.message || "Failed to start OTP for update.");
+      showAlert(err?.response?.data?.message || "Failed to start OTP for update.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -434,7 +906,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
       setPendingId(null);
     } catch (err) {
       console.error("Verify/Save failed:", err);
-      alert(err?.response?.data?.message || "Invalid OTP or update failed.");
+      showAlert(err?.response?.data?.message || "Invalid OTP or update failed.", "error");
     }
   };
 
@@ -475,59 +947,239 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                       <FormSection title="Personal & Contact" icon={faEnvelope}>
               <Field label="First Name" required>
                 <input
+                  ref={firstNameRef}
                   name="firstName"
                   required
-                  className={inputCls}
-                  defaultValue={item?.firstName || ""}
+                  value={firstName}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFirstName(val);
+                    const err = validateName(val);
+                    firstNameRef.current?.setCustomValidity(err || "");
+                    setFirstNameError(err);
+                  }}
+                  className={`${inputCls} ${
+                    firstNameError
+                      ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10"
+                      : ""
+                  }`}
                   placeholder="e.g., Priya"
                 />
+                {firstNameError && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium">
+                    {firstNameError}
+                  </p>
+                )}
               </Field>
 
               <Field label="Last Name" required>
                 <input
+                  ref={lastNameRef}
                   name="lastName"
                   required
-                  className={inputCls}
-                  defaultValue={item?.lastName || ""}
+                  value={lastName}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setLastName(val);
+                    const err = validateName(val);
+                    lastNameRef.current?.setCustomValidity(err || "");
+                    setLastNameError(err);
+                  }}
+                  className={`${inputCls} ${
+                    lastNameError
+                      ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10"
+                      : ""
+                  }`}
                   placeholder="e.g., Sharma"
                 />
+                {lastNameError && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium">
+                    {lastNameError}
+                  </p>
+                )}
               </Field>
 
               <Field label="Email" required>
                 <input
+                  ref={emailRef}
                   type="email"
                   name="email"
                   required
-                  className={inputCls}
-                  defaultValue={item?.email || ""}
+                  value={email}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmail(val);
+                    if (!val || !val.trim()) {
+                      setEmailError("Email is required.");
+                      setEmailSuggestion("");
+                      emailRef.current?.setCustomValidity("Email is required.");
+                    } else {
+                      const err = validateEmail(val);
+                      const sug = getEmailSuggestion(val);
+                      setEmailError(err || "");
+                      setEmailSuggestion(sug || "");
+                      emailRef.current?.setCustomValidity(err || "");
+                    }
+                  }}
+                  onBlur={() => {
+                    const err = validateEmail(email);
+                    const sug = getEmailSuggestion(email);
+                    setEmailError(err || "");
+                    setEmailSuggestion(sug || "");
+                    emailRef.current?.setCustomValidity(err || "");
+                  }}
+                  className={`${inputCls} ${emailError ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10" : ""}`}
                   placeholder="name@example.com"
                 />
+                {emailError && (
+                  <div className="mt-1.5 text-xs text-rose-500 font-medium">
+                    <p className="flex items-center gap-1">
+                      <span className="text-rose-400">⚠️</span> {emailError}
+                    </p>
+                    {emailSuggestion && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmail(emailSuggestion);
+                          setEmailError("");
+                          setEmailSuggestion("");
+                          emailRef.current?.setCustomValidity("");
+                        }}
+                        className="mt-1 inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold underline cursor-pointer"
+                      >
+                        <span>💡 Did you mean <strong>{emailSuggestion}</strong>? Click to use.</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </Field>
 
               <Field label="Mobile" required>
-                <input
-                  name="phone"
-                  required
-                  className={inputCls}
-                  defaultValue={item?.phone || ""}
-                  placeholder={phonePlaceholder}
-                />
+                <div
+                  className={`flex items-center w-full h-11 rounded-xl border bg-white/95 shadow-sm transition-all duration-200 overflow-hidden focus-within:ring-4 focus-within:ring-violet-500/10 focus-within:border-violet-400 hover:border-slate-300 ${
+                    phoneError
+                      ? "!border-rose-400 focus-within:!border-rose-500 focus-within:!ring-rose-500/10"
+                      : "border-slate-200"
+                  }`}
+                  onClick={() => phoneRef.current?.focus()}
+                >
+                  <div className="flex items-center gap-1.5 pl-3.5 pr-2.5 text-slate-600 font-semibold text-xs sm:text-sm select-none shrink-0">
+                    <IndiaFlag />
+                    <span className="text-slate-700 font-semibold text-xs sm:text-sm">+91</span>
+                    <span className="ml-1 h-4 w-px bg-slate-200"></span>
+                  </div>
+                  <input
+                    ref={phoneRef}
+                    type="tel"
+                    name="phone"
+                    required
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={phone}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const digits = extractIndianMobileDigits(val);
+                      setPhone(digits);
+                      if (digits.length === 0) {
+                        setPhoneError("Mobile number is required.");
+                        phoneRef.current?.setCustomValidity("Mobile number is required.");
+                      } else if (!/^[6-9]/.test(digits)) {
+                        setPhoneError("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                        phoneRef.current?.setCustomValidity("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                      } else if (digits.length < 10) {
+                        setPhoneError(`Mobile number must be 10 digits (${digits.length}/10).`);
+                        phoneRef.current?.setCustomValidity(`Mobile number must be 10 digits (${digits.length}/10).`);
+                      } else {
+                        setPhoneError("");
+                        phoneRef.current?.setCustomValidity("");
+                      }
+                    }}
+                    onBlur={() => {
+                      const err = validateIndianMobile(phone, true);
+                      setPhoneError(err);
+                      phoneRef.current?.setCustomValidity(err);
+                    }}
+                    placeholder="98765 43210"
+                    className="input-reset !mt-0 !border-0 focus:!border-0 !outline-none !shadow-none !bg-transparent w-full h-full pl-1.5 pr-3 text-sm text-slate-800 placeholder:text-slate-400 flex-1 min-w-0"
+                    style={{ marginTop: 0, border: "none", outline: "none", boxShadow: "none" }}
+                  />
+                </div>
+                {phoneError && (
+                  <p className="mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1">
+                    <span className="text-rose-400">⚠️</span> {phoneError}
+                  </p>
+                )}
               </Field>
 
               <Field label="Alternate Phone">
-                <input
-                  name="altPhone"
-                  className={inputCls}
-                  defaultValue={item?.altPhone || ""}
-                  placeholder={phonePlaceholder}
-                />
+                <div
+                  className={`flex items-center w-full h-11 rounded-xl border bg-white/95 shadow-sm transition-all duration-200 overflow-hidden focus-within:ring-4 focus-within:ring-violet-500/10 focus-within:border-violet-400 hover:border-slate-300 ${
+                    altPhoneError
+                      ? "!border-rose-400 focus-within:!border-rose-500 focus-within:!ring-rose-500/10"
+                      : "border-slate-200"
+                  }`}
+                  onClick={() => altPhoneRef.current?.focus()}
+                >
+                  <div className="flex items-center gap-1.5 pl-3.5 pr-2.5 text-slate-600 font-semibold text-xs sm:text-sm select-none shrink-0">
+                    <IndiaFlag />
+                    <span className="text-slate-700 font-semibold text-xs sm:text-sm">+91</span>
+                    <span className="ml-1 h-4 w-px bg-slate-200"></span>
+                  </div>
+                  <input
+                    ref={altPhoneRef}
+                    type="tel"
+                    name="altPhone"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={altPhone}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const digits = extractIndianMobileDigits(val);
+                      setAltPhone(digits);
+                      if (digits.length === 0) {
+                        setAltPhoneError("");
+                        altPhoneRef.current?.setCustomValidity("");
+                      } else if (!/^[6-9]/.test(digits)) {
+                        setAltPhoneError("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                        altPhoneRef.current?.setCustomValidity("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                      } else if (digits.length < 10) {
+                        setAltPhoneError(`Alternate phone must be 10 digits (${digits.length}/10).`);
+                        altPhoneRef.current?.setCustomValidity(`Alternate phone must be 10 digits (${digits.length}/10).`);
+                      } else if (digits === phone) {
+                        setAltPhoneError("Alternate phone cannot be the same as primary mobile number.");
+                        altPhoneRef.current?.setCustomValidity("Alternate phone cannot be the same as primary mobile number.");
+                      } else {
+                        setAltPhoneError("");
+                        altPhoneRef.current?.setCustomValidity("");
+                      }
+                    }}
+                    onBlur={() => {
+                      const err = validateIndianMobile(altPhone, false);
+                      if (!err && altPhone && altPhone === phone) {
+                        const dupErr = "Alternate phone cannot be the same as primary mobile number.";
+                        setAltPhoneError(dupErr);
+                        altPhoneRef.current?.setCustomValidity(dupErr);
+                      } else {
+                        setAltPhoneError(err);
+                        altPhoneRef.current?.setCustomValidity(err);
+                      }
+                    }}
+                    placeholder="98765 43210"
+                    className="input-reset !mt-0 !border-0 focus:!border-0 !outline-none !shadow-none !bg-transparent w-full h-full pl-1.5 pr-3 text-sm text-slate-800 placeholder:text-slate-400 flex-1 min-w-0"
+                    style={{ marginTop: 0, border: "none", outline: "none", boxShadow: "none" }}
+                  />
+                </div>
+                {altPhoneError && (
+                  <p className="mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1">
+                    <span className="text-rose-400">⚠️</span> {altPhoneError}
+                  </p>
+                )}
               </Field>
 
               <Field label="Country" required>
-                <select
+                <CustomSelect
                   name="country"
                   required
-                  className={inputCls}
                   value={country}
                   onChange={(e) => {
                     setCountry(e.target.value);
@@ -537,29 +1189,26 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                     setAddress1("");
                     setAddress2("");
                   }}
-                >
-                  <option>India</option>
-                </select>
+                  options={[
+                    { value: "India", label: "India" }
+                  ]}
+                  placeholder="Select Country"
+                />
               </Field>
 
               <Field label={stateLabel} required>
-                <select
+                <CustomSelect
                   name="state"
                   required
                   disabled={!country}
-                  className={inputCls}
                   value={stateProv}
                   onChange={(e) => setStateProv(e.target.value)}
-                >
-                  <option value="" disabled hidden>
-                    Select
-                  </option>
-                  {stateList.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: "Select State" },
+                    ...stateList.map((s) => ({ value: s, label: s }))
+                  ]}
+                  placeholder="Select State"
+                />
               </Field>
 
               <Field label="City" required>
@@ -575,13 +1224,44 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
 
               <Field label={postalLabel} required>
                 <input
+                  ref={postalRef}
                   name="postalCode"
                   required
-                  className={inputCls}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className={`${inputCls} font-mono tracking-wide ${postalError ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10" : ""}`}
                   value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const digits = extractIndianPinCodeDigits(val);
+                    setPostalCode(digits);
+                    if (digits.length === 0) {
+                      setPostalError("PIN code is required.");
+                      postalRef.current?.setCustomValidity("PIN code is required.");
+                    } else if (digits.startsWith("0")) {
+                      setPostalError("PIN code cannot start with 0 (must start with 1-9).");
+                      postalRef.current?.setCustomValidity("PIN code cannot start with 0 (must start with 1-9).");
+                    } else if (digits.length < 6) {
+                      setPostalError(`PIN code must be 6 digits (${digits.length}/6).`);
+                      postalRef.current?.setCustomValidity(`PIN code must be 6 digits (${digits.length}/6).`);
+                    } else {
+                      setPostalError("");
+                      postalRef.current?.setCustomValidity("");
+                    }
+                  }}
+                  onBlur={() => {
+                    const err = validateIndianPinCode(postalCode, true);
+                    setPostalError(err);
+                    postalRef.current?.setCustomValidity(err);
+                  }}
                   placeholder="400001"
                 />
+                {postalError && (
+                  <p className="mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1">
+                    <span className="text-rose-400">⚠️</span> {postalError}
+                  </p>
+                )}
               </Field>
 
               <Field label="Address Line 1" required span={2}>
@@ -611,21 +1291,20 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
             <div className={currentStep === 2 ? 'block animate-fade-in' : 'hidden'}>
                       <FormSection title="Professional & Teaching" icon={faStar}>
               <Field label="Highest Qualification" required>
-                <select
+                <CustomSelect
                   name="qualification"
                   required
-                  className={inputCls}
                   defaultValue={item?.qualification || ""}
-                >
-                  <option value="" disabled hidden>
-                    Select
-                  </option>
-                  <option value="Diploma">Diploma</option>
-                  <option value="Bachelor">Bachelor</option>
-                  <option value="Master">Master</option>
-                  <option value="PhD">PhD</option>
-                  <option value="Other">Other</option>
-                </select>
+                  options={[
+                    { value: "", label: "Select" },
+                    { value: "Diploma", label: "Diploma" },
+                    { value: "Bachelor", label: "Bachelor" },
+                    { value: "Master", label: "Master" },
+                    { value: "PhD", label: "PhD" },
+                    { value: "Other", label: "Other" },
+                  ]}
+                  placeholder="Select"
+                />
               </Field>
 
               <Field label="Years of Experience">
@@ -671,19 +1350,17 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
               </Field>
 
               <Field label="Teaching Mode" required>
-                <select
+                <CustomSelect
                   name="teachingMode"
                   required
-                  className={inputCls}
-                  defaultValue={item?.teachingMode || ""}
-                >
-                  <option value="" disabled hidden>
-                    Select
-                  </option>
-                  <option value="Online">Online</option>
-                  <option value="Offline">Offline</option>
-                  <option value="Hybrid">Hybrid</option>
-                </select>
+                  defaultValue={item?.teachingMode || "Online"}
+                  options={[
+                    { value: "Online", label: "Online" },
+                    { value: "Offline", label: "Offline" },
+                    { value: "Hybrid", label: "Hybrid" },
+                  ]}
+                  placeholder="Select Teaching Mode"
+                />
               </Field>
 
               <Field label="Short Bio / Summary" span={3}>
@@ -751,12 +1428,9 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
               </div>
 
               <Field label="Start Time (24h)" required>
-                <input
-                  type="time"
+                <CustomTimeSelect
                   name="availableStart"
-                  className={inputCls}
                   ref={startRef}
-                  step="60"
                   required
                   value={availStart}
                   onChange={(e) => {
@@ -769,16 +1443,14 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                       el?.setCustomValidity("")
                     );
                   }}
+                  placeholder="--:--"
                 />
               </Field>
 
               <Field label="End Time (24h)" required>
-                <input
-                  type="time"
+                <CustomTimeSelect
                   name="availableEnd"
-                  className={inputCls}
                   ref={endRef}
-                  step="60"
                   required
                   value={availEnd}
                   onChange={(e) => {
@@ -791,22 +1463,21 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                       el?.setCustomValidity("")
                     );
                   }}
+                  placeholder="--:--"
                 />
               </Field>
 
               <Field label="Timezone">
-                <select
+                <CustomSelect
                   name="timezone"
-                  className={inputCls}
                   value={tz}
                   onChange={(e) => setTz(e.target.value)}
-                >
-                  {TIMEZONES.map((z) => (
-                    <option key={z} value={z}>
-                      {z === "Asia/Kolkata" ? "Asia/Kolkata (IST)" : z}
-                    </option>
-                  ))}
-                </select>
+                  options={TIMEZONES.map((z) => ({
+                    value: z,
+                    label: z === "Asia/Kolkata" ? "Asia/Kolkata (IST)" : z,
+                  }))}
+                  placeholder="Select Timezone"
+                />
               </Field>
 
               <div className="md:col-span-3 mt-2">
@@ -845,33 +1516,29 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                       >
                         <div className="md:col-span-3">
                           <label className={labelCls}>Slot {idx + 1}: Start</label>
-                          <input
-                            type="time"
+                          <CustomTimeSelect
                             value={s.start}
                             onChange={(e) => {
                               prefStartRefs.current[idx]?.setCustomValidity("");
                               prefEndRefs.current[idx]?.setCustomValidity("");
                               updatePrefSlot(idx, "start", e.target.value);
                             }}
-                            className={inputCls}
                             ref={(el) => (prefStartRefs.current[idx] = el)}
-                            step="60"
+                            placeholder="--:--"
                           />
                         </div>
 
                         <div className="md:col-span-3">
                           <label className={labelCls}>Slot {idx + 1}: End</label>
-                          <input
-                            type="time"
+                          <CustomTimeSelect
                             value={s.end}
                             onChange={(e) => {
                               prefEndRefs.current[idx]?.setCustomValidity("");
                               prefStartRefs.current[idx]?.setCustomValidity("");
                               updatePrefSlot(idx, "end", e.target.value);
                             }}
-                            className={inputCls}
                             ref={(el) => (prefEndRefs.current[idx] = el)}
-                            step="60"
+                            placeholder="--:--"
                           />
                         </div>
 
@@ -896,15 +1563,16 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
             <div className={currentStep === 4 ? 'block animate-fade-in' : 'hidden'}>
                       <FormSection title="Compensation / Payout" icon={faIndianRupeeSign}>
               <Field label="Rate Type">
-                <select
+                <CustomSelect
                   name="rateType"
-                  className={inputCls}
                   defaultValue={item?.rateType || "Hourly"}
-                >
-                  <option>Hourly</option>
-                  <option>Per Session</option>
-                  <option>Fixed</option>
-                </select>
+                  options={[
+                    { value: "Hourly", label: "Hourly" },
+                    { value: "Per Session", label: "Per Session" },
+                    { value: "Fixed", label: "Fixed" },
+                  ]}
+                  placeholder="Select Rate Type"
+                />
               </Field>
 
               <Field label="Expected Rate">
@@ -920,34 +1588,36 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
               </Field>
 
               <Field label="Currency">
-                <select
+                <CustomSelect
                   name="currency"
-                  className={inputCls}
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                >
-                  <option>INR</option>
-                  <option>USD</option>
-                  <option>CAD</option>
-                  <option>EUR</option>
-                </select>
+                  options={[
+                    { value: "INR", label: "INR" },
+                    { value: "USD", label: "USD" },
+                    { value: "CAD", label: "CAD" },
+                    { value: "EUR", label: "EUR" },
+                  ]}
+                  placeholder="Select Currency"
+                />
               </Field>
 
               <Field label="Preferred Payout Method">
-                <select
+                <CustomSelect
                   name="payoutMethod"
-                  className={inputCls}
                   value={payoutMethod}
                   onChange={(e) => setPayoutMethod(e.target.value)}
-                >
-                  {country === "India" && (
-                    <>
-                      <option>Bank Transfer (NEFT/RTGS)</option>
-                      <option>UPI</option>
-                      <option>Razorpay</option>
-                    </>
-                  )}
-                </select>
+                  options={
+                    country === "India"
+                      ? [
+                          { value: "Bank Transfer (NEFT/RTGS)", label: "Bank Transfer (NEFT/RTGS)" },
+                          { value: "UPI", label: "UPI" },
+                          { value: "Razorpay", label: "Razorpay" },
+                        ]
+                      : []
+                  }
+                  placeholder="Select Payout Method"
+                />
               </Field>
 
               <Field label="Payout Identifier" span={2}>
@@ -968,7 +1638,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                 <input
                   type="file"
                   name="resume"
-                  className={inputCls}
+                  className={fileInputCls}
                   accept=".pdf,.doc,.docx"
                 />
               </Field>
@@ -977,7 +1647,7 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                 <input
                   type="file"
                   name="photo"
-                  className={inputCls}
+                  className={fileInputCls}
                   accept="image/*"
                 />
               </Field>
@@ -986,45 +1656,46 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                 <input
                   type="file"
                   name="certificates"
-                  className={inputCls}
+                  className={fileInputCls}
                   accept=".pdf,.png,.jpg,.jpeg"
                   multiple
                 />
               </Field>
 
               <Field label="Background Check">
-                <select
+                <CustomSelect
                   name="backgroundCheck"
-                  className={inputCls}
                   defaultValue={item?.backgroundCheck || "Pending"}
-                >
-                  <option>Pending</option>
-                  <option>Cleared</option>
-                  <option>Not Required</option>
-                </select>
+                  options={[
+                    { value: "Pending", label: "Pending" },
+                    { value: "Cleared", label: "Cleared" },
+                    { value: "Not Required", label: "Not Required" },
+                  ]}
+                  placeholder="Select Status"
+                />
               </Field>
 
-              <div className="md:col-span-2 flex items-center gap-6">
-                <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+              <div className="md:col-span-2 flex flex-wrap items-center gap-6 pt-1">
+                <label className="inline-flex items-center gap-2.5 cursor-pointer select-none group">
                   <input
                     type="checkbox"
                     name="ndaSigned"
                     defaultChecked={!!item?.ndaSigned}
-                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    className="w-4 h-4 !m-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer shrink-0 accent-violet-600"
                   />
-                  <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                  <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 whitespace-nowrap">
                     NDA signed
                   </span>
                 </label>
 
-                <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                <label className="inline-flex items-center gap-2.5 cursor-pointer select-none group">
                   <input
                     type="checkbox"
                     name="agreeToTerms"
                     defaultChecked={!!item?.agreeToTerms}
-                    className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    className="w-4 h-4 !m-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer shrink-0 accent-violet-600"
                   />
-                  <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                  <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 whitespace-nowrap">
                     I confirm all details are accurate
                   </span>
                 </label>
@@ -1079,6 +1750,47 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                                 const container = document.getElementById('wizard-scroll-container');
                                 if (!container) return;
                                 
+                                if (currentStep === 1) {
+                                  const emailErr = validateEmail(email);
+                                  if (emailErr) {
+                                    setEmailError(emailErr);
+                                    setEmailSuggestion(getEmailSuggestion(email) || "");
+                                    emailRef.current?.setCustomValidity(emailErr);
+                                    emailRef.current?.reportValidity();
+                                    return;
+                                  }
+                                  const pErr = validateIndianMobile(phone, true);
+                                  if (pErr) {
+                                    setPhoneError(pErr);
+                                    phoneRef.current?.setCustomValidity(pErr);
+                                    phoneRef.current?.reportValidity();
+                                    return;
+                                  }
+                                  if (altPhone) {
+                                    const apErr = validateIndianMobile(altPhone, false);
+                                    if (apErr) {
+                                      setAltPhoneError(apErr);
+                                      altPhoneRef.current?.setCustomValidity(apErr);
+                                      altPhoneRef.current?.reportValidity();
+                                      return;
+                                    }
+                                    if (phone === altPhone) {
+                                      const dupErr = "Alternate phone cannot be the same as primary mobile number.";
+                                      setAltPhoneError(dupErr);
+                                      altPhoneRef.current?.setCustomValidity(dupErr);
+                                      altPhoneRef.current?.reportValidity();
+                                      return;
+                                    }
+                                  }
+                                  const pinErr = validateIndianPinCode(postalCode, true);
+                                  if (pinErr) {
+                                    setPostalError(pinErr);
+                                    postalRef.current?.setCustomValidity(pinErr);
+                                    postalRef.current?.reportValidity();
+                                    return;
+                                  }
+                                }
+
                                 const visibleStep = container.querySelector('.block.animate-fade-in');
                                 if (!visibleStep) return;
 
@@ -1171,15 +1883,72 @@ export default function InstructorManagementedit({ open, item, onClose, onSaved 
                 onClick={async () => {
                   try {
                     await axios.post("/api/instructors/otp/start", { email: otpEmail }, authCfg());
-                    alert("OTP resent.");
+                    showAlert("OTP resent.", "info");
                   } catch {
-                    alert("Failed to resend OTP.");
+                    showAlert("Failed to resend OTP.", "error");
                   }
                 }}
               >
                 Didn't receive a code? Resend
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ CENTERED FEEDBACK / ALERT MODAL ═══ */}
+      {alertInfo && (
+        <div
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-[3px] animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setAlertInfo(null)}
+        >
+          <div
+            className="bg-white rounded-[24px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] w-full max-w-sm p-6 sm:p-7 border border-slate-100 flex flex-col items-center text-center transform transition-all scale-100 animate-zoom-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm ${
+                alertInfo.type === "error"
+                  ? "bg-rose-50 text-rose-500 border border-rose-100"
+                  : alertInfo.type === "info"
+                  ? "bg-sky-50 text-sky-600 border border-sky-100"
+                  : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+              }`}
+            >
+              <FontAwesomeIcon
+                icon={
+                  alertInfo.type === "error"
+                    ? faTimes
+                    : alertInfo.type === "info"
+                    ? faEnvelope
+                    : faCheck
+                }
+                className="text-2xl"
+              />
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-1.5">
+              {alertInfo.title ||
+                (alertInfo.type === "error"
+                  ? "Error"
+                  : alertInfo.type === "info"
+                  ? "Notice"
+                  : "Success")}
+            </h3>
+
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              {alertInfo.message}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setAlertInfo(null)}
+              className="w-full py-2.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold shadow-lg shadow-violet-200/70 transition-all focus:outline-none focus:ring-4 focus:ring-violet-500/20 active:scale-[0.98]"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}

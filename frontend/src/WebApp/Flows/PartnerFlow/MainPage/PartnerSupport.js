@@ -42,6 +42,7 @@ import {
   FaArrowLeft,
   FaMicrophone,
   FaMicrophoneSlash,
+  FaChevronDown,
 } from "react-icons/fa";
 import logo from "../../../../assets/Edutech-logo.png";
 import axios from "axios";
@@ -1088,6 +1089,27 @@ const PartnerSupport = () => {
     priority: "",
     description: "",
   });
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [priorityOpen, setPriorityOpen] = useState(false);
+  const categoryRef = useRef(null);
+  const priorityRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (categoryRef.current && !categoryRef.current.contains(e.target)) {
+        setCategoryOpen(false);
+      }
+      if (priorityRef.current && !priorityRef.current.contains(e.target)) {
+        setPriorityOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, []);
   const [newTicketAtts, setNewTicketAtts] = useState([]);
   const newTicketFileRef = useRef(null);
   const [ticketToDelete, setTicketToDelete] = useState(null);
@@ -2320,9 +2342,40 @@ const PartnerSupport = () => {
                       </div>
                     )}
                     <div className="p-3 border-t border-gray-200 bg-white flex-shrink-0">
-                      <div className="flex items-center gap-2">
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          width: "100%",
+                        }}
+                      >
                         <label
-                          className="flex-shrink-0 p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full cursor-pointer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 38,
+                            height: 38,
+                            borderRadius: "50%",
+                            background: "#f3f4f6",
+                            color: "#6b7280",
+                            flexShrink: 0,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                            border: "none",
+                            margin: 0,
+                            padding: 0,
+                            boxSizing: "border-box",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#e5e7eb";
+                            e.currentTarget.style.color = "#4f46e5";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.color = "#6b7280";
+                          }}
                           title="Attach files (max 10 MB each)"
                         >
                           <FaPaperclip className="w-4 h-4" />
@@ -2396,40 +2449,40 @@ const PartnerSupport = () => {
                             setIsListening(true);
                           }}
                           title="Auto Type (Speech to Text)"
+                          className={isListening ? "sa-ping-red" : ""}
                           style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 38,
+                            height: 38,
+                            borderRadius: "50%",
+                            background: isListening ? "#fef2f2" : "#f3f4f6",
+                            color: isListening
+                              ? "#ef4444"
+                              : isEsc
+                                ? "#f97316"
+                                : "#6366f1",
                             flexShrink: 0,
                             cursor: "pointer",
-                            border: "none",
-                            background: "transparent",
+                            border: isListening ? "1px solid #fca5a5" : "none",
+                            margin: 0,
                             padding: 0,
+                            boxSizing: "border-box",
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isListening) e.currentTarget.style.background = "#e5e7eb";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isListening) e.currentTarget.style.background = "#f3f4f6";
                           }}
                         >
-                          <div
-                            className={`${isListening ? "sa-ping-red" : ""}`}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: isListening ? "#fef2f2" : "#f3f4f6",
-                              color: isListening
-                                ? "#ef4444"
-                                : isEsc
-                                  ? "#f97316"
-                                  : "#6366f1",
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            {isListening ? (
-                              <FaMicrophoneSlash
-                                style={{ width: 14, height: 14 }}
-                              />
-                            ) : (
-                              <FaMicrophone style={{ width: 14, height: 14 }} />
-                            )}
-                          </div>
+                          {isListening ? (
+                            <FaMicrophoneSlash className="w-4 h-4" />
+                          ) : (
+                            <FaMicrophone className="w-4 h-4" />
+                          )}
                         </button>
                         <input
                           type="text"
@@ -2442,7 +2495,31 @@ const PartnerSupport = () => {
                                   ? "Reply to student ticket…"
                                   : "Message to admin…"
                           }
-                          className={`flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 ${pRing} focus:border-transparent outline-none`}
+                          style={{
+                            flex: 1,
+                            height: 38,
+                            boxSizing: "border-box",
+                            border: "1.5px solid #d1d5db",
+                            borderRadius: 999,
+                            padding: "0 16px",
+                            fontSize: "0.85rem",
+                            outline: "none",
+                            minWidth: 0,
+                            fontFamily: "inherit",
+                            background: "#fff",
+                            color: "#1f2937",
+                            transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = "#6366f1";
+                            e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.15)";
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "#d1d5db";
+                            e.target.style.boxShadow = "none";
+                          }}
                           value={msgInput}
                           onChange={(e) => setMsgInput(e.target.value)}
                           onKeyDown={(e) => {
@@ -2454,14 +2531,41 @@ const PartnerSupport = () => {
                           disabled={sending}
                         />
                         <button
+                          type="button"
                           onClick={handleSend}
                           disabled={!canSend}
-                          className={`flex-shrink-0 p-2.5 rounded-full transition-all ${canSend ? `bg-gradient-to-r ${pBg} text-white shadow hover:shadow-md hover:scale-105` : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
+                          title="Send message"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            width: 38,
+                            height: 38,
+                            borderRadius: "50%",
+                            border: "none",
+                            margin: 0,
+                            padding: 0,
+                            boxSizing: "border-box",
+                            transition: "all 0.15s ease",
+                            ...(canSend
+                              ? {
+                                  background: `linear-gradient(to right, ${pBg ? "#4f46e5, #7c3aed" : "#6366f1, #4f46e5"})`,
+                                  color: "#fff",
+                                  boxShadow: "0 3px 10px rgba(99,102,241,0.35)",
+                                  cursor: "pointer",
+                                }
+                              : {
+                                  background: "#e5e7eb",
+                                  color: "#9ca3af",
+                                  cursor: "not-allowed",
+                                }),
+                          }}
                         >
                           {sending ? (
                             <FaSpinner className="w-4 h-4 animate-spin" />
                           ) : (
-                            <FaPaperPlane className="w-4 h-4" />
+                            <FaPaperPlane className="w-4 h-4 ml-0.5" />
                           )}
                         </button>
                       </div>
@@ -2741,6 +2845,8 @@ const PartnerSupport = () => {
           className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
           onClick={() => {
             setShowNewTicket(false);
+            setCategoryOpen(false);
+            setPriorityOpen(false);
             setNewTicketAtts([]);
             if (newTicketFileRef.current) newTicketFileRef.current.value = "";
           }}
@@ -2772,6 +2878,8 @@ const PartnerSupport = () => {
             <button
               onClick={() => {
                 setShowNewTicket(false);
+                setCategoryOpen(false);
+                setPriorityOpen(false);
                 setNewTicketAtts([]);
                 if (newTicketFileRef.current)
                   newTicketFileRef.current.value = "";
@@ -2783,44 +2891,140 @@ const PartnerSupport = () => {
           </div>
 
           <div className="flex-1 px-6 py-6 space-y-6 overflow-y-auto ticket-scroll">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Category Dropdown */}
+              <div className="relative" ref={categoryRef}>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Category <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={newTicket.category}
-                  onChange={(e) =>
-                    setNewTicket({ ...newTicket, category: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCategoryOpen((prev) => !prev);
+                    setPriorityOpen(false);
+                  }}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm flex items-center justify-between bg-white text-left transition-all ${
+                    categoryOpen
+                      ? "border-indigo-500 ring-2 ring-indigo-100"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
                 >
-                  <option value="">Select Category</option>
-                  {PARTNER_CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  <span className={`truncate ${newTicket.category ? "text-gray-900 font-medium" : "text-gray-400"}`}>
+                    {newTicket.category || "Select Category"}
+                  </span>
+                  <FaChevronDown
+                    className={`w-3.5 h-3.5 text-gray-400 ml-2 shrink-0 transition-transform duration-200 ${
+                      categoryOpen ? "rotate-180 text-indigo-500" : ""
+                    }`}
+                  />
+                </button>
+
+                {categoryOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 max-h-60 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewTicket({ ...newTicket, category: "" });
+                        setCategoryOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-50 transition-colors"
+                    >
+                      Select Category
+                    </button>
+                    {PARTNER_CATEGORIES.map((c) => {
+                      const isSelected = newTicket.category === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setNewTicket({ ...newTicket, category: c.id });
+                            setCategoryOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors ${
+                            isSelected
+                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                            {c.icon && <span className="shrink-0">{c.icon}</span>}
+                            <span className="truncate">{c.name}</span>
+                          </div>
+                          {isSelected && <FaCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              <div>
+
+              {/* Priority Dropdown */}
+              <div className="relative" ref={priorityRef}>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Priority <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={newTicket.priority}
-                  onChange={(e) =>
-                    setNewTicket({ ...newTicket, priority: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPriorityOpen((prev) => !prev);
+                    setCategoryOpen(false);
+                  }}
+                  className={`w-full border rounded-xl px-4 py-3 text-sm flex items-center justify-between bg-white text-left transition-all ${
+                    priorityOpen
+                      ? "border-indigo-500 ring-2 ring-indigo-100"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
                 >
-                  <option value="">Select Priority</option>
-                  {PRIORITIES.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  <span className={`truncate capitalize ${newTicket.priority ? "text-gray-900 font-medium" : "text-gray-400"}`}>
+                    {newTicket.priority
+                      ? PRIORITIES.find((p) => p.id === newTicket.priority)?.name || newTicket.priority
+                      : "Select Priority"}
+                  </span>
+                  <FaChevronDown
+                    className={`w-3.5 h-3.5 text-gray-400 ml-2 shrink-0 transition-transform duration-200 ${
+                      priorityOpen ? "rotate-180 text-indigo-500" : ""
+                    }`}
+                  />
+                </button>
+
+                {priorityOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 max-h-60 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewTicket({ ...newTicket, priority: "" });
+                        setPriorityOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-50 transition-colors"
+                    >
+                      Select Priority
+                    </button>
+                    {PRIORITIES.map((p) => {
+                      const isSelected = newTicket.priority === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setNewTicket({ ...newTicket, priority: p.id });
+                            setPriorityOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors ${
+                            isSelected
+                              ? "bg-indigo-50 text-indigo-700 font-semibold"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${p.color}`}>
+                            {p.name}
+                          </span>
+                          {isSelected && <FaCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2884,22 +3088,33 @@ const PartnerSupport = () => {
               )}
 
               {/* Drop zone / click to pick */}
-              <label className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all cursor-pointer group">
-                <FaPaperclip className="w-4 h-4 group-hover:text-indigo-500 transition-colors" />
-                <span className="group-hover:text-indigo-600 transition-colors">
-                  {newTicketAtts.length === 0
-                    ? "Click to attach files"
-                    : `${newTicketAtts.length} file${newTicketAtts.length > 1 ? "s" : ""} attached — click to add more`}
-                </span>
-                <input
-                  ref={newTicketFileRef}
-                  type="file"
-                  className="hidden"
-                  multiple
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt,.xlsx,.xls,.zip"
-                  onChange={handleNewTicketFileChange}
-                />
-              </label>
+              <div
+                onClick={() => newTicketFileRef.current?.click()}
+                className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full px-4 py-4 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all cursor-pointer group text-center select-none"
+              >
+                <div className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-indigo-100 flex items-center justify-center transition-colors shrink-0">
+                  <FaPaperclip className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 transition-colors" />
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-1">
+                  <span className="font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
+                    {newTicketAtts.length === 0
+                      ? "Click to attach files"
+                      : `${newTicketAtts.length} file${newTicketAtts.length > 1 ? "s" : ""} selected`}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {newTicketAtts.length === 0 ? "or browse from device" : "— click to add more"}
+                  </span>
+                </div>
+              </div>
+              <input
+                ref={newTicketFileRef}
+                type="file"
+                style={{ display: "none" }}
+                className="hidden !hidden"
+                multiple
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt,.xlsx,.xls,.zip"
+                onChange={handleNewTicketFileChange}
+              />
             </div>
 
             <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4">

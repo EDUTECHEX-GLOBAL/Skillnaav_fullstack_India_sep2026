@@ -1,7 +1,7 @@
 //File: InstructureManagement.js
 
 import axios from "../../../../api/axiosInstance";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,6 +11,7 @@ import {
   faTimes,
   faChevronLeft,
   faChevronRight,
+  faChevronDown,
   faShieldAlt,
   faEnvelope,
   faPhone,
@@ -24,17 +25,374 @@ import {
   faClock,
   faIndianRupeeSign,
   faClipboardList,
+  faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import InstructureDetailsView from "./InstructureDetailsView";
 import InstructorManagementedit from "./InstructorManagementedit";
+import {
+  validateName,
+  validateEmail,
+  getEmailSuggestion,
+  validateIndianMobile,
+  extractIndianMobileDigits,
+  formatIndianMobile,
+  validateIndianPinCode,
+  extractIndianPinCodeDigits,
+} from "../../../../utils/validators";
 
 /* ─── Shared UI tokens (same format as edit modal) ─── */
 const inputCls =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white/95 px-4 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-50 file:to-sky-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-indigo-700";
+  "!mt-0 w-full h-11 rounded-xl border border-slate-200 bg-white/95 px-4 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-50 file:to-sky-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 file:cursor-pointer file:align-middle";
+const fileInputCls =
+  "!mt-0 w-full h-11 rounded-xl border border-slate-200 bg-white/95 px-3 py-[5px] text-sm text-slate-800 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 cursor-pointer flex items-center file:mr-3 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-50 file:to-sky-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 file:cursor-pointer file:align-middle";
 const textareaCls =
-  "w-full rounded-xl border border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 min-h-[7rem] resize-y";
+  "!mt-0 w-full rounded-xl border border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 min-h-[7rem] resize-y";
 const labelCls =
   "block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5";
+
+const IndiaFlag = () => (
+  <svg
+    className="w-[18px] h-[13px] rounded-[2px] shadow-xs shrink-0 object-cover"
+    viewBox="0 0 640 480"
+    aria-hidden="true"
+  >
+    <path fill="#FF9933" d="M0 0h640v160H0z" />
+    <path fill="#FFFFFF" d="M0 160h640v160H0z" />
+    <path fill="#128807" d="M0 320h640v160H0z" />
+    <circle cx="320" cy="240" r="28" fill="#000080" />
+    <circle cx="320" cy="240" r="23" fill="#FFFFFF" />
+    <circle cx="320" cy="240" r="7" fill="#000080" />
+  </svg>
+);
+
+// ─── CustomSelect ─────────────────────────────────────────────────────────────
+// Ensures the dropdown menu ("down box") strictly matches the width of the trigger ("top box")
+const CustomSelect = forwardRef(({
+  name,
+  value,
+  defaultValue = "",
+  onChange,
+  options = [],
+  placeholder = "Select",
+  required = false,
+  disabled = false,
+  className = "",
+  error = "",
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const containerRef = useRef(null);
+  const hiddenInputRef = useRef(null);
+
+  const currentValue = value !== undefined ? value : internalValue;
+
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setInternalValue(defaultValue);
+    }
+  }, [defaultValue]);
+
+  const setRefs = (el) => {
+    hiddenInputRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  const normalizedOptions = useMemo(() => {
+    return options.map((opt) =>
+      typeof opt === "object" && opt !== null && "value" in opt
+        ? opt
+        : { value: opt, label: opt }
+    );
+  }, [options]);
+
+  const selectedOption = normalizedOptions.find(
+    (opt) => String(opt.value) === String(currentValue)
+  );
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (val) => {
+    setInternalValue(val);
+    if (onChange) {
+      onChange({ target: { name, value: val } });
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full ${isOpen ? "z-[60]" : "z-[1]"}`}
+    >
+      <input
+        type="hidden"
+        name={name}
+        value={currentValue || ""}
+        required={required}
+        ref={setRefs}
+      />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full h-11 rounded-xl border bg-white/95 px-4 text-sm shadow-sm transition-all duration-200 flex items-center justify-between text-left focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 ${
+          isOpen
+            ? "border-violet-400 ring-4 ring-violet-500/10"
+            : error
+              ? "!border-rose-400 focus:!border-rose-500"
+              : "border-slate-200"
+        } ${disabled ? "opacity-60 cursor-not-allowed bg-slate-50" : "cursor-pointer"} ${className}`}
+      >
+        <span
+          className={`truncate pr-2 ${
+            selectedOption && selectedOption.value !== ""
+              ? "text-slate-800 font-medium"
+              : "text-slate-400 font-normal"
+          }`}
+        >
+          {selectedOption && selectedOption.value !== ""
+            ? selectedOption.label
+            : placeholder}
+        </span>
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          className={`text-xs text-slate-400 shrink-0 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-violet-600" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute z-[80] left-0 right-0 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto py-1 divide-y divide-slate-50"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          {normalizedOptions.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-slate-400 text-center">
+              No options available
+            </div>
+          ) : (
+            normalizedOptions.map((opt) => {
+              const isSelected = String(currentValue) === String(opt.value);
+              return (
+                <div
+                  key={opt.value}
+                  onClick={() => handleSelect(opt.value)}
+                  className={`px-4 py-2.5 text-xs sm:text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? "bg-violet-50 text-violet-700 font-semibold"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && opt.value !== "" && (
+                    <span className="text-violet-600 text-xs font-bold">✓</span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ─── CustomTimeSelect ─────────────────────────────────────────────────────────
+// Time picker dropdown matching the exact width of the top box
+const CustomTimeSelect = forwardRef(({
+  name,
+  value,
+  defaultValue = "",
+  onChange,
+  placeholder = "--:--",
+  required = false,
+  disabled = false,
+  className = "",
+  error = "",
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const currentValue = value !== undefined ? value : internalValue;
+
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setInternalValue(defaultValue);
+    }
+  }, [defaultValue]);
+
+  const setRefs = (el) => {
+    inputRef.current = el;
+    if (typeof ref === "function") ref(el);
+    else if (ref) ref.current = el;
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const [currentHour, currentMin] = (currentValue && currentValue.includes(":"))
+    ? currentValue.split(":")
+    : ["", ""];
+
+  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+  const handleHourSelect = (h) => {
+    const m = currentMin || "00";
+    const newVal = `${h}:${m}`;
+    setInternalValue(newVal);
+    if (onChange) onChange({ target: { name, value: newVal } });
+  };
+
+  const handleMinSelect = (m) => {
+    const h = currentHour || "09";
+    const newVal = `${h}:${m}`;
+    setInternalValue(newVal);
+    if (onChange) onChange({ target: { name, value: newVal } });
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full ${isOpen ? "z-[60]" : "z-[1]"}`}
+    >
+      <input
+        type="hidden"
+        name={name}
+        value={currentValue || ""}
+        required={required}
+        ref={setRefs}
+      />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full h-11 rounded-xl border bg-white/95 px-4 text-sm shadow-sm transition-all duration-200 flex items-center justify-between text-left focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 hover:border-slate-300 ${
+          isOpen
+            ? "border-violet-400 ring-4 ring-violet-500/10"
+            : error
+              ? "!border-rose-400 focus:!border-rose-500"
+              : "border-slate-200"
+        } ${disabled ? "opacity-60 cursor-not-allowed bg-slate-50" : "cursor-pointer"} ${className}`}
+      >
+        <span className={currentValue ? "text-slate-800 font-medium" : "text-slate-400 font-normal"}>
+          {currentValue || placeholder}
+        </span>
+        <FontAwesomeIcon
+          icon={faClock}
+          className={`text-xs transition-colors ${
+            isOpen ? "text-violet-600" : "text-slate-400"
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute z-[80] left-0 right-0 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-in"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          <div className="grid grid-cols-2 bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider py-1.5 text-center">
+            <span>Hour (24h)</span>
+            <span>Minute</span>
+          </div>
+
+          <div className="grid grid-cols-2 divide-x divide-slate-100 h-44">
+            <div className="overflow-y-auto py-1 scrollbar-thin">
+              {hours.map((h) => {
+                const isSelected = currentHour === h;
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => handleHourSelect(h)}
+                    className={`w-full py-1.5 text-xs text-center font-medium transition-colors ${
+                      isSelected
+                        ? "bg-violet-600 text-white font-bold"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-700"
+                    }`}
+                  >
+                    {h}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="overflow-y-auto py-1 scrollbar-thin">
+              {minutes.map((m) => {
+                const isSelected = currentMin === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleMinSelect(m)}
+                    className={`w-full py-1.5 text-xs text-center font-medium transition-colors ${
+                      isSelected
+                        ? "bg-violet-600 text-white font-bold"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-700"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="p-2 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                setInternalValue("");
+                if (onChange) onChange({ target: { name, value: "" } });
+              }}
+              className="text-[11px] font-semibold text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="px-3 py-1 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-semibold transition-all active:scale-95 shadow-sm"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
 
 const sectionThemes = {
   "Personal & Contact": {
@@ -168,7 +526,7 @@ const FormSection = ({ title, icon, children }) => {
         {icon && <FontAwesomeIcon icon={icon} className={theme.icon} />}
         {title}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 sm:gap-x-5 gap-y-5">
         {children}
       </div>
     </div>
@@ -178,7 +536,7 @@ const FormSection = ({ title, icon, children }) => {
 /* ─── field wrapper ─── */
 const Field = ({ label, required, span = 1, children }) => (
   <div
-    className={`flex flex-col justify-end h-full ${span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : ""}`}
+    className={`flex flex-col justify-start ${span === 2 ? "sm:col-span-2 md:col-span-2" : span === 3 ? "sm:col-span-3 md:col-span-3" : ""}`}
   >
     <label className={labelCls}>
       {label} {required && <span className="text-rose-500">*</span>}
@@ -219,6 +577,11 @@ const InstructureManagement = () => {
   const [prefSlots, setPrefSlots] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [portalTarget, setPortalTarget] = useState(null);
+  const [alertInfo, setAlertInfo] = useState(null);
+
+  const showAlert = (message, type = "success", title) => {
+    setAlertInfo({ message, type, title });
+  };
   const [isAssigning, setIsAssigning] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -248,6 +611,24 @@ const InstructureManagement = () => {
   const postalRef = useRef(null);
   const address1Ref = useRef(null);
   const address2Ref = useRef(null);
+  const phoneRef = useRef(null);
+  const altPhoneRef = useRef(null);
+  const emailRef = useRef(null);
+  const firstNameRef = useRef(null);
+  const lastNameRef = useRef(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailSuggestion, setEmailSuggestion] = useState("");
+  const [phone, setPhone] = useState("");
+  const [altPhone, setAltPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [altPhoneError, setAltPhoneError] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [postalError, setPostalError] = useState("");
 
   const avatarInitials = (i) => {
     const a = [i?.firstName, i?.lastName]
@@ -308,7 +689,7 @@ const InstructureManagement = () => {
             : status === 403
               ? "You don't have permission to view instructors."
               : "Failed to load instructors.");
-        alert(msg);
+        showAlert(msg, "error");
       } finally {
         setLoading(false);
       }
@@ -374,11 +755,36 @@ const InstructureManagement = () => {
 
       if (data.name) {
         const parts = data.name.trim().split(/\s+/);
-        if (form.elements['firstName']) form.elements['firstName'].value = parts[0] || '';
-        if (form.elements['lastName']) form.elements['lastName'].value = parts.slice(1).join(' ') || '';
+        const f = parts[0] || "";
+        const l = parts.slice(1).join(" ") || "";
+        setFirstName(f);
+        setLastName(l);
+        if (form.elements['firstName']) form.elements['firstName'].value = f;
+        if (form.elements['lastName']) form.elements['lastName'].value = l;
+        const fe = validateName(f);
+        const le = validateName(l);
+        setFirstNameError(fe);
+        setLastNameError(le);
+        firstNameRef.current?.setCustomValidity(fe || "");
+        lastNameRef.current?.setCustomValidity(le || "");
       }
-      if (data.email && form.elements['email']) form.elements['email'].value = data.email;
-      if (data.phone && form.elements['phone']) form.elements['phone'].value = data.phone;
+      if (data.email) {
+        setEmail(data.email);
+        const err = validateEmail(data.email);
+        setEmailError(err || "");
+        setEmailSuggestion(err ? getEmailSuggestion(data.email) : "");
+        if (emailRef.current) {
+          emailRef.current.setCustomValidity(err || "");
+        }
+      }
+      if (data.phone) {
+        const digits = extractIndianMobileDigits(data.phone);
+        if (digits.length === 10 && /^[6-9]/.test(digits)) {
+          setPhone(digits);
+          setPhoneError("");
+          phoneRef.current?.setCustomValidity("");
+        }
+      }
       if (data.linkedin && form.elements['linkedIn']) form.elements['linkedIn'].value = data.linkedin;
       if (data.portfolio && form.elements['portfolio']) form.elements['portfolio'].value = data.portfolio;
       if (data.summary && form.elements['bio']) form.elements['bio'].value = data.summary;
@@ -410,7 +816,7 @@ const InstructureManagement = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to parse resume automatically. Please fill manually.");
+      showAlert("Failed to parse resume automatically. Please fill manually.", "error");
     } finally {
       setIsExtracting(false);
       e.target.value = null;
@@ -444,10 +850,82 @@ const InstructureManagement = () => {
         setSubmitting(false);
         return;
       }
+      firstNameRef.current?.setCustomValidity("");
+      lastNameRef.current?.setCustomValidity("");
       startRef.current?.setCustomValidity("");
       endRef.current?.setCustomValidity("");
       (prefStartRefs.current || []).forEach((el) => el?.setCustomValidity(""));
       (prefEndRefs.current || []).forEach((el) => el?.setCustomValidity(""));
+      emailRef.current?.setCustomValidity("");
+      phoneRef.current?.setCustomValidity("");
+      altPhoneRef.current?.setCustomValidity("");
+      postalRef.current?.setCustomValidity("");
+
+      const fName = (firstName || fd.get("firstName") || "").trim();
+      const fnErr = validateName(fName);
+      if (fnErr) {
+        setFirstNameError(fnErr);
+        firstNameRef.current?.setCustomValidity(fnErr);
+        firstNameRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const lName = (lastName || fd.get("lastName") || "").trim();
+      const lnErr = validateName(lName);
+      if (lnErr) {
+        setLastNameError(lnErr);
+        lastNameRef.current?.setCustomValidity(lnErr);
+        lastNameRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const emailErr = validateEmail(email);
+      if (emailErr) {
+        setEmailError(emailErr);
+        setEmailSuggestion(getEmailSuggestion(email) || "");
+        emailRef.current?.setCustomValidity(emailErr);
+        emailRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const pinErr = validateIndianPinCode(postalCode, true);
+      if (pinErr) {
+        setPostalError(pinErr);
+        postalRef.current?.setCustomValidity(pinErr);
+        postalRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+
+      const pErr = validateIndianMobile(phone, true);
+      if (pErr) {
+        setPhoneError(pErr);
+        phoneRef.current?.setCustomValidity(pErr);
+        phoneRef.current?.reportValidity();
+        setSubmitting(false);
+        return;
+      }
+      if (altPhone) {
+        const apErr = validateIndianMobile(altPhone, false);
+        if (apErr) {
+          setAltPhoneError(apErr);
+          altPhoneRef.current?.setCustomValidity(apErr);
+          altPhoneRef.current?.reportValidity();
+          setSubmitting(false);
+          return;
+        }
+        if (phone === altPhone) {
+          const dupErr = "Alternate phone cannot be the same as primary mobile number.";
+          setAltPhoneError(dupErr);
+          altPhoneRef.current?.setCustomValidity(dupErr);
+          altPhoneRef.current?.reportValidity();
+          setSubmitting(false);
+          return;
+        }
+      }
 
       const start = fd.get("availableStart");
       const end = fd.get("availableEnd");
@@ -519,13 +997,13 @@ const InstructureManagement = () => {
       const payload = {
         firstName: fd.get("firstName"),
         lastName: fd.get("lastName"),
-        email: fd.get("email"),
-        phone: fd.get("phone"),
-        altPhone: fd.get("altPhone"),
+        email: (email || fd.get("email") || "").trim(),
+        phone: formatIndianMobile(phone),
+        altPhone: altPhone ? formatIndianMobile(altPhone) : "",
         country: fd.get("country"),
         state: fd.get("state"),
         city: fd.get("city"),
-        postalCode: fd.get("postalCode"),
+        postalCode: extractIndianPinCodeDigits(postalCode),
         address1: fd.get("address1"),
         address2: fd.get("address2"),
         qualification: fd.get("qualification"),
@@ -575,7 +1053,7 @@ const InstructureManagement = () => {
       try {
         const email = (payload.email || "").trim();
         if (!email) {
-          alert("Email is required for OTP verification.");
+          showAlert("Email is required for OTP verification.", "error");
           setSubmitting(false);
           return;
         }
@@ -590,11 +1068,11 @@ const InstructureManagement = () => {
         return;
       } catch (err) {
         console.error("Start OTP failed:", err);
-        alert(err?.response?.data?.message || "Failed to start OTP.");
+        showAlert(err?.response?.data?.message || "Failed to start OTP.", "error");
       }
     } catch (err) {
       console.error("Submit failed:", err);
-      alert("Something went wrong while saving the instructor.");
+      showAlert("Something went wrong while saving the instructor.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -695,6 +1173,19 @@ const InstructureManagement = () => {
                 setRateType("");
                 setCurrency("");
                 setBackgroundCheck("");
+                setPhone("");
+                setAltPhone("");
+                setPhoneError("");
+                setAltPhoneError("");
+                setPostalCode("");
+                setPostalError("");
+                setEmail("");
+                setEmailError("");
+                setEmailSuggestion("");
+                setFirstName("");
+                setFirstNameError("");
+                setLastName("");
+                setLastNameError("");
                 setIsAddOpen(true);
                 setCurrentStep(1);
               }}
@@ -922,54 +1413,239 @@ const InstructureManagement = () => {
 
                       <Field label="First Name" required>
                         <input
+                          ref={firstNameRef}
                           name="firstName"
                           required
-                          className={inputCls}
+                          value={firstName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFirstName(val);
+                            const err = validateName(val);
+                            firstNameRef.current?.setCustomValidity(err || "");
+                            setFirstNameError(err);
+                          }}
+                          className={`${inputCls} ${
+                            firstNameError
+                              ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10"
+                              : ""
+                          }`}
                           placeholder="e.g., Priya"
                         />
+                        {firstNameError && (
+                          <p className="mt-1 text-xs text-rose-500 font-medium">
+                            {firstNameError}
+                          </p>
+                        )}
                       </Field>
 
                       <Field label="Last Name" required>
                         <input
+                          ref={lastNameRef}
                           name="lastName"
                           required
-                          className={inputCls}
+                          value={lastName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setLastName(val);
+                            const err = validateName(val);
+                            lastNameRef.current?.setCustomValidity(err || "");
+                            setLastNameError(err);
+                          }}
+                          className={`${inputCls} ${
+                            lastNameError
+                              ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10"
+                              : ""
+                          }`}
                           placeholder="e.g., Sharma"
                         />
+                        {lastNameError && (
+                          <p className="mt-1 text-xs text-rose-500 font-medium">
+                            {lastNameError}
+                          </p>
+                        )}
                       </Field>
 
                       <Field label="Email" required>
                         <input
+                          ref={emailRef}
                           type="email"
                           name="email"
                           required
-                          className={inputCls}
+                          value={email}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEmail(val);
+                            if (!val || !val.trim()) {
+                              setEmailError("Email is required.");
+                              setEmailSuggestion("");
+                              emailRef.current?.setCustomValidity("Email is required.");
+                            } else {
+                              const err = validateEmail(val);
+                              const sug = getEmailSuggestion(val);
+                              setEmailError(err || "");
+                              setEmailSuggestion(sug || "");
+                              emailRef.current?.setCustomValidity(err || "");
+                            }
+                          }}
+                          onBlur={() => {
+                            const err = validateEmail(email);
+                            const sug = getEmailSuggestion(email);
+                            setEmailError(err || "");
+                            setEmailSuggestion(sug || "");
+                            emailRef.current?.setCustomValidity(err || "");
+                          }}
+                          className={`${inputCls} ${emailError ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10" : ""}`}
                           placeholder="name@example.com"
                         />
+                        {emailError && (
+                          <div className="mt-1.5 text-xs text-rose-500 font-medium">
+                            <p className="flex items-center gap-1">
+                              <span className="text-rose-400">⚠️</span> {emailError}
+                            </p>
+                            {emailSuggestion && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEmail(emailSuggestion);
+                                  setEmailError("");
+                                  setEmailSuggestion("");
+                                  emailRef.current?.setCustomValidity("");
+                                }}
+                                className="mt-1 inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold underline cursor-pointer"
+                              >
+                                <span>💡 Did you mean <strong>{emailSuggestion}</strong>? Click to use.</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </Field>
 
                       <Field label="Mobile" required>
-                        <input
-                          name="phone"
-                          required
-                          className={inputCls}
-                          placeholder={phonePlaceholder}
-                        />
+                        <div
+                          className={`flex items-center w-full h-11 rounded-xl border bg-white/95 shadow-sm transition-all duration-200 overflow-hidden focus-within:ring-4 focus-within:ring-violet-500/10 focus-within:border-violet-400 hover:border-slate-300 ${
+                            phoneError
+                              ? "!border-rose-400 focus-within:!border-rose-500 focus-within:!ring-rose-500/10"
+                              : "border-slate-200"
+                          }`}
+                          onClick={() => phoneRef.current?.focus()}
+                        >
+                          <div className="flex items-center gap-1.5 pl-3.5 pr-2.5 text-slate-600 font-semibold text-xs sm:text-sm select-none shrink-0">
+                            <IndiaFlag />
+                            <span className="text-slate-700 font-semibold text-xs sm:text-sm">+91</span>
+                            <span className="ml-1 h-4 w-px bg-slate-200"></span>
+                          </div>
+                          <input
+                            ref={phoneRef}
+                            type="tel"
+                            name="phone"
+                            required
+                            inputMode="numeric"
+                            maxLength={10}
+                            value={phone}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const digits = extractIndianMobileDigits(val);
+                              setPhone(digits);
+                              if (digits.length === 0) {
+                                setPhoneError("Mobile number is required.");
+                                phoneRef.current?.setCustomValidity("Mobile number is required.");
+                              } else if (!/^[6-9]/.test(digits)) {
+                                setPhoneError("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                                phoneRef.current?.setCustomValidity("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                              } else if (digits.length < 10) {
+                                setPhoneError(`Mobile number must be 10 digits (${digits.length}/10).`);
+                                phoneRef.current?.setCustomValidity(`Mobile number must be 10 digits (${digits.length}/10).`);
+                              } else {
+                                setPhoneError("");
+                                phoneRef.current?.setCustomValidity("");
+                              }
+                            }}
+                            onBlur={() => {
+                              const err = validateIndianMobile(phone, true);
+                              setPhoneError(err);
+                              phoneRef.current?.setCustomValidity(err);
+                            }}
+                            placeholder="98765 43210"
+                            className="input-reset !mt-0 !border-0 focus:!border-0 !outline-none !shadow-none !bg-transparent w-full h-full pl-1.5 pr-3 text-sm text-slate-800 placeholder:text-slate-400 flex-1 min-w-0"
+                            style={{ marginTop: 0, border: "none", outline: "none", boxShadow: "none" }}
+                          />
+                        </div>
+                        {phoneError && (
+                          <p className="mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1">
+                            <span className="text-rose-400">⚠️</span> {phoneError}
+                          </p>
+                        )}
                       </Field>
 
                       <Field label="Alternate Phone">
-                        <input
-                          name="altPhone"
-                          className={inputCls}
-                          placeholder={phonePlaceholder}
-                        />
+                        <div
+                          className={`flex items-center w-full h-11 rounded-xl border bg-white/95 shadow-sm transition-all duration-200 overflow-hidden focus-within:ring-4 focus-within:ring-violet-500/10 focus-within:border-violet-400 hover:border-slate-300 ${
+                            altPhoneError
+                              ? "!border-rose-400 focus-within:!border-rose-500 focus-within:!ring-rose-500/10"
+                              : "border-slate-200"
+                          }`}
+                          onClick={() => altPhoneRef.current?.focus()}
+                        >
+                          <div className="flex items-center gap-1.5 pl-3.5 pr-2.5 text-slate-600 font-semibold text-xs sm:text-sm select-none shrink-0">
+                            <IndiaFlag />
+                            <span className="text-slate-700 font-semibold text-xs sm:text-sm">+91</span>
+                            <span className="ml-1 h-4 w-px bg-slate-200"></span>
+                          </div>
+                          <input
+                            ref={altPhoneRef}
+                            type="tel"
+                            name="altPhone"
+                            inputMode="numeric"
+                            maxLength={10}
+                            value={altPhone}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const digits = extractIndianMobileDigits(val);
+                              setAltPhone(digits);
+                              if (digits.length === 0) {
+                                setAltPhoneError("");
+                                altPhoneRef.current?.setCustomValidity("");
+                              } else if (!/^[6-9]/.test(digits)) {
+                                setAltPhoneError("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                                altPhoneRef.current?.setCustomValidity("Indian mobile numbers must start with 6, 7, 8, or 9.");
+                              } else if (digits.length < 10) {
+                                setAltPhoneError(`Alternate phone must be 10 digits (${digits.length}/10).`);
+                                altPhoneRef.current?.setCustomValidity(`Alternate phone must be 10 digits (${digits.length}/10).`);
+                              } else if (digits === phone) {
+                                setAltPhoneError("Alternate phone cannot be the same as primary mobile number.");
+                                altPhoneRef.current?.setCustomValidity("Alternate phone cannot be the same as primary mobile number.");
+                              } else {
+                                setAltPhoneError("");
+                                altPhoneRef.current?.setCustomValidity("");
+                              }
+                            }}
+                            onBlur={() => {
+                              const err = validateIndianMobile(altPhone, false);
+                              if (!err && altPhone && altPhone === phone) {
+                                const dupErr = "Alternate phone cannot be the same as primary mobile number.";
+                                setAltPhoneError(dupErr);
+                                altPhoneRef.current?.setCustomValidity(dupErr);
+                              } else {
+                                setAltPhoneError(err);
+                                altPhoneRef.current?.setCustomValidity(err);
+                              }
+                            }}
+                            placeholder="98765 43210"
+                            className="input-reset !mt-0 !border-0 focus:!border-0 !outline-none !shadow-none !bg-transparent w-full h-full pl-1.5 pr-3 text-sm text-slate-800 placeholder:text-slate-400 flex-1 min-w-0"
+                            style={{ marginTop: 0, border: "none", outline: "none", boxShadow: "none" }}
+                          />
+                        </div>
+                        {altPhoneError && (
+                          <p className="mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1">
+                            <span className="text-rose-400">⚠️</span> {altPhoneError}
+                          </p>
+                        )}
                       </Field>
 
                       <Field label="Country" required>
-                        <select
+                        <CustomSelect
                           name="country"
                           required
-                          className={inputCls}
                           value={country}
                           onChange={(e) => {
                             setCountry(e.target.value);
@@ -981,32 +1657,27 @@ const InstructureManagement = () => {
                             if (address2Ref.current)
                               address2Ref.current.value = "";
                           }}
-                        >
-                          <option value="" disabled={country !== ""}>
-                            Select
-                          </option>
-                          <option value="India">India</option>
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            { value: "India", label: "India" },
+                          ]}
+                          placeholder="Select"
+                        />
                       </Field>
 
                       <Field label={stateLabel} required>
-                        <select
+                        <CustomSelect
                           name="state"
                           required
                           disabled={!country}
-                          className={inputCls}
                           value={stateProv}
                           onChange={(e) => setStateProv(e.target.value)}
-                        >
-                          <option value="" disabled hidden>
-                            Select
-                          </option>
-                          {stateList.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
+                          options={[
+                            { value: "", label: "Select State" },
+                            ...stateList.map((s) => ({ value: s, label: s })),
+                          ]}
+                          placeholder="Select State"
+                        />
                       </Field>
 
                       <Field label="City" required>
@@ -1024,9 +1695,41 @@ const InstructureManagement = () => {
                           name="postalCode"
                           required
                           ref={postalRef}
-                          className={inputCls}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          value={postalCode}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const digits = extractIndianPinCodeDigits(val);
+                            setPostalCode(digits);
+                            if (digits.length === 0) {
+                              setPostalError("PIN code is required.");
+                              postalRef.current?.setCustomValidity("PIN code is required.");
+                            } else if (digits.startsWith("0")) {
+                              setPostalError("PIN code cannot start with 0 (must start with 1-9).");
+                              postalRef.current?.setCustomValidity("PIN code cannot start with 0 (must start with 1-9).");
+                            } else if (digits.length < 6) {
+                              setPostalError(`PIN code must be 6 digits (${digits.length}/6).`);
+                              postalRef.current?.setCustomValidity(`PIN code must be 6 digits (${digits.length}/6).`);
+                            } else {
+                              setPostalError("");
+                              postalRef.current?.setCustomValidity("");
+                            }
+                          }}
+                          onBlur={() => {
+                            const err = validateIndianPinCode(postalCode, true);
+                            setPostalError(err);
+                            postalRef.current?.setCustomValidity(err);
+                          }}
                           placeholder="400001"
+                          className={`${inputCls} font-mono tracking-wide ${postalError ? "!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/10" : ""}`}
                         />
+                        {postalError && (
+                          <p className="mt-1.5 text-xs text-rose-500 font-medium flex items-center gap-1">
+                            <span className="text-rose-400">⚠️</span> {postalError}
+                          </p>
+                        )}
                       </Field>
 
                       <Field label="Address Line 1" required span={2}>
@@ -1054,21 +1757,20 @@ const InstructureManagement = () => {
                     <div className={currentStep === 2 ? 'block animate-fade-in' : 'hidden'}>
                       <FormSection title="Professional & Teaching" icon={faStar}>
                       <Field label="Highest Qualification">
-                        <select
+                        <CustomSelect
                           name="qualification"
-                          className={inputCls}
                           value={qualification}
                           onChange={(e) => setQualification(e.target.value)}
-                        >
-                          <option value="" disabled={qualification !== ""}>
-                            Select
-                          </option>
-                          <option value="Diploma">Diploma</option>
-                          <option value="Bachelor">Bachelor</option>
-                          <option value="Master">Master</option>
-                          <option value="PhD">PhD</option>
-                          <option value="Other">Other</option>
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            { value: "Diploma", label: "Diploma" },
+                            { value: "Bachelor", label: "Bachelor" },
+                            { value: "Master", label: "Master" },
+                            { value: "PhD", label: "PhD" },
+                            { value: "Other", label: "Other" },
+                          ]}
+                          placeholder="Select"
+                        />
                       </Field>
 
                       <Field label="Years of Experience">
@@ -1111,20 +1813,19 @@ const InstructureManagement = () => {
                       </Field>
 
                       <Field label="Teaching Mode" required>
-                        <select
+                        <CustomSelect
                           name="teachingMode"
                           required
-                          className={inputCls}
                           value={teachingMode}
                           onChange={(e) => setTeachingMode(e.target.value)}
-                        >
-                          <option value="" disabled={teachingMode !== ""}>
-                            Select
-                          </option>
-                          <option value="Online">Online</option>
-                          <option value="Offline">Offline</option>
-                          <option value="Hybrid">Hybrid</option>
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            { value: "Online", label: "Online" },
+                            { value: "Offline", label: "Offline" },
+                            { value: "Hybrid", label: "Hybrid" },
+                          ]}
+                          placeholder="Select Teaching Mode"
+                        />
                       </Field>
 
                       <Field label="Short Bio / Summary" span={3}>
@@ -1186,12 +1887,9 @@ const InstructureManagement = () => {
                       </div>
 
                       <Field label="Start Time (24h)" required>
-                        <input
-                          type="time"
+                        <CustomTimeSelect
                           name="availableStart"
-                          className={inputCls}
                           ref={startRef}
-                          step="60"
                           required
                           value={availStart}
                           onChange={(e) => {
@@ -1204,16 +1902,14 @@ const InstructureManagement = () => {
                               el?.setCustomValidity(""),
                             );
                           }}
+                          placeholder="--:--"
                         />
                       </Field>
 
                       <Field label="End Time (24h)" required>
-                        <input
-                          type="time"
+                        <CustomTimeSelect
                           name="availableEnd"
-                          className={inputCls}
                           ref={endRef}
-                          step="60"
                           required
                           value={availEnd}
                           onChange={(e) => {
@@ -1226,25 +1922,24 @@ const InstructureManagement = () => {
                               el?.setCustomValidity(""),
                             );
                           }}
+                          placeholder="--:--"
                         />
                       </Field>
 
                       <Field label="Timezone">
-                        <select
+                        <CustomSelect
                           name="timezone"
-                          className={inputCls}
                           value={tz}
                           onChange={(e) => setTz(e.target.value)}
-                        >
-                          <option value="" disabled={tz !== ""}>
-                            Select
-                          </option>
-                          {TIMEZONES.map((z) => (
-                            <option key={z} value={z}>
-                              {z === "Asia/Kolkata" ? "Asia/Kolkata (IST)" : z}
-                            </option>
-                          ))}
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            ...TIMEZONES.map((z) => ({
+                              value: z,
+                              label: z === "Asia/Kolkata" ? "Asia/Kolkata (IST)" : z,
+                            })),
+                          ]}
+                          placeholder="Select Timezone"
+                        />
                       </Field>
 
                       <div className="md:col-span-3 mt-2">
@@ -1290,8 +1985,7 @@ const InstructureManagement = () => {
                                   <label className={labelCls}>
                                     Slot {idx + 1}: Start
                                   </label>
-                                  <input
-                                    type="time"
+                                  <CustomTimeSelect
                                     value={s.start}
                                     onChange={(e) => {
                                       prefStartRefs.current[
@@ -1306,11 +2000,10 @@ const InstructureManagement = () => {
                                         e.target.value,
                                       );
                                     }}
-                                    className={inputCls}
                                     ref={(el) =>
                                       (prefStartRefs.current[idx] = el)
                                     }
-                                    step="60"
+                                    placeholder="--:--"
                                   />
                                 </div>
 
@@ -1318,8 +2011,7 @@ const InstructureManagement = () => {
                                   <label className={labelCls}>
                                     Slot {idx + 1}: End
                                   </label>
-                                  <input
-                                    type="time"
+                                  <CustomTimeSelect
                                     value={s.end}
                                     onChange={(e) => {
                                       prefEndRefs.current[
@@ -1334,11 +2026,10 @@ const InstructureManagement = () => {
                                         e.target.value,
                                       );
                                     }}
-                                    className={inputCls}
                                     ref={(el) =>
                                       (prefEndRefs.current[idx] = el)
                                     }
-                                    step="60"
+                                    placeholder="--:--"
                                   />
                                 </div>
 
@@ -1363,19 +2054,18 @@ const InstructureManagement = () => {
                     <div className={currentStep === 4 ? 'block animate-fade-in' : 'hidden'}>
                       <FormSection title="Compensation / Payout" icon={faIndianRupeeSign}>
                       <Field label="Rate Type">
-                        <select
+                        <CustomSelect
                           name="rateType"
-                          className={inputCls}
                           value={rateType}
                           onChange={(e) => setRateType(e.target.value)}
-                        >
-                          <option value="" disabled={rateType !== ""}>
-                            Select
-                          </option>
-                          <option value="Hourly">Hourly</option>
-                          <option value="Per Session">Per Session</option>
-                          <option value="Fixed">Fixed</option>
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            { value: "Hourly", label: "Hourly" },
+                            { value: "Per Session", label: "Per Session" },
+                            { value: "Fixed", label: "Fixed" },
+                          ]}
+                          placeholder="Select"
+                        />
                       </Field>
 
                       <Field label="Expected Rate">
@@ -1390,41 +2080,39 @@ const InstructureManagement = () => {
                       </Field>
 
                       <Field label="Currency">
-                        <select
+                        <CustomSelect
                           name="currency"
-                          className={inputCls}
                           value={currency}
                           onChange={(e) => setCurrency(e.target.value)}
-                        >
-                          <option value="" disabled={currency !== ""}>
-                            Select
-                          </option>
-                          <option value="INR">INR</option>
-                          <option value="USD">USD</option>
-                          <option value="CAD">CAD</option>
-                          <option value="EUR">EUR</option>
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            { value: "INR", label: "INR" },
+                            { value: "USD", label: "USD" },
+                            { value: "CAD", label: "CAD" },
+                            { value: "EUR", label: "EUR" },
+                          ]}
+                          placeholder="Select"
+                        />
                       </Field>
 
                       <Field label="Preferred Payout Method">
-                        <select
+                        <CustomSelect
                           name="payoutMethod"
-                          className={inputCls}
                           value={payoutMethod}
                           onChange={(e) => setPayoutMethod(e.target.value)}
                           disabled={country !== "India"}
-                        >
-                          <option value="" disabled>
-                            {country ? "Select" : "Select country first"}
-                          </option>
-                          {country === "India" && (
-                            <>
-                              <option>Bank Transfer (NEFT/RTGS)</option>
-                              <option>UPI</option>
-                              <option>Razorpay</option>
-                            </>
-                          )}
-                        </select>
+                          options={
+                            country === "India"
+                              ? [
+                                  { value: "", label: "Select" },
+                                  { value: "Bank Transfer (NEFT/RTGS)", label: "Bank Transfer (NEFT/RTGS)" },
+                                  { value: "UPI", label: "UPI" },
+                                  { value: "Razorpay", label: "Razorpay" },
+                                ]
+                              : [{ value: "", label: country ? "Select" : "Select country first" }]
+                          }
+                          placeholder={country ? "Select" : "Select country first"}
+                        />
                       </Field>
 
                       <Field label="Payout Identifier" span={2}>
@@ -1445,7 +2133,7 @@ const InstructureManagement = () => {
                           type="file"
                           name="resume"
                           required
-                          className={inputCls}
+                          className={fileInputCls}
                           accept=".pdf,.doc,.docx"
                         />
                       </Field>
@@ -1454,7 +2142,7 @@ const InstructureManagement = () => {
                         <input
                           type="file"
                           name="photo"
-                          className={inputCls}
+                          className={fileInputCls}
                           accept="image/*"
                         />
                       </Field>
@@ -1463,50 +2151,49 @@ const InstructureManagement = () => {
                         <input
                           type="file"
                           name="certificates"
-                          className={inputCls}
+                          className={fileInputCls}
                           accept=".pdf,.png,.jpg,.jpeg"
                           multiple
                         />
                       </Field>
 
                       <Field label="Background Check">
-                        <select
+                        <CustomSelect
                           name="backgroundCheck"
-                          className={inputCls}
                           value={backgroundCheck}
                           onChange={(e) => setBackgroundCheck(e.target.value)}
-                        >
-                          <option value="" disabled={backgroundCheck !== ""}>
-                            Select
-                          </option>
-                          <option value="Pending">Pending</option>
-                          <option value="Cleared">Cleared</option>
-                          <option value="Not Required">Not Required</option>
-                        </select>
+                          options={[
+                            { value: "", label: "Select" },
+                            { value: "Pending", label: "Pending" },
+                            { value: "Cleared", label: "Cleared" },
+                            { value: "Not Required", label: "Not Required" },
+                          ]}
+                          placeholder="Select"
+                        />
                       </Field>
 
-                      <div className="md:col-span-2 flex items-center gap-6">
-                        <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                      <div className="md:col-span-2 flex flex-wrap items-center gap-6 pt-1">
+                        <label className="inline-flex items-center gap-2.5 cursor-pointer select-none group">
                           <input
                             type="checkbox"
                             name="ndaSigned"
-                            className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                            className="w-4 h-4 !m-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer shrink-0 accent-violet-600"
                           />
-                          <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 whitespace-nowrap">
                             NDA signed
                           </span>
                         </label>
 
-                        <label className="inline-flex items-center gap-2.5 cursor-pointer group">
+                        <label className="inline-flex items-center gap-2.5 cursor-pointer select-none group">
                           <input
                             type="checkbox"
                             name="agreeToTerms"
                             required
-                            className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                            className="w-4 h-4 !m-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer shrink-0 accent-violet-600"
                           />
-                          <span className="text-sm text-slate-600 group-hover:text-slate-800">
+                          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 whitespace-nowrap">
                             I confirm all details are accurate{" "}
-                            <span className="text-rose-500">*</span>
+                            <span className="text-rose-500 font-bold">*</span>
                           </span>
                         </label>
                       </div>
@@ -1558,6 +2245,47 @@ const InstructureManagement = () => {
                                 const container = document.getElementById('wizard-scroll-container');
                                 if (!container) return;
                                 
+                                if (currentStep === 1) {
+                                  const emailErr = validateEmail(email);
+                                  if (emailErr) {
+                                    setEmailError(emailErr);
+                                    setEmailSuggestion(getEmailSuggestion(email) || "");
+                                    emailRef.current?.setCustomValidity(emailErr);
+                                    emailRef.current?.reportValidity();
+                                    return;
+                                  }
+                                  const pErr = validateIndianMobile(phone, true);
+                                  if (pErr) {
+                                    setPhoneError(pErr);
+                                    phoneRef.current?.setCustomValidity(pErr);
+                                    phoneRef.current?.reportValidity();
+                                    return;
+                                  }
+                                  if (altPhone) {
+                                    const apErr = validateIndianMobile(altPhone, false);
+                                    if (apErr) {
+                                      setAltPhoneError(apErr);
+                                      altPhoneRef.current?.setCustomValidity(apErr);
+                                      altPhoneRef.current?.reportValidity();
+                                      return;
+                                    }
+                                    if (phone === altPhone) {
+                                      const dupErr = "Alternate phone cannot be the same as primary mobile number.";
+                                      setAltPhoneError(dupErr);
+                                      altPhoneRef.current?.setCustomValidity(dupErr);
+                                      altPhoneRef.current?.reportValidity();
+                                      return;
+                                    }
+                                  }
+                                  const pinErr = validateIndianPinCode(postalCode, true);
+                                  if (pinErr) {
+                                    setPostalError(pinErr);
+                                    postalRef.current?.setCustomValidity(pinErr);
+                                    postalRef.current?.reportValidity();
+                                    return;
+                                  }
+                                }
+
                                 const visibleStep = container.querySelector('.block.animate-fade-in');
                                 if (!visibleStep) return;
 
@@ -1664,12 +2392,13 @@ const InstructureManagement = () => {
                         setOtpCode("");
                         setPendingFormData(null);
                         setPrefSlots([]);
-                        alert("Instructor created successfully.");
+                        showAlert("Instructor created successfully.", "success");
                       } catch (err) {
                         console.error("Verify OTP or Create failed:", err);
-                        alert(
+                        showAlert(
                           err?.response?.data?.message ||
                             "Invalid OTP or create failed.",
+                          "error",
                         );
                       }
                     }}
@@ -1690,15 +2419,75 @@ const InstructureManagement = () => {
                           { email: otpEmail },
                           { headers: authHeaders() },
                         );
-                        alert("OTP resent.");
+                        showAlert("OTP resent.", "info");
                       } catch {
-                        alert("Failed to resend OTP.");
+                        showAlert("Failed to resend OTP.", "error");
                       }
                     }}
                   >
                     Didn't receive a code? Resend
                   </button>
                 </div>
+              </div>
+            </div>,
+            portalTarget,
+          )}
+
+        {/* ═══ CENTERED FEEDBACK / ALERT MODAL ═══ */}
+        {alertInfo &&
+          portalTarget &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-[3px] animate-fade-in"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setAlertInfo(null)}
+            >
+              <div
+                className="bg-white rounded-[24px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] w-full max-w-sm p-6 sm:p-7 border border-slate-100 flex flex-col items-center text-center transform transition-all scale-100 animate-zoom-in"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm ${
+                    alertInfo.type === "error"
+                      ? "bg-rose-50 text-rose-500 border border-rose-100"
+                      : alertInfo.type === "info"
+                      ? "bg-sky-50 text-sky-600 border border-sky-100"
+                      : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    icon={
+                      alertInfo.type === "error"
+                        ? faTimes
+                        : alertInfo.type === "info"
+                        ? faEnvelope
+                        : faCheck
+                    }
+                    className="text-2xl"
+                  />
+                </div>
+
+                <h3 className="text-lg font-bold text-slate-900 mb-1.5">
+                  {alertInfo.title ||
+                    (alertInfo.type === "error"
+                      ? "Error"
+                      : alertInfo.type === "info"
+                      ? "Notice"
+                      : "Success")}
+                </h3>
+
+                <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                  {alertInfo.message}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setAlertInfo(null)}
+                  className="w-full py-2.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold shadow-lg shadow-violet-200/70 transition-all focus:outline-none focus:ring-4 focus:ring-violet-500/20 active:scale-[0.98]"
+                >
+                  OK
+                </button>
               </div>
             </div>,
             portalTarget,
@@ -1722,7 +2511,7 @@ const InstructureManagement = () => {
                 ),
               );
               setEditing(null);
-              alert("Instructor updated successfully.");
+              showAlert("Instructor updated successfully.", "success");
             }}
           />
         )}
@@ -1892,11 +2681,11 @@ const InstructureManagement = () => {
             <div className="relative w-full max-w-xs">
               <FontAwesomeIcon
                 icon={faSearch}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm z-10"
               />
-              {/*Add the "!mt-0" style for alignment - 04-08-2026 */}
               <input
-                className={`${inputCls} !mt-0 pl-10 !h-10 !rounded-xl bg-slate-50 border-slate-200`}
+                className={`${inputCls} !mt-0 !pl-10 !h-10 !rounded-xl bg-slate-50 border-slate-200`}
+                style={{ paddingLeft: "2.5rem" }}
                 placeholder="Search by name, email, skills..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

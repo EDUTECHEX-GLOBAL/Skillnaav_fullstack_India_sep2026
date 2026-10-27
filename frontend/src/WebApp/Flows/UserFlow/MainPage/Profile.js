@@ -1103,7 +1103,7 @@ const ProfileForm = () => {
                 <label className="text-sm font-medium text-gray-700">
                   Profile Image
                 </label>
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4 sm:gap-6">
                   {(user.profileImage || tempUser.profileImage) && (
                     <img
                       src={
@@ -1120,16 +1120,16 @@ const ProfileForm = () => {
                             : user.profileImage
                       }
                       alt="Profile"
-                      className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+                      className="w-24 h-24 min-w-[96px] min-h-[96px] max-w-[96px] max-h-[96px] shrink-0 flex-shrink-0 aspect-square rounded-full object-cover border-2 border-gray-300 shadow-sm block"
                     />
                   )}
                   {isEditing && (
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Upload a new profile image (JPEG, PNG, JPG)

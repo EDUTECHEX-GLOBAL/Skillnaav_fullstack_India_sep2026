@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import PropTypes from "prop-types";
+import { FaEye } from "react-icons/fa";
 import jsPDF from "jspdf";
 import SendOfferLetter from "./OfferLetter";
 import BulkSendOffer from "./BulkSendOffer";
@@ -19,6 +20,49 @@ import {
   sendInterviewInvite,
   completeInterview,
 } from "./pipelineUtils";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// L2 Assessment Configuration Validation Specs
+// ─────────────────────────────────────────────────────────────────────────────
+const L2_CONFIG_SPECS = {
+  questionCount: {
+    min: 1,
+    max: 50,
+    defaultVal: 10,
+    maxDigits: 2,
+    getLabel: (type) =>
+      type === "ai_voice_assessment" ? "Question Count" : "MCQ Count",
+    hint: "1 – 50 questions",
+    errorMsg: "Must be between 1 and 50",
+  },
+  difficulty: {
+    min: 1,
+    max: 3,
+    defaultVal: 2,
+    maxDigits: 1,
+    getLabel: () => "Difficulty (1-3)",
+    hint: "1: Easy, 2: Medium, 3: Hard",
+    errorMsg: "Must be 1, 2, or 3",
+  },
+  timeLimitMinutes: {
+    min: 5,
+    max: 180,
+    defaultVal: 20,
+    maxDigits: 3,
+    getLabel: () => "Time (mins)",
+    hint: "5 – 180 mins",
+    errorMsg: "Must be between 5 and 180 mins",
+  },
+  passScore: {
+    min: 1,
+    max: 100,
+    defaultVal: 70,
+    maxDigits: 3,
+    getLabel: () => "Pass Score (%)",
+    hint: "1 – 100%",
+    errorMsg: "Must be between 1% and 100%",
+  },
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Skeleton row — used as loading placeholder
@@ -256,9 +300,108 @@ const downloadAssessmentResultPDF = async ({
   const contentWidth = pageWidth - marginX * 2;
   let y = 18;
 
-  const cleanText = (value) => {
-    if (value === null || value === undefined || value === "") return "N/A";
-    return String(value).replace(/\s+/g, " ").trim();
+  const sanitizeForJsPDF = (text) => {
+    if (text === null || text === undefined || text === "") return "N/A";
+    let s = String(text);
+
+    // Replace HTML linebreaks if any
+    s = s.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
+
+    // Emojis and status icons
+    s = s
+      .replace(/✅/g, "")
+      .replace(/⚠️/g, "")
+      .replace(/❌/g, "")
+      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
+
+    // Superscripts
+    s = s
+      .replace(/⁻¹/g, "^-1")
+      .replace(/⁻²/g, "^-2")
+      .replace(/⁻³/g, "^-3")
+      .replace(/⁻/g, "-")
+      .replace(/⁰/g, "^0")
+      .replace(/¹/g, "^1")
+      .replace(/²/g, "^2")
+      .replace(/³/g, "^3")
+      .replace(/⁴/g, "^4")
+      .replace(/⁵/g, "^5")
+      .replace(/⁶/g, "^6")
+      .replace(/⁷/g, "^7")
+      .replace(/⁸/g, "^8")
+      .replace(/⁹/g, "^9");
+
+    // Subscripts
+    s = s
+      .replace(/₀/g, "_0")
+      .replace(/₁/g, "_1")
+      .replace(/₂/g, "_2")
+      .replace(/₃/g, "_3")
+      .replace(/₄/g, "_4");
+
+    // Quotes and dashes
+    s = s
+      .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+      .replace(/[\u2013\u2014\u2212]/g, "-");
+
+    // Middle dots / bullets
+    s = s.replace(/[\u00B7\u2022\u2219]/g, ".");
+
+    // Common scientific/Greek symbols
+    s = s
+      .replace(/α/g, "alpha")
+      .replace(/β/g, "beta")
+      .replace(/γ/g, "gamma")
+      .replace(/δ/g, "delta")
+      .replace(/θ/g, "theta")
+      .replace(/λ/g, "lambda")
+      .replace(/μ/g, "u")
+      .replace(/π/g, "pi")
+      .replace(/σ/g, "sigma")
+      .replace(/ω/g, "omega")
+      .replace(/Δ/g, "Delta")
+      .replace(/Ω/g, "Ohm")
+      .replace(/°/g, " deg")
+      .replace(/Å/g, "A")
+      .replace(/→/g, "->")
+      .replace(/←/g, "<-")
+      .replace(/↔/g, "<->")
+      .replace(/±/g, "+/-")
+      .replace(/≤/g, "<=")
+      .replace(/≥/g, ">=")
+      .replace(/≠/g, "!=")
+      .replace(/≈/g, "~=")
+      .replace(/×/g, "x")
+      .replace(/÷/g, "/");
+
+    // Markdown asterisks & formatting
+    s = s
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1");
+
+    // HTML entities and leftover artifacts
+    s = s
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&p/g, " ");
+
+    // Non-breaking spaces and invisible characters
+    s = s.replace(/[\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/g, " ");
+
+    // Strip any remaining characters outside ASCII 32-126 and newline
+    s = s.replace(/[^\x20-\x7E\n]/g, "");
+
+    // Normalize horizontal spaces without destroying newlines
+    s = s.replace(/[ \t]+/g, " ");
+    s = s.replace(/\n{3,}/g, "\n\n");
+
+    return s.trim();
   };
 
   const ensureSpace = (height = 12) => {
@@ -268,18 +411,34 @@ const downloadAssessmentResultPDF = async ({
   };
 
   const writeWrapped = (text, x, maxWidth, lineHeight = 5) => {
-    const lines = doc.splitTextToSize(cleanText(text), maxWidth);
-    ensureSpace(lines.length * lineHeight + 2);
-    doc.text(lines, x, y);
-    y += lines.length * lineHeight;
+    const sanitized = sanitizeForJsPDF(text);
+    const lines = doc.splitTextToSize(sanitized, maxWidth);
+    for (let i = 0; i < lines.length; i++) {
+      ensureSpace(lineHeight + 1);
+      doc.text(lines[i], x, y);
+      y += lineHeight;
+    }
   };
 
   const writeLabelValue = (label, value) => {
-    ensureSpace(8);
+    const sanitized = sanitizeForJsPDF(value);
+    ensureSpace(10);
     doc.setFont("helvetica", "bold");
     doc.text(label, marginX, y);
     doc.setFont("helvetica", "normal");
-    writeWrapped(value, marginX + 34, contentWidth - 34, 5);
+
+    const lines = doc.splitTextToSize(sanitized, contentWidth - 34);
+    if (lines.length > 0) {
+      doc.text(lines[0], marginX + 34, y);
+      y += 5;
+      for (let i = 1; i < lines.length; i++) {
+        ensureSpace(6);
+        doc.text(lines[i], marginX + 34, y);
+        y += 5;
+      }
+    } else {
+      y += 5;
+    }
     y += 1;
   };
 
@@ -840,9 +999,10 @@ export const ApplicationsTable = ({ applications = [] }) => {
                         href={student.resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 transition"
+                        className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 transition"
                       >
-                        📄 View
+                        <FaEye className="w-3.5 h-3.5" />
+                        <span>View</span>
                       </a>
                     ) : (
                       <span className="text-gray-400">—</span>
@@ -951,6 +1111,83 @@ export const ShortlistedTable = ({
     allowText: true,
     allowFileUpload: true,
   });
+
+  const [assessmentTypeOpen, setAssessmentTypeOpen] = useState(false);
+  const assessmentTypeRef = useRef(null);
+
+  useEffect(() => {
+    const handleAssessmentTypeOutsideClick = (e) => {
+      if (
+        assessmentTypeRef.current &&
+        !assessmentTypeRef.current.contains(e.target)
+      ) {
+        setAssessmentTypeOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleAssessmentTypeOutsideClick);
+    return () =>
+      document.removeEventListener(
+        "mousedown",
+        handleAssessmentTypeOutsideClick
+      );
+  }, []);
+
+  const l2ConfigDetailsRef = useRef(null);
+
+  const getL2FieldError = (key) => {
+    const spec = L2_CONFIG_SPECS[key];
+    if (!spec) return "";
+    const val = l2Config[key];
+    if (val === "" || val === null || val === undefined) {
+      return "Required";
+    }
+    const num = Number(val);
+    if (isNaN(num) || num < spec.min || num > spec.max) {
+      return spec.errorMsg;
+    }
+    return "";
+  };
+
+  const handleL2ConfigKeyDown = (e) => {
+    if (["-", "+", "e", "E", "."].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleL2ConfigChange = (key, rawValue) => {
+    const digitsOnly = String(rawValue ?? "").replace(/\D/g, "");
+    const spec = L2_CONFIG_SPECS[key];
+    if (!spec) return;
+
+    if (digitsOnly === "") {
+      setL2Config((p) => ({ ...p, [key]: "" }));
+      return;
+    }
+
+    const truncated = digitsOnly.slice(0, spec.maxDigits);
+    setL2Config((p) => ({
+      ...p,
+      [key]: Number(truncated),
+    }));
+  };
+
+  const handleL2ConfigBlur = (key) => {
+    const spec = L2_CONFIG_SPECS[key];
+    if (!spec) return;
+
+    const val = l2Config[key];
+    if (val === "" || val === null || val === undefined || isNaN(Number(val))) {
+      setL2Config((p) => ({ ...p, [key]: spec.defaultVal }));
+      return;
+    }
+
+    const num = Number(val);
+    if (num < spec.min) {
+      setL2Config((p) => ({ ...p, [key]: spec.min }));
+    } else if (num > spec.max) {
+      setL2Config((p) => ({ ...p, [key]: spec.max }));
+    }
+  };
 
   // ✅ FIX: Normalise every candidate on the way in so all downstream code
   //         gets consistent field names (student_id, ats_score_pct) regardless
@@ -1150,17 +1387,45 @@ export const ShortlistedTable = ({
     const l2Status = item?.l2?.status;
     if (ASSIGNMENT_LOCKED_STATUSES.has(l2Status)) return;
 
+    // Validate L2 configuration before proceeding
+    const configErrors = Object.keys(L2_CONFIG_SPECS)
+      .map((k) => {
+        const err = getL2FieldError(k);
+        return err
+          ? `${L2_CONFIG_SPECS[k].getLabel(l2Config.assessmentType)}: ${err}`
+          : null;
+      })
+      .filter(Boolean);
+
+    if (configErrors.length > 0) {
+      if (l2ConfigDetailsRef.current) {
+        l2ConfigDetailsRef.current.open = true;
+      }
+      alert(
+        "Please fix the assessment configuration errors before sending:\n\n• " +
+          configErrors.join("\n• "),
+      );
+      return;
+    }
+
     setSendingMap((prev) => ({ ...prev, [sid]: true }));
     try {
       let assessmentId = item?.l2?.assessmentId
         ? String(item.l2.assessmentId)
         : null;
       if (!assessmentId) {
+        const safeConfig = {
+          ...l2Config,
+          questionCount: Math.min(50, Math.max(1, Number(l2Config.questionCount) || 10)),
+          difficulty: Math.min(3, Math.max(1, Number(l2Config.difficulty) || 2)),
+          timeLimitMinutes: Math.min(180, Math.max(5, Number(l2Config.timeLimitMinutes) || 20)),
+          passScore: Math.min(100, Math.max(1, Number(l2Config.passScore) || 70)),
+        };
         const genRes = await generateL2Assessment({
           internshipId,
           studentId: sid,
           partnerId,
-          config: l2Config,
+          config: safeConfig,
         });
         assessmentId = genRes?.assessmentId
           ? String(genRes.assessmentId)
@@ -1541,9 +1806,10 @@ export const ShortlistedTable = ({
                                 href={student.resumeUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 transition"
+                                className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 transition"
                               >
-                                📄 View
+                                <FaEye className="w-3.5 h-3.5" />
+                                <span>View</span>
                               </a>
                             ) : (
                               <span className="text-gray-400">—</span>
@@ -1579,7 +1845,7 @@ export const ShortlistedTable = ({
           {activeLevel === "L2" && (
             <div className="space-y-4">
               {/* Config panel */}
-              <details className="group">
+              <details ref={l2ConfigDetailsRef} className="group">
                 <summary className="cursor-pointer px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 flex items-center gap-2 list-none">
                   <span className="group-open:rotate-90 transition-transform text-gray-400 inline-block">
                     ▶
@@ -1587,75 +1853,117 @@ export const ShortlistedTable = ({
                   Assessment Configuration
                 </summary>
                 <div className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                  <div className="mb-4">
+                  <div className="mb-4 relative" ref={assessmentTypeRef}>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Assessment Type
                     </label>
-                    <select
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-                      value={l2Config.assessmentType || "mcqs"}
-                      onChange={(e) =>
-                        setL2Config((p) => ({
-                          ...p,
-                          assessmentType: e.target.value,
-                        }))
-                      }
+                    <button
+                      type="button"
+                      onClick={() => setAssessmentTypeOpen((prev) => !prev)}
+                      className="w-full flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     >
-                      <option value="mcqs">MCQs</option>
-                      <option value="ai_voice_assessment">
-                        AI Voice Assessment
-                      </option>
-                    </select>
+                      <span className="font-medium">
+                        {l2Config.assessmentType === "ai_voice_assessment"
+                          ? "AI Voice Assessment"
+                          : "MCQs"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 text-gray-500 transition-transform ${
+                          assessmentTypeOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {assessmentTypeOpen && (
+                      <div className="absolute left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 overflow-hidden">
+                        {[
+                          { value: "mcqs", label: "MCQs" },
+                          {
+                            value: "ai_voice_assessment",
+                            label: "AI Voice Assessment",
+                          },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setL2Config((p) => ({
+                                ...p,
+                                assessmentType: opt.value,
+                              }));
+                              setAssessmentTypeOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition ${
+                              (l2Config.assessmentType || "mcqs") === opt.value
+                                ? "bg-blue-50 text-blue-700 font-semibold"
+                                : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {(l2Config.assessmentType || "mcqs") === opt.value && (
+                              <svg
+                                className="w-4 h-4 text-blue-600"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {[
-                      {
-                        label:
-                          l2Config.assessmentType === "ai_voice_assessment"
-                            ? "Question Count"
-                            : "MCQ Count",
-                        key: "questionCount",
-                        type: "number",
-                        min: 1,
-                      },
-                      {
-                        label: "Difficulty (1-3)",
-                        key: "difficulty",
-                        type: "number",
-                        min: 1,
-                        max: 3,
-                      },
-                      {
-                        label: "Time (mins)",
-                        key: "timeLimitMinutes",
-                        type: "number",
-                        min: 1,
-                      },
-                      {
-                        label: "Pass Score (%)",
-                        key: "passScore",
-                        type: "number",
-                        min: 1,
-                        max: 100,
-                      },
-                    ].map(({ label, key, ...rest }) => (
-                      <div key={key}>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          {label}
-                        </label>
-                        <input
-                          {...rest}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                          value={l2Config[key]}
-                          onChange={(e) =>
-                            setL2Config((p) => ({
-                              ...p,
-                              [key]: Number(e.target.value),
-                            }))
-                          }
-                        />
-                      </div>
-                    ))}
+                    {Object.entries(L2_CONFIG_SPECS).map(([key, spec]) => {
+                      const error = getL2FieldError(key);
+                      const label = spec.getLabel(l2Config.assessmentType);
+                      return (
+                        <div key={key}>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {label}
+                          </label>
+                          <input
+                            type="number"
+                            min={spec.min}
+                            max={spec.max}
+                            className={`w-full rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors ${
+                              error
+                                ? "border border-red-400 bg-red-50/20 text-red-900 focus:ring-2 focus:ring-red-400 focus:border-red-400"
+                                : "border border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-blue-400"
+                            }`}
+                            value={l2Config[key] ?? ""}
+                            onKeyDown={handleL2ConfigKeyDown}
+                            onChange={(e) =>
+                              handleL2ConfigChange(key, e.target.value)
+                            }
+                            onBlur={() => handleL2ConfigBlur(key)}
+                          />
+                          {error ? (
+                            <span className="block text-[11px] font-medium text-red-500 mt-1 leading-tight">
+                              {error}
+                            </span>
+                          ) : (
+                            <span className="block text-[11px] text-gray-400 mt-1 leading-tight">
+                              {spec.hint}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="flex gap-6 mt-3">
                     {[

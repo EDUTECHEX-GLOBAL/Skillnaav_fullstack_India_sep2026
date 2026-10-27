@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const CustomInternshipCertificate = require("../models/webapp-models/customInternshipCertificateModel");
 const Notification = require("../models/webapp-models/NotificationModel");
 const Partner = require("../models/webapp-models/partnerModel");
-const { transporter } = require("../utils/mailer");
+const notifyUser = require("../utils/notifyUser");
 
 const getAllCertificates = async (req, res) => {
     try {
@@ -58,28 +58,23 @@ const updateCertificateStatus = async (req, res) => {
                 type: 'certificate'
             });
 
-            // Email Notification
+            // Email Notification with Edutechex branded template & logo
             if (partner.email) {
                 const subject = `Edutechex: Your Certificate Template has been ${status}`;
-                const html = `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
-                        <h2 style="color: #4f46e5;">Certificate Template ${status}</h2>
-                        <p>Hi ${partner.name},</p>
-                        <p>Your custom internship certificate template <strong>"${certificate.name}"</strong> has been reviewed by the admin.</p>
-                        <p><strong>Status:</strong> <span style="color: ${status === 'Approved' ? 'green' : 'red'};">${status}</span></p>
-                        ${adminRemarks ? `<p><strong>Admin Remarks:</strong> ${adminRemarks}</p>` : ''}
-                        ${status === 'Rejected' ? `<p>Please update your template ensuring it complies with our guidelines (e.g., includes the Edutechex logo) and upload a new one.</p>` : ''}
+                const bodyHtml = `
+                    <div style="text-align: left; line-height: 1.6;">
+                        <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px;">Certificate Template ${status}</h2>
+                        <p style="margin: 12px 0; color: #374151; font-size: 15px;">Hi ${partner.name || 'Partner'},</p>
+                        <p style="margin: 12px 0; color: #374151; font-size: 15px;">Your custom internship certificate template <strong>"${certificate.name}"</strong> has been reviewed by the admin.</p>
+                        <p style="margin: 12px 0; font-size: 15px;"><strong>Status:</strong> <span style="color: ${status === 'Approved' ? '#16a34a' : '#dc2626'}; font-weight: 700;">${status}</span></p>
+                        ${adminRemarks ? `<p style="margin: 12px 0; color: #374151; font-size: 15px;"><strong>Admin Remarks:</strong> ${adminRemarks}</p>` : ''}
+                        ${status === 'Rejected' ? `<p style="margin: 12px 0; color: #dc2626; font-size: 14px;">Please update your template ensuring it complies with our guidelines (e.g., includes the Edutechex logo) and upload a new one.</p>` : ''}
                         <br/>
-                        <p>Best regards,</p>
-                        <p>The Edutechex Team</p>
+                        <p style="margin: 12px 0 0; color: #4b5563; font-size: 14px;">Best regards,<br/><strong>The Edutechex Team</strong></p>
                     </div>
                 `;
 
-                transporter.sendMail({
-                    to: partner.email,
-                    subject,
-                    html
-                }).catch(err => console.error("Error sending certificate approval email:", err));
+                notifyUser(partner.email, subject, bodyHtml).catch(err => console.error("Error sending certificate approval email:", err));
             }
         }
 

@@ -5,7 +5,10 @@ import BodyContent from "./BodyContent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
+import { useTabContext } from "./UserHomePageContext/HomePageContext";
+
 const PartnerDashboard = () => {
+  const { selectedTab } = useTabContext();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true); // desktop
 
@@ -32,21 +35,27 @@ const PartnerDashboard = () => {
 
         {/* Desktop toggle button — sits at the boundary of the sidebar */}
         <button
-  onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
-  className="hidden md:flex items-center justify-center absolute top-4 z-50
-    w-6 h-6 rounded-full bg-white border border-gray-300 shadow-md
-    hover:bg-teal-50 hover:border-teal-400 transition-all duration-200"
-  style={{ left: isDesktopSidebarOpen ? "248px" : "48px" }} // 48px = w-14 (3.5rem)
-  title={isDesktopSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
->
-  <FontAwesomeIcon
-    icon={isDesktopSidebarOpen ? faChevronLeft : faChevronRight}
-    className="text-teal-600 text-xs"
-  />
-</button>
+          onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
+          className="hidden md:flex items-center justify-center absolute top-[26px] z-50
+            w-6 h-6 rounded-full bg-white border border-gray-200 shadow-md
+            hover:bg-teal-50 hover:border-teal-400 transition-all duration-300 ease-in-out cursor-pointer"
+          style={{ left: isDesktopSidebarOpen ? "244px" : "44px" }}
+          title={isDesktopSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          <FontAwesomeIcon
+            icon={isDesktopSidebarOpen ? faChevronLeft : faChevronRight}
+            className="text-teal-500 text-[10px]"
+          />
+        </button>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-2 sm:p-4">
+        <main
+          className={`flex-1 ${
+            selectedTab === "messages"
+              ? "overflow-hidden p-0 h-full"
+              : "overflow-y-auto p-2 sm:p-4"
+          }`}
+        >
           <BodyContent />
         </main>
       </div>

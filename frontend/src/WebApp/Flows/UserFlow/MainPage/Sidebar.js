@@ -177,33 +177,38 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
           ${
             isMobile
               ? isOpen
-                ? "fixed top-16 left-0 h-[calc(100vh-4rem)] z-[100] w-64 bg-white shadow-xl transform translate-x-0"
+                ? "fixed top-[72px] left-0 h-[calc(100vh-72px)] z-[100] w-64 bg-white shadow-xl transform translate-x-0"
                 : "hidden"
-              : `sticky top-16 z-10 h-[calc(100vh-4rem)] bg-white shadow-lg ${
-                  isDesktopOpen ? "w-64" : "w-14"
+              : `sticky top-[72px] z-10 h-[calc(100vh-72px)] bg-white shadow-lg ${
+                  isDesktopOpen ? "w-64" : "w-16"
                 }`
           }
           font-poppins transition-all duration-300 ease-in-out
         `}
       >
-        {/* Inner content — always 256px wide; parent clips when collapsed */}
+        {/* Inner content */}
         <div className="w-full h-full flex flex-col">
           {/* Scrollable nav area */}
           <div
-            className={`flex-1 min-h-0 overflow-y-auto pt-4 pb-6 hide-scrollbar ${isDesktopOpen || isMobile ? "px-4" : "px-1"}`}
+            className={`flex-1 min-h-0 overflow-y-auto ${isDesktopOpen || isMobile ? "px-4 pt-4" : "px-1.5 pt-10"} pb-6 hide-scrollbar`}
           >
             <nav className="space-y-2">
               {menuItems.map(({ id, icon, label }) => (
                 <button
                   key={id}
                   onClick={() => handleTabClick(id)}
-                  className={`flex items-center p-3 rounded-lg w-full text-left font-medium transition-colors
+                  title={!isDesktopOpen && !isMobile ? label : ""}
+                  className={`flex items-center rounded-xl transition-all
     ${
       selectedTab === id
         ? "bg-[#F0DEFD] text-[#7520A9]"
         : "text-gray-600 hover:bg-gray-100"
     }
-    ${!isDesktopOpen && !isMobile ? "justify-center" : ""}
+    ${
+      !isDesktopOpen && !isMobile
+        ? "justify-center w-11 h-11 mx-auto p-0"
+        : "p-3 w-full text-left font-medium"
+    }
   `}
                 >
                   <FontAwesomeIcon

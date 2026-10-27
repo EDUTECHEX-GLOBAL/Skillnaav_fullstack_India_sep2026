@@ -1,5 +1,5 @@
 // Chatview.js
-import React, { useLayoutEffect, useMemo, useRef } from "react";
+import React, { useState, useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import { PaginationBar } from "./Internshiplistview";
 import {
   S,
@@ -18,6 +18,8 @@ import {
   ACTIVE_DOT,
   ACTIVE_WRAP,
 } from "./Chatconstants";
+
+
 
 // ─── Download icon ────────────────────────────────────────────
 const IconDownload = (
@@ -526,6 +528,7 @@ const ChatView = ({
 }) => {
   const fileInputRef = useRef(null);
 
+
   /* Add this effect for the message textarea for initially 42 upto 120 
   means 3 lines the message is visible of the message - 04-08-2026 */
   useLayoutEffect(() => {
@@ -697,36 +700,46 @@ const ChatView = ({
               files={pendingFiles}
               onRemove={onRemoveFile}
             />
-            <div style={S.inputRow}>
-              <input
-                type="file"
-                ref={fileInputRef}
-                multiple
-                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  if (e.target.files?.length)
-                    onFilesSelected(Array.from(e.target.files));
-                  e.target.value = "";
-                }}
-              />
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              multiple
+              accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+              className="hidden"
+              hidden
+              style={{ display: "none" }}
+              onChange={(e) => {
+                if (e.target.files?.length)
+                  onFilesSelected(Array.from(e.target.files));
+                e.target.value = "";
+              }}
+            />
 
+            {/* Exactly 3 items in the same row: Attach, Textarea, Send */}
+            <div style={S.inputRow} className="flex flex-row items-center flex-nowrap w-full gap-2.5">
               <button
+                type="button"
                 className="attach-btn"
                 title="Attach files"
                 onClick={() => fileInputRef.current?.click()}
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 11,
-                  border: "1px solid #E2E8F0",
-                  background: "#F8FAFC",
+                  width: 44,
+                  minWidth: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  border: "1.5px solid #E2E8F0",
+                  background: "#fff",
+                  color: "#64748B",
                   cursor: "pointer",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transition: "background 0.15s",
+                  transition: "all 0.15s ease",
+                  margin: 0,
+                  padding: 0,
+                  boxSizing: "border-box",
                 }}
               >
                 {IconAttach}
@@ -737,16 +750,31 @@ const ChatView = ({
                 value={input}
                 onChange={(e) => onInputChange(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Type your message…"
-                style={S.textarea}
+                placeholder="Type your message..."
+                style={{
+                  ...S.textarea,
+                  margin: 0,
+                  marginTop: 0,
+                  marginBottom: 0,
+                }}
                 rows={1}
-                className="no-zoom"
+                className="no-zoom rounded-2xl border-slate-200 !mt-0 !mb-0"
               />
 
               <button
                 onClick={onSend}
                 disabled={!canSend}
-                style={{ ...S.sendBtn, opacity: !canSend ? 0.5 : 1 }}
+                style={{
+                  ...S.sendBtn,
+                  width: 44,
+                  minWidth: 44,
+                  height: 44,
+                  flexShrink: 0,
+                  margin: 0,
+                  opacity: !canSend ? 0.6 : 1,
+                  cursor: !canSend ? "not-allowed" : "pointer",
+                  boxSizing: "border-box",
+                }}
                 aria-label="Send"
               >
                 {sending ? (

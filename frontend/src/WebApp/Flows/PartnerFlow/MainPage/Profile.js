@@ -207,15 +207,15 @@ const ProfileForm = () => {
   };
 
   return (
-    <div className="min-h-screen mt-12 flex justify-center bg-gray-50 font-poppins pb-12">
-      <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+    <div className="min-h-screen mt-4 sm:mt-12 flex justify-center bg-gray-50 font-poppins pb-12 px-2 sm:px-0">
+      <div className="w-full max-w-4xl bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
         {/* Header with Edit/Save Buttons */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">
               Partner Profile
             </h2>
-            <p className="text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
               {isEditing
                 ? "Edit your organizational details"
                 : "View your organizational details"}
@@ -225,27 +225,27 @@ const ProfileForm = () => {
           {!isEditing ? (
             <button
               onClick={handleEditClick}
-              className="h-9 sm:h-11 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition duration-150 self-start sm:self-auto text-xs sm:text-sm font-semibold shadow-sm hover:shadow active:scale-[0.98] whitespace-nowrap"
+              className="h-10 sm:h-11 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition duration-150 self-start sm:self-auto text-xs sm:text-sm font-semibold shadow-sm hover:shadow active:scale-[0.98] whitespace-nowrap"
             >
               <PencilIcon className="h-4 w-4" />
-              Edit Profile
+              <span>Edit Profile</span>
             </button>
           ) : (
-            <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleCancelClick}
-                className="flex-1 sm:flex-initial h-9 sm:h-10 flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition duration-150 text-xs sm:text-sm font-semibold shadow-sm hover:border-gray-400 active:scale-[0.98] whitespace-nowrap min-w-0"
+                className="flex-1 sm:flex-initial h-10 flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-xl transition duration-150 text-xs sm:text-sm font-semibold shadow-sm hover:border-gray-400 active:scale-[0.98] whitespace-nowrap min-w-0"
               >
-                <XMarkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                <XMarkIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
                 <span>Cancel</span>
               </button>
               <button
                 type="button"
                 onClick={handleUpdateProfile}
-                className="flex-1 sm:flex-initial h-9 sm:h-10 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl transition duration-150 text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-600/20 hover:shadow-md active:scale-[0.98] whitespace-nowrap min-w-0"
+                className="flex-1 sm:flex-initial h-10 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-5 py-2 rounded-xl transition duration-150 text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-600/20 hover:shadow-md active:scale-[0.98] whitespace-nowrap min-w-0"
               >
-                <CheckIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <CheckIcon className="h-4 w-4 flex-shrink-0" />
                 <span>Save Changes</span>
               </button>
             </div>
@@ -283,15 +283,15 @@ const ProfileForm = () => {
                 <label className="text-sm font-medium text-gray-700">
                   Logo / Profile Image
                 </label>
-                <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4 sm:gap-6">
+                  <div className="w-24 h-24 min-w-[96px] min-h-[96px] max-w-[96px] max-h-[96px] shrink-0 flex-shrink-0 aspect-square bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-300 shadow-sm">
                     {(
                       isEditing
                         ? tempUser.profileImagePreview
                         : user.profileImage
                     ) ? (
                       <img
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-full aspect-square block"
                         src={
                           isEditing
                             ? tempUser.profileImagePreview
@@ -308,7 +308,7 @@ const ProfileForm = () => {
                   </div>
 
                   {isEditing && (
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <input
                         type="file"
                         accept="image/*"

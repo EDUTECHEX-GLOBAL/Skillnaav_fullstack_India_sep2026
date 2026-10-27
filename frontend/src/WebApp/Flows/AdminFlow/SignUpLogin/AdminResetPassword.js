@@ -268,24 +268,26 @@ const AdminResetPassword = () => {
                   </div>
 
                   {/* New Password */}
-                  <div className="relative">
-                    <Field
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      placeholder="New Password"
-                      className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 mt-[9px] flex items-center justify-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      <FontAwesomeIcon
-                        icon={showPassword ? faEyeSlash : faEye}
-                        size="lg"
-                        className="text-gray-600"
+                  <div>
+                    <div className="relative flex items-center">
+                      <Field
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        placeholder="New Password"
+                        className="w-full !mt-0 p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                       />
-                    </button>
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer focus:outline-none text-gray-600 hover:text-gray-800"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          size="lg"
+                        />
+                      </button>
+                    </div>
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -294,26 +296,28 @@ const AdminResetPassword = () => {
                   </div>
 
                   {/* Confirm Password */}
-                  <div className="relative">
-                    <Field
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      placeholder="Confirm New Password"
-                      className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 mt-[9px] flex items-center justify-center"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      <FontAwesomeIcon
-                        icon={showConfirmPassword ? faEyeSlash : faEye}
-                        size="lg"
-                        className="text-gray-600"
+                  <div>
+                    <div className="relative flex items-center">
+                      <Field
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        placeholder="Confirm New Password"
+                        className="w-full !mt-0 p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                       />
-                    </button>
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer focus:outline-none text-gray-600 hover:text-gray-800"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        <FontAwesomeIcon
+                          icon={showConfirmPassword ? faEyeSlash : faEye}
+                          size="lg"
+                        />
+                      </button>
+                    </div>
                     <ErrorMessage
                       name="confirmPassword"
                       component="div"

@@ -3805,24 +3805,40 @@ const SchoolAdminSupport = () => {
                     }}
                   >
                     <div
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        width: "100%",
+                      }}
                     >
-                      <label style={{ flexShrink: 0, cursor: "pointer" }}>
-                        <div
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "#f3f4f6",
-                            color: selectedNeedsReply ? "#3b82f6" : accent,
-                            transition: "all 0.15s",
-                          }}
-                        >
-                          <Paperclip style={{ width: 14, height: 14 }} />
-                        </div>
+                      <label
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 38,
+                          height: 38,
+                          borderRadius: "50%",
+                          background: "#f3f4f6",
+                          color: selectedNeedsReply ? "#3b82f6" : accent,
+                          flexShrink: 0,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                          border: "none",
+                          margin: 0,
+                          padding: 0,
+                          boxSizing: "border-box",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#e5e7eb";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "#f3f4f6";
+                        }}
+                        title="Attach files"
+                      >
+                        <Paperclip style={{ width: 16, height: 16 }} />
                         <input
                           type="file"
                           style={{ display: "none" }}
@@ -3832,40 +3848,43 @@ const SchoolAdminSupport = () => {
                         />
                       </label>
                       <button
+                        type="button"
                         onClick={toggleListening}
                         title="Auto Type (Speech to Text)"
+                        className={isListening ? "sa-ping-red" : ""}
                         style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 38,
+                          height: 38,
+                          borderRadius: "50%",
+                          background: isListening ? "#fef2f2" : "#f3f4f6",
+                          color: isListening
+                            ? "#ef4444"
+                            : selectedNeedsReply
+                              ? "#3b82f6"
+                              : accent,
                           flexShrink: 0,
                           cursor: "pointer",
-                          border: "none",
-                          background: "transparent",
+                          border: isListening ? "1px solid #fca5a5" : "none",
+                          margin: 0,
                           padding: 0,
+                          boxSizing: "border-box",
+                          transition: "all 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isListening) e.currentTarget.style.background = "#e5e7eb";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isListening) e.currentTarget.style.background = "#f3f4f6";
                         }}
                       >
-                        <div
-                          className={`${isListening ? "sa-ping-red" : ""}`}
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: isListening ? "#fef2f2" : "#f3f4f6",
-                            color: isListening
-                              ? "#ef4444"
-                              : selectedNeedsReply
-                                ? "#3b82f6"
-                                : accent,
-                            transition: "all 0.15s",
-                          }}
-                        >
-                          {isListening ? (
-                            <MicOff style={{ width: 14, height: 14 }} />
-                          ) : (
-                            <Mic style={{ width: 14, height: 14 }} />
-                          )}
-                        </div>
+                        {isListening ? (
+                          <MicOff style={{ width: 16, height: 16 }} />
+                        ) : (
+                          <Mic style={{ width: 16, height: 16 }} />
+                        )}
                       </button>
                       <input
                         type="text"
@@ -3880,16 +3899,23 @@ const SchoolAdminSupport = () => {
                         }
                         style={{
                           flex: 1,
-                          border: `1px solid ${selectedNeedsReply ? "#93c5fd" : "#d1d5db"}`,
+                          height: 38,
+                          boxSizing: "border-box",
+                          border: `1.5px solid ${selectedNeedsReply ? "#93c5fd" : "#d1d5db"}`,
                           borderRadius: 999,
-                          padding: "8px 14px",
-                          fontSize: "0.8rem",
+                          padding: "0 16px",
+                          fontSize: "0.85rem",
                           outline: "none",
                           minWidth: 0,
                           boxShadow: selectedNeedsReply
                             ? "0 0 0 2px rgba(59,130,246,0.1)"
                             : "none",
                           fontFamily: "inherit",
+                          background: "#fff",
+                          color: "#1f2937",
+                          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                          display: "flex",
+                          alignItems: "center",
                         }}
                         onFocus={(e) => {
                           e.target.style.borderColor = selectedNeedsReply
@@ -3916,18 +3942,26 @@ const SchoolAdminSupport = () => {
                         disabled={sendingMessage}
                       />
                       <button
+                        type="button"
                         onClick={handleSendMessage}
                         disabled={
                           (!messageInput.trim() && attachments.length === 0) ||
                           sendingMessage
                         }
+                        title="Send message"
                         style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           flexShrink: 0,
-                          width: 32,
-                          height: 32,
+                          width: 38,
+                          height: 38,
                           borderRadius: "50%",
                           border: "none",
-                          transition: "all 0.15s",
+                          margin: 0,
+                          padding: 0,
+                          boxSizing: "border-box",
+                          transition: "all 0.15s ease",
                           ...((messageInput.trim() || attachments.length > 0) &&
                           !sendingMessage
                             ? {
@@ -3947,11 +3981,11 @@ const SchoolAdminSupport = () => {
                       >
                         {sendingMessage ? (
                           <Loader2
-                            style={{ width: 14, height: 14 }}
+                            style={{ width: 16, height: 16 }}
                             className="animate-spin"
                           />
                         ) : (
-                          <Send style={{ width: 14, height: 14 }} />
+                          <Send style={{ width: 16, height: 16, marginLeft: 1 }} />
                         )}
                       </button>
                     </div>

@@ -97,35 +97,35 @@ const AdminLogin = () => {
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
                   {/* Email Field */}
-                  <div className="relative">
+                  <div>
                     <Field
                       type="email"
                       name="email"
                       placeholder="Enter your email"
-                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                      className="w-full !mt-0 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                     />
                     <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
                   </div>
 
                   {/* Password Field */}
                   <div>
-                    <div className="relative">
+                    <div className="relative flex items-center">
                       <Field
                         type={showPassword ? "text" : "password"}
                         name="password"
                         placeholder="Enter your password"
-                        className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                        className="w-full !mt-0 p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                       />
 
                       <button
                         type="button"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 mt-[9px] flex items-center justify-center"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer focus:outline-none text-gray-600 hover:text-gray-800"
                         onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         <FontAwesomeIcon
                           icon={showPassword ? faEyeSlash : faEye}
                           size="lg"
-                          className="text-gray-600"
                         />
                       </button>
                     </div>

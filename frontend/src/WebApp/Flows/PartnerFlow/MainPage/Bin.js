@@ -83,100 +83,172 @@ const Bin = () => {
 
   return (
     <div
-      className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[500px]"
+      className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col h-full min-h-[500px]"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Bin – Deleted Internships
-        </h2>
-      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-slate-100 mb-5 sm:mb-6">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-md shadow-rose-500/20 shrink-0">
+            <FontAwesomeIcon icon={faTrash} className="text-base sm:text-lg" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Bin – Deleted Internships
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+              Manage or restore your deleted internship postings
+            </p>
+          </div>
+        </div>
 
-      {/* Result count */}
-      {!loading && deletedPosts.length > 0 && (
-        <p className="text-xs text-gray-400 mb-3 flex items-center gap-1.5">
-          <FontAwesomeIcon icon={faLayerGroup} className="text-gray-300" />
-          {deletedPosts.length} result{deletedPosts.length !== 1 ? "s" : ""}
-        </p>
-      )}
+        {!loading && deletedPosts.length > 0 && (
+          <span className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+            <FontAwesomeIcon icon={faLayerGroup} className="text-slate-400 text-[11px]" />
+            {deletedPosts.length} result{deletedPosts.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
 
       {/* Loading */}
       {loading ? (
-        <div className="flex justify-center items-center h-48">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+        <div className="flex flex-col justify-center items-center h-56 gap-3">
+          <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-indigo-600" />
+          <p className="text-xs font-semibold text-slate-400">Loading deleted internships…</p>
         </div>
       ) : deletedPosts.length === 0 ? (
         /* Empty state */
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-          <FontAwesomeIcon
-            icon={faTrash}
-            className="text-4xl mb-3 opacity-30"
-          />
-          <p className="text-sm">Your bin is empty.</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+            <FontAwesomeIcon
+              icon={faTrash}
+              className="text-2xl opacity-60"
+            />
+          </div>
+          <h3 className="text-base font-bold text-slate-800">Your bin is empty</h3>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-sm">
+            Internships you delete will appear here before being permanently removed.
+          </p>
         </div>
       ) : (
-        /* Table */
-        <div className="rounded-xl overflow-hidden border border-gray-200">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-5 py-3.5 text-gray-500 font-semibold text-xs border-b border-gray-200 w-14">
-                  S.No
-                </th>
-                <th className="px-5 py-3.5 text-gray-500 font-semibold text-xs border-b border-gray-200">
-                  Job Title
-                </th>
-                <th className="px-5 py-3.5 text-gray-500 font-semibold text-xs border-b border-gray-200">
-                  Company
-                </th>
-                <th className="px-5 py-3.5 text-gray-500 font-semibold text-xs border-b border-gray-200">
-                  Location
-                </th>
-                <th className="px-5 py-3.5 text-gray-500 font-semibold text-xs border-b border-gray-200">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {deletedPosts.map((post, index) => (
-                <tr
-                  key={post._id}
-                  className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-5 py-4 text-gray-400 font-medium">
-                    {index + 1}
-                  </td>
-                  <td className="px-5 py-4 font-semibold text-gray-800">
-                    {post.jobTitle}
-                  </td>
-                  <td className="px-5 py-4 text-gray-500">{post.companyName}</td>
-                  <td className="px-5 py-4 text-gray-500">
-                    {post.location || "N/A"}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleRestore(post._id)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 hover:-translate-y-px hover:shadow-md"
-                      >
-                        <FontAwesomeIcon icon={faRotateLeft} />
-                        Restore
-                      </button>
-                      <button
-                        onClick={() => setPostToDelete(post)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 hover:-translate-y-px hover:shadow-md"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Mobile Card View (< md) */}
+          <div className="block md:hidden space-y-3.5">
+            {deletedPosts.map((post, index) => (
+              <div
+                key={post._id}
+                className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col gap-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      #{index + 1}
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 leading-snug break-words mt-0.5">
+                      {post.jobTitle}
+                    </h3>
+                    <p className="text-xs font-medium text-slate-600 mt-0.5">
+                      {post.companyName}
+                    </p>
+                  </div>
+                  {post.location && (
+                    <span className="shrink-0 text-[11px] font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">
+                      {post.location}
+                    </span>
+                  )}
+                </div>
+
+                {/* Actions row */}
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(post._id)}
+                    className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-[0.98]"
+                  >
+                    <FontAwesomeIcon icon={faRotateLeft} className="text-[11px]" />
+                    Restore
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPostToDelete(post)}
+                    className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/70 rounded-xl text-xs font-bold transition active:scale-[0.98]"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="text-[11px]" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View (>= md) */}
+          <div className="hidden md:block rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-left">
+                    <th className="px-5 py-3.5 text-slate-500 font-bold text-xs uppercase tracking-wider w-16">
+                      #
+                    </th>
+                    <th className="px-5 py-3.5 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                      Job Title
+                    </th>
+                    <th className="px-5 py-3.5 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                      Company
+                    </th>
+                    <th className="px-5 py-3.5 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                      Location
+                    </th>
+                    <th className="px-5 py-3.5 text-slate-500 font-bold text-xs uppercase tracking-wider text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {deletedPosts.map((post, index) => (
+                    <tr
+                      key={post._id}
+                      className="hover:bg-slate-50/70 transition-colors"
+                    >
+                      <td className="px-5 py-4 text-slate-400 font-bold text-xs">
+                        {index + 1}
+                      </td>
+                      <td className="px-5 py-4 font-bold text-slate-800">
+                        {post.jobTitle}
+                      </td>
+                      <td className="px-5 py-4 text-slate-600 font-medium">
+                        {post.companyName}
+                      </td>
+                      <td className="px-5 py-4 text-slate-500">
+                        {post.location || "N/A"}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="inline-flex items-center gap-2 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleRestore(post._id)}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm hover:shadow active:scale-95"
+                          >
+                            <FontAwesomeIcon icon={faRotateLeft} className="text-[10px]" />
+                            Restore
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPostToDelete(post)}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 rounded-xl text-xs font-bold transition hover:shadow-sm active:scale-95"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="text-[10px]" />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {postToDelete && (

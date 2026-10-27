@@ -182,7 +182,7 @@ const overrideAttendance = async (req, res) => {
           "internshipId, studentId, timetableDate, partnerId, and isPresent are required.",
       });
     }
-    //03-06-2026-------------
+
     const sessionDate = moment(timetableDate).startOf("day");
     const today = moment().startOf("day");
 
@@ -192,11 +192,14 @@ const overrideAttendance = async (req, res) => {
         message: "Cannot mark attendance for future sessions.",
       });
     }
-    //---------------
-    const schedule = await InternshipSchedule.findOne({
+
+    let schedule = await InternshipSchedule.findOne({
       internshipId,
       partnerId: resolvedPartnerId,
     });
+    if (!schedule) {
+      schedule = await InternshipSchedule.findOne({ internshipId });
+    }
     if (!schedule) {
       return res
         .status(404)
@@ -210,39 +213,95 @@ const overrideAttendance = async (req, res) => {
       });
     }
 
-    let slot = schedule.timetable.find(
+    // Match slot safely across normal schedule or batches
+    const timetableDateStr = String(timetableDate).slice(0, 10);
+    let timetableToSearch = schedule.timetable || [];
+    let slot = timetableToSearch.find(
       (s) =>
-        new Date(s.date).toDateString() ===
-        new Date(timetableDate).toDateString(),
+        s.date === timetableDate ||
+        new Date(s.date).toISOString().startsWith(timetableDateStr) ||
+        new Date(s.date).toDateString() === new Date(timetableDate).toDateString()
     );
     if (!slot && schedule.batches) {
       for (const batch of schedule.batches) {
-        slot = batch.timetable.find(
+        slot = (batch.timetable || []).find(
           (s) =>
-            new Date(s.date).toDateString() ===
-            new Date(timetableDate).toDateString(),
+            s.date === timetableDate ||
+            new Date(s.date).toISOString().startsWith(timetableDateStr) ||
+            new Date(s.date).toDateString() === new Date(timetableDate).toDateString()
         );
         if (slot) break;
       }
     }
 
+    const targetDate = slot?.date ? new Date(slot.date) : new Date(timetableDate);
     const sessionType = slot?.type || slot?.sessionType || "offline";
+    const isPresentBool = Boolean(isPresent);
 
-    const record = await Attendance.findOneAndUpdate(
-      { internshipId, studentId, timetableDate: new Date(timetableDate) },
-      {
-        $set: {
-          scheduleId: schedule._id,
-          partnerId: resolvedPartnerId,
-          sessionType,
-          isPresent,
-          resolvedBy: "override",
-          overriddenBy: resolvedPartnerId,
-          overrideReason: reason || "",
+    // Look for existing attendance record for this session
+    let existingRecord = await Attendance.findOne({
+      internshipId,
+      studentId,
+      timetableDate: targetDate,
+    });
+
+    if (!existingRecord) {
+      const targetDateString = targetDate.toDateString();
+      const allStudentRecords = await Attendance.find({ internshipId, studentId });
+      existingRecord = allStudentRecords.find(
+        (r) => new Date(r.timetableDate).toDateString() === targetDateString
+      );
+    }
+
+    let record;
+    if (existingRecord) {
+      existingRecord.scheduleId = schedule._id;
+      existingRecord.partnerId = schedule.partnerId || resolvedPartnerId;
+      existingRecord.sessionType = sessionType;
+      existingRecord.isPresent = isPresentBool;
+      existingRecord.resolvedBy = "override";
+      existingRecord.overriddenBy = resolvedPartnerId;
+      existingRecord.overrideReason = reason || "";
+      if (isPresentBool) {
+        existingRecord.offlineAttendance = existingRecord.offlineAttendance || {};
+        existingRecord.offlineAttendance.markedPresent = true;
+        existingRecord.offlineAttendance.markedAt = new Date();
+        existingRecord.offlineAttendance.markedBy = resolvedPartnerId;
+      } else {
+        if (existingRecord.offlineAttendance) {
+          existingRecord.offlineAttendance.markedPresent = false;
+        }
+        if (existingRecord.onlineAttendance) {
+          existingRecord.onlineAttendance.meetsThreshold = false;
+        }
+      }
+      record = await existingRecord.save();
+    } else {
+      record = await Attendance.findOneAndUpdate(
+        { internshipId, studentId, timetableDate: targetDate },
+        {
+          $set: {
+            scheduleId: schedule._id,
+            partnerId: schedule.partnerId || resolvedPartnerId,
+            sessionType,
+            isPresent: isPresentBool,
+            resolvedBy: "override",
+            overriddenBy: resolvedPartnerId,
+            overrideReason: reason || "",
+            ...(isPresentBool
+              ? {
+                  offlineAttendance: {
+                    markedPresent: true,
+                    markedAt: new Date(),
+                    markedBy: resolvedPartnerId,
+                  },
+                }
+              : {}),
+          },
         },
-      },
-      { new: true, upsert: true },
-    );
+        { new: true, upsert: true }
+      );
+    }
 
     return res.status(200).json({ success: true, record });
   } catch (error) {

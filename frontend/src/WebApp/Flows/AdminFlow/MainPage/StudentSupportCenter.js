@@ -4113,15 +4113,41 @@ const StudentTicketsPanel = () => {
 
               {/* Input */}
               <div className="p-3 border-t border-gray-200 bg-white">
-                <div className="flex items-center gap-2">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    width: "100%",
+                  }}
+                >
                   <label
-                    className="p-1.5 rounded-full flex-shrink-0 cursor-pointer transition-colors"
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
                       background: "#f3f4f6",
                       color: isAutoEscalated ? "#2563eb" : "#6366f1",
+                      flexShrink: 0,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      border: "none",
+                      margin: 0,
+                      padding: 0,
+                      boxSizing: "border-box",
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#e5e7eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#f3f4f6";
+                    }}
+                    title="Attach files"
                   >
-                    <Paperclip className="w-3.5 h-3.5" />
+                    <Paperclip className="w-4 h-4" />
                     <input
                       type="file"
                       className="hidden"
@@ -4131,40 +4157,43 @@ const StudentTicketsPanel = () => {
                     />
                   </label>
                   <button
+                    type="button"
                     onClick={p.toggleListening}
                     title="Auto Type (Speech to Text)"
+                    className={p.isListening ? "sa-ping-red" : ""}
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
+                      background: p.isListening ? "#fef2f2" : "#f3f4f6",
+                      color: p.isListening
+                        ? "#ef4444"
+                        : isAutoEscalated
+                          ? "#2563eb"
+                          : "#6366f1",
                       flexShrink: 0,
                       cursor: "pointer",
-                      border: "none",
-                      background: "transparent",
+                      border: p.isListening ? "1px solid #fca5a5" : "none",
+                      margin: 0,
                       padding: 0,
+                      boxSizing: "border-box",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!p.isListening) e.currentTarget.style.background = "#e5e7eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!p.isListening) e.currentTarget.style.background = "#f3f4f6";
                     }}
                   >
-                    <div
-                      className={`${p.isListening ? "sa-ping-red" : ""}`}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: p.isListening ? "#fef2f2" : "#f3f4f6",
-                        color: p.isListening
-                          ? "#ef4444"
-                          : isAutoEscalated
-                            ? "#2563eb"
-                            : "#6366f1",
-                        transition: "all 0.15s",
-                      }}
-                    >
-                      {p.isListening ? (
-                        <MicOff style={{ width: 14, height: 14 }} />
-                      ) : (
-                        <Mic style={{ width: 14, height: 14 }} />
-                      )}
-                    </div>
+                    {p.isListening ? (
+                      <MicOff style={{ width: 16, height: 16 }} />
+                    ) : (
+                      <Mic style={{ width: 16, height: 16 }} />
+                    )}
                   </button>
                   <input
                     type="text"
@@ -4177,14 +4206,25 @@ const StudentTicketsPanel = () => {
                             ? "Reply to student…"
                             : "Reply… (Enter to send)"
                     }
-                    className="flex-1 border border-gray-300 rounded-full px-3 py-2 outline-none"
                     style={{
-                      fontSize: "0.8rem",
+                      flex: 1,
+                      height: 38,
+                      boxSizing: "border-box",
+                      border: `1.5px solid ${isAutoEscalated ? "#3b82f6" : "#d1d5db"}`,
+                      borderRadius: 999,
+                      padding: "0 16px",
+                      fontSize: "0.85rem",
+                      outline: "none",
                       minWidth: 0,
-                      borderColor: isAutoEscalated ? "#3b82f6" : undefined,
                       boxShadow: isAutoEscalated
                         ? "0 0 0 2px rgba(59,130,246,0.15)"
-                        : undefined,
+                        : "none",
+                      fontFamily: "inherit",
+                      background: "#fff",
+                      color: "#1f2937",
+                      transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                      display: "flex",
+                      alignItems: "center",
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = isAutoEscalated
@@ -4211,29 +4251,43 @@ const StudentTicketsPanel = () => {
                     disabled={p.sending}
                   />
                   <button
+                    type="button"
                     onClick={send}
                     disabled={
                       (!p.messageInput.trim() && !p.staged.length) || p.sending
                     }
-                    className="p-2 rounded-full transition-all flex-shrink-0"
-                    style={
-                      (p.messageInput.trim() || p.staged.length) && !p.sending
+                    title="Send message"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
+                      border: "none",
+                      margin: 0,
+                      padding: 0,
+                      boxSizing: "border-box",
+                      transition: "all 0.15s ease",
+                      ...((p.messageInput.trim() || p.staged.length) && !p.sending
                         ? {
                             background: isAutoEscalated ? G_AMBER : G_INDIGO,
                             color: "#fff",
                             boxShadow: `0 3px 10px rgba(${isAutoEscalated ? "59,130,246" : "99,102,241"},0.4)`,
+                            cursor: "pointer",
                           }
                         : {
                             background: "#e5e7eb",
                             color: "#9ca3af",
                             cursor: "not-allowed",
-                          }
-                    }
+                          }),
+                    }}
                   >
                     {p.sending ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Send className="w-3.5 h-3.5" />
+                      <Send className="w-4 h-4 ml-0.5" />
                     )}
                   </button>
                 </div>
@@ -6036,15 +6090,41 @@ const SchoolStudentPanel = () => {
               />
 
               <div className="p-3 border-t border-gray-200 bg-white">
-                <div className="flex items-center gap-2">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    width: "100%",
+                  }}
+                >
                   <label
-                    className="p-1.5 rounded-full flex-shrink-0 cursor-pointer transition-colors"
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
                       background: "#f3f4f6",
                       color: isAutoEscalated ? "#2563eb" : "#6366f1",
+                      flexShrink: 0,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      border: "none",
+                      margin: 0,
+                      padding: 0,
+                      boxSizing: "border-box",
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#e5e7eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#f3f4f6";
+                    }}
+                    title="Attach files"
                   >
-                    <Paperclip className="w-3.5 h-3.5" />
+                    <Paperclip className="w-4 h-4" />
                     <input
                       type="file"
                       className="hidden"
@@ -6054,40 +6134,43 @@ const SchoolStudentPanel = () => {
                     />
                   </label>
                   <button
+                    type="button"
                     onClick={p.toggleListening}
                     title="Auto Type (Speech to Text)"
+                    className={p.isListening ? "sa-ping-red" : ""}
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
+                      background: p.isListening ? "#fef2f2" : "#f3f4f6",
+                      color: p.isListening
+                        ? "#ef4444"
+                        : isAutoEscalated
+                          ? "#2563eb"
+                          : "#6366f1",
                       flexShrink: 0,
                       cursor: "pointer",
-                      border: "none",
-                      background: "transparent",
+                      border: p.isListening ? "1px solid #fca5a5" : "none",
+                      margin: 0,
                       padding: 0,
+                      boxSizing: "border-box",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!p.isListening) e.currentTarget.style.background = "#e5e7eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!p.isListening) e.currentTarget.style.background = "#f3f4f6";
                     }}
                   >
-                    <div
-                      className={`${p.isListening ? "sa-ping-red" : ""}`}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: p.isListening ? "#fef2f2" : "#f3f4f6",
-                        color: p.isListening
-                          ? "#ef4444"
-                          : isAutoEscalated
-                            ? "#2563eb"
-                            : "#6366f1",
-                        transition: "all 0.15s",
-                      }}
-                    >
-                      {p.isListening ? (
-                        <MicOff style={{ width: 14, height: 14 }} />
-                      ) : (
-                        <Mic style={{ width: 14, height: 14 }} />
-                      )}
-                    </div>
+                    {p.isListening ? (
+                      <MicOff style={{ width: 16, height: 16 }} />
+                    ) : (
+                      <Mic style={{ width: 16, height: 16 }} />
+                    )}
                   </button>
                   <input
                     type="text"
@@ -6100,14 +6183,25 @@ const SchoolStudentPanel = () => {
                             ? "Reply to student (partner notified)…"
                             : "Type your response…"
                     }
-                    className="flex-1 border border-gray-300 rounded-full px-3 py-2 outline-none"
                     style={{
-                      fontSize: "0.8rem",
+                      flex: 1,
+                      height: 38,
+                      boxSizing: "border-box",
+                      border: `1.5px solid ${isAutoEscalated ? "#3b82f6" : "#d1d5db"}`,
+                      borderRadius: 999,
+                      padding: "0 16px",
+                      fontSize: "0.85rem",
+                      outline: "none",
                       minWidth: 0,
-                      borderColor: isAutoEscalated ? "#3b82f6" : undefined,
                       boxShadow: isAutoEscalated
                         ? "0 0 0 2px rgba(59,130,246,0.15)"
-                        : undefined,
+                        : "none",
+                      fontFamily: "inherit",
+                      background: "#fff",
+                      color: "#1f2937",
+                      transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                      display: "flex",
+                      alignItems: "center",
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = isAutoEscalated
@@ -6134,29 +6228,43 @@ const SchoolStudentPanel = () => {
                     disabled={p.sending}
                   />
                   <button
+                    type="button"
                     onClick={send}
                     disabled={
                       (!p.messageInput.trim() && !p.staged.length) || p.sending
                     }
-                    className="p-2 rounded-full transition-all flex-shrink-0"
-                    style={
-                      (p.messageInput.trim() || p.staged.length) && !p.sending
+                    title="Send message"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      width: 38,
+                      height: 38,
+                      borderRadius: "50%",
+                      border: "none",
+                      margin: 0,
+                      padding: 0,
+                      boxSizing: "border-box",
+                      transition: "all 0.15s ease",
+                      ...((p.messageInput.trim() || p.staged.length) && !p.sending
                         ? {
                             background: isAutoEscalated ? G_AMBER : G_INDIGO,
                             color: "#fff",
                             boxShadow: `0 3px 10px rgba(${isAutoEscalated ? "59,130,246" : "99,102,241"},0.4)`,
+                            cursor: "pointer",
                           }
                         : {
                             background: "#e5e7eb",
                             color: "#9ca3af",
                             cursor: "not-allowed",
-                          }
-                    }
+                          }),
+                    }}
                   >
                     {p.sending ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Send className="w-3.5 h-3.5" />
+                      <Send className="w-4 h-4 ml-0.5" />
                     )}
                   </button>
                 </div>

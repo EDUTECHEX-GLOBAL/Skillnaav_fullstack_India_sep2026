@@ -6,7 +6,7 @@ const MockInterviewSubmission = require("../models/webapp-models/MockInterviewSu
 const OfferLetter = require("../models/webapp-models/offerLetterModel");
 const Partnerwebapp = require("../models/webapp-models/partnerModel");
 const CandidatePipeline = require("../models/pipeline/CandidatePipeline");
-const { transporter } = require("../utils/mailer");
+const notifyUser = require("../utils/notifyUser");
 const Anthropic = require("@anthropic-ai/sdk");
 
 const anthropic = new Anthropic({
@@ -39,31 +39,42 @@ const sendMockInterviewEmail = async (mockInterview, internshipId, partnerId, is
       ? `Update: Mock Interview Rescheduled for ${internship.jobTitle}`
       : `New Mock Interview Scheduled for ${internship.jobTitle}`;
 
-    const htmlContent = `
-      <h3>Mock Interview Details</h3>
-      <p><strong>Internship:</strong> ${internship.jobTitle}</p>
-      <p><strong>Date:</strong> ${dateStr}</p>
-      <p><strong>Time:</strong> ${timeStr}</p>
-      <p><strong>Details/Link:</strong> ${meetingLink.startsWith('http') ? '<a href="' + meetingLink + '">' + meetingLink + '</a>' : meetingLink}</p>
-      <p>Please make sure to attend on time.</p>
+    const bodyHtml = `
+      <div style="text-align: left; line-height: 1.6;">
+        <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px;">
+          ${isUpdate ? "Mock Interview Rescheduled" : "Mock Interview Details"}
+        </h2>
+        <p style="margin: 12px 0; color: #374151; font-size: 15px;">
+          Details for your upcoming mock interview session:
+        </p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin: 18px 0;">
+          <p style="margin: 6px 0; color: #1e293b; font-size: 14px;"><strong>Internship:</strong> ${internship.jobTitle}</p>
+          <p style="margin: 6px 0; color: #1e293b; font-size: 14px;"><strong>Date:</strong> ${dateStr}</p>
+          <p style="margin: 6px 0; color: #1e293b; font-size: 14px;"><strong>Time:</strong> ${timeStr}</p>
+          <p style="margin: 6px 0; color: #1e293b; font-size: 14px;"><strong>Details/Link:</strong> ${meetingLink.startsWith('http') ? '<a href="' + meetingLink + '" style="color: #4f46e5; text-decoration: underline;">' + meetingLink + '</a>' : meetingLink}</p>
+        </div>
+        <p style="margin: 12px 0; color: #4b5563; font-size: 14px;">Please make sure to attend on time.</p>
+        <br/>
+        <p style="margin: 12px 0 0; color: #4b5563; font-size: 14px;">Best regards,<br/><strong>The Edutechex Team</strong></p>
+      </div>
     `;
 
-    // Email to Partner
+    // Email to Partner (includes Edutechex logo via notifyUser)
     if (partner.email) {
-      await transporter.sendMail({
-        to: partner.email,
-        subject: subject + " (Partner Copy)",
-        html: htmlContent
-      });
+      await notifyUser(
+        partner.email,
+        subject + " (Partner Copy)",
+        bodyHtml
+      ).catch(err => console.error("Error sending partner mock interview email:", err));
     }
 
-    // Email to all students
+    // Email to all students (includes Edutechex logo via notifyUser)
     for (const email of studentEmails) {
-      await transporter.sendMail({
-        to: email,
+      await notifyUser(
+        email,
         subject,
-        html: htmlContent
-      });
+        bodyHtml
+      ).catch(err => console.error("Error sending student mock interview email:", err));
     }
 
   } catch (error) {

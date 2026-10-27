@@ -347,7 +347,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const displayPlan = isPremiumExpired ? "Expired" : (userInfo.planType || "Loading");
 
   return (
-    <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2">
+    <header className="bg-white font-poppins text-gray-800 h-[72px] px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 box-border flex-shrink-0">
       {/* Left: Logo + hamburger */}
       <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
         <button
@@ -364,7 +364,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
         <img
           src={logo}
           alt="Edutechex Logo"
-          className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+          className="h-[42px] sm:h-[46px] w-auto max-w-[160px] sm:max-w-[190px] object-contain ml-0.5 sm:ml-2"
         />
       </div>
 
@@ -409,10 +409,17 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 top-10 mt-2 bg-white shadow-xl rounded-xl border border-gray-200 z-50 w-80 max-w-[92vw] overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100">
-                <p className="text-sm font-bold text-gray-900">Unread Messages</p>
-                <p className="text-xs text-gray-500">{unreadSummary.totalUnread} unread message{unreadSummary.totalUnread === 1 ? "" : "s"}</p>
+            <div className="absolute -right-12 sm:right-0 top-10 mt-2 bg-white shadow-xl rounded-2xl border border-gray-200 z-50 w-[calc(100vw-24px)] sm:w-80 max-w-[360px] overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">Unread Messages</p>
+                  <p className="text-xs text-gray-500">{unreadSummary.totalUnread} unread message{unreadSummary.totalUnread === 1 ? "" : "s"}</p>
+                </div>
+                {unreadSummary.totalUnread > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold">
+                    {unreadSummary.totalUnread} new
+                  </span>
+                )}
               </div>
 
               <div className="max-h-80 overflow-y-auto">
@@ -476,7 +483,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
 
         {/* Dropdown */}
         {isDropdownOpen && (
-          <div ref={dropdownRef} className="absolute right-0 top-10 mt-2 bg-white shadow-xl rounded-xl border border-gray-200 z-50 w-auto min-w-[20rem] max-w-[90vw]">
+          <div ref={dropdownRef} className="absolute right-0 top-full mt-2 bg-white shadow-xl rounded-2xl border border-gray-200 z-50 w-[calc(100vw-24px)] sm:w-auto sm:min-w-[19rem] max-w-sm overflow-hidden">
             {/* Profile header */}
             <div className="px-4 py-3 border-b rounded-t-xl bg-white">
               <div className="flex items-center gap-3 text-black">

@@ -141,12 +141,12 @@ const PartnerLogin = () => {
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
                   {/* Email Field */}
-                  <div className="relative">
+                  <div>
                     <Field
                       type="email"
                       name="email"
                       placeholder="Enter your email"
-                      className="w-full mt-0 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                      className="w-full !mt-0 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
                     <ErrorMessage
                       name="email"
@@ -156,24 +156,26 @@ const PartnerLogin = () => {
                   </div>
 
                   {/* Password Field */}
-                  <div className="relative">
-                    <Field
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      placeholder="Enter your password"
-                      className="w-full mt-0 p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-600 hover:text-gray-800"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      <FontAwesomeIcon
-                        icon={showPassword ? faEyeSlash : faEye}
-                        size="lg"
+                  <div>
+                    <div className="relative flex items-center">
+                      <Field
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        placeholder="Enter your password"
+                        className="w-full !mt-0 p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                       />
-                    </button>
+                      <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-600 hover:text-gray-800 cursor-pointer focus:outline-none"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          size="lg"
+                        />
+                      </button>
+                    </div>
                     <ErrorMessage
                       name="password"
                       component="div"

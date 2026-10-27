@@ -100,6 +100,84 @@ const parsePayload = (req) => {
     }
 };
 
+const validateIndianPhone = (phone, isRequired = false) => {
+    if (!phone || !String(phone).trim()) {
+        return !isRequired;
+    }
+    const raw = String(phone).trim();
+    const cleaned = raw.replace(/[\s\-\(\)]/g, "");
+    if (cleaned.startsWith("+") && !cleaned.startsWith("+91")) {
+        return false;
+    }
+    let digits = cleaned;
+    if (digits.startsWith("+91")) digits = digits.slice(3);
+    else if (digits.startsWith("91") && digits.length === 12) digits = digits.slice(2);
+    else if (digits.startsWith("0") && digits.length === 11) digits = digits.slice(1);
+
+    const numeric = digits.replace(/\D/g, "");
+    return numeric.length === 10 && /^[6-9]/.test(numeric);
+};
+
+const formatIndianPhone = (phone) => {
+    if (!phone) return "";
+    const cleaned = String(phone).trim().replace(/[\s\-\(\)]/g, "");
+    let digits = cleaned;
+    if (digits.startsWith("+91")) digits = digits.slice(3);
+    else if (digits.startsWith("91") && digits.length === 12) digits = digits.slice(2);
+    else if (digits.startsWith("0") && digits.length === 11) digits = digits.slice(1);
+    const numeric = digits.replace(/\D/g, "").slice(0, 10);
+    if (numeric.length === 10) {
+        return `+91 ${numeric.slice(0, 5)} ${numeric.slice(5)}`;
+    }
+    return phone;
+};
+
+const validateIndianPinCode = (pin) => {
+    if (!pin) return false;
+    const cleaned = String(pin).trim();
+    return /^[1-9][0-9]{5}$/.test(cleaned);
+};
+
+const validateEmailBackend = (email) => {
+    if (!email || typeof email !== "string" || !email.trim()) {
+        return false;
+    }
+    const cleaned = email.trim().toLowerCase();
+    if (cleaned.length > 254 || cleaned.includes("..")) {
+        return false;
+    }
+    const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!EMAIL_REGEX.test(cleaned)) {
+        return false;
+    }
+    const parts = cleaned.split("@");
+    if (parts.length !== 2) return false;
+    const [localPart, domain] = parts;
+    if (!localPart || !domain) return false;
+    if (localPart.length > 64) return false;
+    if (localPart.startsWith(".") || localPart.endsWith(".")) return false;
+    if (domain.startsWith("-") || domain.endsWith("-") || domain.startsWith(".") || domain.endsWith(".")) return false;
+
+    const domainParts = domain.split(".");
+    if (domainParts.length < 2) return false;
+    const tld = domainParts[domainParts.length - 1];
+    const invalidTlds = new Set([
+        "con", "cmo", "cpm", "coom", "comm", "col", "vom", "xom", "ocm", "kom",
+        "cm", "om", "ii", "met", "ner", "ney", "ogr", "orgg", "eddu"
+    ]);
+    if (invalidTlds.has(tld)) return false;
+    if (!/^[a-z]{2,24}$/.test(tld)) return false;
+
+    const disposableDomains = new Set([
+        "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
+        "throwawaymail.com", "yopmail.com", "sharklasers.com", "trashmail.com",
+        "dispostable.com", "fake.com", "test.com", "example.com"
+    ]);
+    if (disposableDomains.has(domain)) return false;
+
+    return true;
+};
+
 exports.createInstructure = async (req, res) => {
     try {
         const payload = parsePayload(req);
@@ -121,12 +199,36 @@ exports.createInstructure = async (req, res) => {
         if (!emailToCheck) {
             return res.status(400).json({ message: "Email is required." });
         }
+        if (!validateEmailBackend(emailToCheck)) {
+            return res.status(400).json({ message: "Please provide a valid email address." });
+        }
         if (!isVerified(emailToCheck)) {
             return res.status(400).json({
                 message: "Email not verified. Please complete OTP verification and try again.",
             });
         }
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  ADD THIS BLOCK  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+        // Validate Indian phone numbers
+        if (!validateIndianPhone(payload.phone, true)) {
+            return res.status(400).json({
+                message: "Please provide a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.",
+            });
+        }
+        if (payload.altPhone && !validateIndianPhone(payload.altPhone, false)) {
+            return res.status(400).json({
+                message: "Please provide a valid 10-digit Indian alternate phone number starting with 6, 7, 8, or 9.",
+            });
+        }
+        if (payload.postalCode && !validateIndianPinCode(payload.postalCode)) {
+            return res.status(400).json({
+                message: "Please provide a valid 6-digit Indian PIN code starting with 1-9.",
+            });
+        }
+        payload.phone = formatIndianPhone(payload.phone);
+        if (payload.altPhone) {
+            payload.altPhone = formatIndianPhone(payload.altPhone);
+        }
 
         const resumeFile = req.files?.resume?.[0];
         const photoFile = req.files?.photo?.[0];
@@ -285,6 +387,31 @@ exports.updateInstructure = async (req, res) => {
         if (patch.availableStart && patch.availableEnd && patch.availableEnd <= patch.availableStart) {
             return res.status(400).json({ message: "End Time must be after Start Time." });
         }
+
+        if (patch.email !== undefined) {
+            const cleanPatchEmail = String(patch.email).trim().toLowerCase();
+            if (!cleanPatchEmail || !validateEmailBackend(cleanPatchEmail)) {
+                return res.status(400).json({ message: "Please provide a valid email address." });
+            }
+        }
+
+        if (patch.phone !== undefined && !validateIndianPhone(patch.phone, true)) {
+            return res.status(400).json({
+                message: "Please provide a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.",
+            });
+        }
+        if (patch.altPhone !== undefined && patch.altPhone && !validateIndianPhone(patch.altPhone, false)) {
+            return res.status(400).json({
+                message: "Please provide a valid 10-digit Indian alternate phone number starting with 6, 7, 8, or 9.",
+            });
+        }
+        if (patch.postalCode !== undefined && patch.postalCode && !validateIndianPinCode(patch.postalCode)) {
+            return res.status(400).json({
+                message: "Please provide a valid 6-digit Indian PIN code starting with 1-9.",
+            });
+        }
+        if (patch.phone) patch.phone = formatIndianPhone(patch.phone);
+        if (patch.altPhone) patch.altPhone = formatIndianPhone(patch.altPhone);
 
         const partnerId = req.partner?._id;
         if (!partnerId) {
@@ -645,6 +772,9 @@ exports.startInstructorEmailOtp = async (req, res) => {
     try {
         const { email } = req.body || {};
         if (!email) return res.status(400).json({ message: "Email is required." });
+        if (!validateEmailBackend(email)) {
+            return res.status(400).json({ message: "Please provide a valid email address." });
+        }
 
         const code = issueOtp(email);
         const subject = "Edutechex — Verify your email (OTP)";

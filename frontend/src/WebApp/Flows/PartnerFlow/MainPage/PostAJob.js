@@ -8,6 +8,9 @@ import { IN_STATES } from "../../../../constants/locations";
 import {
   validateJobTitle,
   validateCompanyName,
+  validateContactName,
+  validateEmail,
+  validateContactPhone,
 } from "../../../../utils/validators";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -270,16 +273,23 @@ const PostAJob = () => {
   const [fieldErrors, setFieldErrors] = useState({
     jobTitle: "",
     companyName: "",
+    "contactInfo.name": "",
+    "contactInfo.email": "",
+    "contactInfo.phone": "",
   });
   const [touchedFields, setTouchedFields] = useState({
     jobTitle: false,
     companyName: false,
+    "contactInfo.name": false,
+    "contactInfo.email": false,
+    "contactInfo.phone": false,
   });
 
   const stateList = formData.country === "India" ? IN_STATES : [];
   const stateLabel =
     formData.country === "India" ? "State / Union Territory" : "State";
   const [qualInput, setQualInput] = useState("");
+  const [skillError, setSkillError] = useState("");
 
   useEffect(() => {
     try {
@@ -368,6 +378,13 @@ const PostAJob = () => {
       }
       if (name.startsWith("contactInfo.")) {
         const field = name.split(".")[1];
+        if (touchedFields[name]) {
+          let err = "";
+          if (field === "name") err = validateContactName(value);
+          else if (field === "email") err = validateEmail(value);
+          else if (field === "phone") err = validateContactPhone(value, prev.country);
+          setFieldErrors((prevErr) => ({ ...prevErr, [name]: err }));
+        }
         return {
           ...prev,
           contactInfo: { ...prev.contactInfo, [field]: value },
@@ -390,6 +407,24 @@ const PostAJob = () => {
       setFieldErrors((prev) => ({
         ...prev,
         companyName: validateCompanyName(value),
+      }));
+    } else if (name === "contactInfo.name") {
+      setTouchedFields((prev) => ({ ...prev, "contactInfo.name": true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        "contactInfo.name": validateContactName(value),
+      }));
+    } else if (name === "contactInfo.email") {
+      setTouchedFields((prev) => ({ ...prev, "contactInfo.email": true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        "contactInfo.email": validateEmail(value),
+      }));
+    } else if (name === "contactInfo.phone") {
+      setTouchedFields((prev) => ({ ...prev, "contactInfo.phone": true }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        "contactInfo.phone": validateContactPhone(value, formData.country),
       }));
     }
   };
@@ -447,6 +482,26 @@ const PostAJob = () => {
   const addQualification = () => {
     const val = qualInput.trim();
     if (!val) return;
+    if (/^\d+$/.test(val)) {
+      setSkillError("Skills cannot be just numbers. Please enter a valid skill name.");
+      return;
+    }
+    if (
+      !/[a-zA-Z]/.test(val) ||
+      (val.length < 2 && !["C", "R"].includes(val.toUpperCase()))
+    ) {
+      setSkillError("Please enter a valid skill name with letters (min 2 characters).");
+      return;
+    }
+    if (
+      formData.qualifications.some(
+        (q) => q.toLowerCase() === val.toLowerCase()
+      )
+    ) {
+      setSkillError("This skill has already been added.");
+      return;
+    }
+    setSkillError("");
     setFormData((prev) => ({
       ...prev,
       qualifications: [...prev.qualifications, val],
@@ -494,8 +549,20 @@ const PostAJob = () => {
       adminApproved: false,
       applicationOpen: true,
     });
-    setFieldErrors({ jobTitle: "", companyName: "" });
-    setTouchedFields({ jobTitle: false, companyName: false });
+    setFieldErrors({
+      jobTitle: "",
+      companyName: "",
+      "contactInfo.name": "",
+      "contactInfo.email": "",
+      "contactInfo.phone": "",
+    });
+    setTouchedFields({
+      jobTitle: false,
+      companyName: false,
+      "contactInfo.name": false,
+      "contactInfo.email": false,
+      "contactInfo.phone": false,
+    });
     setPreviewUrl(null);
   };
 
@@ -504,17 +571,32 @@ const PostAJob = () => {
 
     const titleErr = validateJobTitle(formData.jobTitle);
     const compErr = validateCompanyName(formData.companyName);
+    const contactNameErr = validateContactName(formData.contactInfo?.name);
+    const contactEmailErr = validateEmail(formData.contactInfo?.email);
+    const contactPhoneErr = validateContactPhone(formData.contactInfo?.phone, formData.country);
 
-    if (titleErr || compErr) {
+    if (titleErr || compErr || contactNameErr || contactEmailErr || contactPhoneErr) {
       setFieldErrors({
         jobTitle: titleErr,
         companyName: compErr,
+        "contactInfo.name": contactNameErr,
+        "contactInfo.email": contactEmailErr,
+        "contactInfo.phone": contactPhoneErr,
       });
       setTouchedFields({
         jobTitle: true,
         companyName: true,
+        "contactInfo.name": true,
+        "contactInfo.email": true,
+        "contactInfo.phone": true,
       });
-      setErrorMessage(titleErr || compErr);
+      const firstErr =
+        titleErr ||
+        compErr ||
+        contactNameErr ||
+        contactEmailErr ||
+        contactPhoneErr;
+      setErrorMessage(firstErr);
       setTimeout(() => setErrorMessage(""), 6000);
       return;
     }
@@ -755,10 +837,10 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Location
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="country" className="block text-gray-700 text-sm">
-                Country *
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+            <div className="w-full min-w-0 flex flex-col">
+              <label htmlFor="country" className="block text-gray-700 text-sm font-medium mb-1.5 h-5 flex items-center">
+                Country <span className="text-red-500 ml-0.5">*</span>
               </label>
               <CustomSelect
                 name="country"
@@ -776,10 +858,9 @@ const PostAJob = () => {
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              {/* add custom style modal for select tag for states - 07-09-2026 */}
-              <label htmlFor="state" className="block text-gray-700 text-sm">
-                {stateLabel} *
+            <div className="w-full min-w-0 flex flex-col">
+              <label htmlFor="state" className="block text-gray-700 text-sm font-medium mb-1.5 h-5 flex items-center">
+                {stateLabel} <span className="text-red-500 ml-0.5">*</span>
               </label>
               <CustomSelect
                 name="state"
@@ -790,9 +871,9 @@ const PostAJob = () => {
               />
             </div>
 
-            <div className="relative flex flex-col gap-1">
-              <label htmlFor="city" className="block text-gray-700 text-sm">
-                City *
+            <div className="w-full min-w-0 relative flex flex-col">
+              <label htmlFor="city" className="block text-gray-700 text-sm font-medium mb-1.5 h-5 flex items-center">
+                City <span className="text-red-500 ml-0.5">*</span>
               </label>
               <input
                 id="city"
@@ -806,11 +887,11 @@ const PostAJob = () => {
                 className={`${locationInputCls} relative z-[15]`}
               />
               {citySuggestions.length > 0 && (
-                <ul className="absolute z-[20] left-0 right-0 w-full mt-2 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                <ul className="absolute z-[20] left-0 right-0 w-full mt-2 top-[72px] max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
                   {citySuggestions.map((city) => (
                     <li
                       key={city.wikiDataId || city.id || city.name}
-                      className="px-4 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700 break-words"
+                      className="px-4 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700 break-words text-sm"
                       onClick={() => handleCitySelect(city.name)}
                     >
                       {city.name}
@@ -982,7 +1063,10 @@ const PostAJob = () => {
               id="qualInput"
               type="text"
               value={qualInput}
-              onChange={(e) => setQualInput(e.target.value)}
+              onChange={(e) => {
+                setQualInput(e.target.value);
+                if (skillError) setSkillError("");
+              }}
               maxLength={50}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -1005,6 +1089,11 @@ const PostAJob = () => {
               + Add
             </button>
           </div>
+          {skillError && (
+            <p className="text-xs text-red-500 font-medium mt-1">
+              {skillError}
+            </p>
+          )}
           <p className="text-xs text-gray-400 mt-1">
             Press Enter or click Add. Click &times; to remove a skill.
           </p>
@@ -1013,39 +1102,77 @@ const PostAJob = () => {
         {/* Contact Information */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Contact Information
+            Contact Information <span className="text-red-500">*</span>
           </label>
-          <div className="space-y-2">
-            <input
-              type="text"
-              name="contactInfo.name"
-              value={formData.contactInfo.name}
-              onChange={handleChange}
-              required
-              maxLength={60}
-              className={inputCls}
-              placeholder="Contact Name (max 60 chars)"
-            />
-            <input
-              type="email"
-              name="contactInfo.email"
-              value={formData.contactInfo.email}
-              onChange={handleChange}
-              required
-              maxLength={80}
-              className={inputCls}
-              placeholder="Contact Email (max 80 chars)"
-            />
-            <input
-              type="tel"
-              name="contactInfo.phone"
-              value={formData.contactInfo.phone}
-              onChange={handleChange}
-              required
-              maxLength={25}
-              className={inputCls}
-              placeholder="Contact Phone (max 25 chars)"
-            />
+          <div className="space-y-3">
+            <div>
+              <input
+                type="text"
+                name="contactInfo.name"
+                value={formData.contactInfo.name}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+                maxLength={60}
+                className={`${inputCls} ${
+                  touchedFields["contactInfo.name"] && fieldErrors["contactInfo.name"]
+                    ? "!border-red-500 focus:!ring-red-400 bg-red-50/20"
+                    : ""
+                }`}
+                placeholder="Contact Name (e.g. Priya Sharma)"
+              />
+              {touchedFields["contactInfo.name"] && fieldErrors["contactInfo.name"] && (
+                <p className="text-xs text-red-500 mt-1 font-medium flex items-center gap-1">
+                  <span>⚠️</span> {fieldErrors["contactInfo.name"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="email"
+                name="contactInfo.email"
+                value={formData.contactInfo.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+                maxLength={80}
+                className={`${inputCls} ${
+                  touchedFields["contactInfo.email"] && fieldErrors["contactInfo.email"]
+                    ? "!border-red-500 focus:!ring-red-400 bg-red-50/20"
+                    : ""
+                }`}
+                placeholder="Contact Email (e.g. name@example.com)"
+              />
+              {touchedFields["contactInfo.email"] && fieldErrors["contactInfo.email"] && (
+                <p className="text-xs text-red-500 mt-1 font-medium flex items-center gap-1">
+                  <span>⚠️</span> {fieldErrors["contactInfo.email"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="tel"
+                name="contactInfo.phone"
+                value={formData.contactInfo.phone}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+                maxLength={25}
+                className={`${inputCls} ${
+                  touchedFields["contactInfo.phone"] && fieldErrors["contactInfo.phone"]
+                    ? "!border-red-500 focus:!ring-red-400 bg-red-50/20"
+                    : ""
+                }`}
+                placeholder="Contact Phone (e.g. 9876543210)"
+              />
+              {touchedFields["contactInfo.phone"] && fieldErrors["contactInfo.phone"] && (
+                <p className="text-xs text-red-500 mt-1 font-medium flex items-center gap-1">
+                  <span>⚠️</span> {fieldErrors["contactInfo.phone"]}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1276,15 +1403,23 @@ const PostAJob = () => {
 
       {/* Freemium upgrade alert */}
       {freemiumAlert && (
-        <div className="fixed top-28 right-10 z-[9999] bg-orange-500 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-300">
+        <div className="fixed top-5 left-4 right-4 sm:left-auto sm:right-8 sm:top-20 z-[9999] max-w-md bg-orange-500 text-white py-3 px-5 rounded-xl shadow-2xl transition-all duration-300 text-sm font-medium">
           {freemiumAlert}
         </div>
       )}
 
       {/* Error toast */}
       {errorMessage && (
-        <div className="fixed top-36 right-10 z-[9999] bg-red-600 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-300">
-          {errorMessage}
+        <div className="fixed top-5 left-4 right-4 sm:left-auto sm:right-8 sm:top-20 z-[9999] max-w-md bg-red-600 text-white py-3 px-5 rounded-xl shadow-2xl transition-all duration-300 text-sm font-medium flex items-start justify-between gap-3 animate-fade-in">
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage("")}
+            className="text-white/80 hover:text-white font-bold ml-2 text-base leading-none"
+            aria-label="Close error"
+          >
+            &times;
+          </button>
         </div>
       )}
     </div>

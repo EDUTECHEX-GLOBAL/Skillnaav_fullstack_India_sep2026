@@ -139,9 +139,9 @@ const Sidebar = ({ isOpen, isCompactLayout, onClose, isDesktopOpen = true }) => 
     <button
       onClick={onClick}
       title={!showLabels ? item.label : ""}
-      className={`flex items-center w-full p-3 rounded-lg font-medium transition-colors ${
+      className={`flex items-center rounded-xl font-medium transition-colors ${
         isActive ? "bg-teal-100 text-teal-700" : "text-gray-600 hover:bg-gray-100"
-      } ${showLabels ? "items-start" : "items-center justify-center"}`}
+      } ${showLabels ? "w-full p-3 items-start" : "justify-center w-11 h-11 mx-auto p-0"}`}
     >
       <FontAwesomeIcon
         icon={icon}
@@ -171,9 +171,9 @@ const Sidebar = ({ isOpen, isCompactLayout, onClose, isDesktopOpen = true }) => 
       <button
         onClick={() => showLabels && setExpanded((prev) => !prev)}
         title={!showLabels ? label : ""}
-        className={`flex w-full p-3 rounded-lg font-medium transition-colors ${
+        className={`flex rounded-xl font-medium transition-colors ${
           isActive ? "bg-teal-100 text-teal-700" : "text-gray-600 hover:bg-gray-100"
-        } ${showLabels ? "justify-between" : "justify-center"}`}
+        } ${showLabels ? "w-full p-3 justify-between" : "justify-center w-11 h-11 mx-auto p-0"}`}
       >
         {showLabels ? (
           <>
@@ -269,27 +269,27 @@ const Sidebar = ({ isOpen, isCompactLayout, onClose, isDesktopOpen = true }) => 
       )}
       {isCompactLayout && isOpen && (
         <div
-          className="fixed top-[90px] right-0 bottom-0 left-0 bg-black/40 z-40"
+          className="fixed top-[72px] right-0 bottom-0 left-0 bg-black/40 z-40"
           onClick={onClose}
         />
       )}
 
       <aside
         className={`
-          ${isCompactLayout ? "fixed top-[90px] bottom-0 left-0 z-50" : "relative z-auto"}
+          ${isCompactLayout ? "fixed top-[72px] bottom-0 left-0 z-50" : "relative z-auto"}
           bg-white shadow-lg font-poppins
           transition-all duration-300 ease-in-out
           flex flex-col overflow-hidden shrink-0
           ${
             isCompactLayout
               ? `${isOpen ? "translate-x-0" : "-translate-x-full"} w-64`
-              : `translate-x-0 ${!isDesktopOpen ? "w-14" : "w-64"}`
+              : `translate-x-0 ${!isDesktopOpen ? "w-16" : "w-64"}`
           }
         `}
-        style={{ height: isCompactLayout ? "calc(100vh - 90px)" : "100%" }}
+        style={{ height: isCompactLayout ? "calc(100vh - 72px)" : "100%" }}
       >
         <div className="w-full h-full flex flex-col">
-          <div className={`flex-1 overflow-y-auto hide-scrollbar pt-4 pb-6 ${showLabels ? "px-3" : "px-1"}`}>
+          <div className={`flex-1 overflow-y-auto hide-scrollbar ${showLabels ? "px-3 pt-4" : "px-1.5 pt-10"} pb-6`}>
             <ul className="space-y-2">
               {primaryNavItems.map((item) => (
                 <li key={item.key}>

@@ -89,9 +89,9 @@ async function generateAssessment(req, res) {
       allowText: !!config?.allowText,
       allowFileUpload: !!config?.allowFileUpload,
       difficulty: Math.min(3, Math.max(1, Number(config?.difficulty || 2))),
-      questionCount: Math.min(50, Math.max(5, Number(config?.questionCount || 10))),
+      questionCount: Math.min(50, Math.max(1, Number(config?.questionCount || 10))),
       timeLimitMinutes: Math.min(180, Math.max(5, Number(config?.timeLimitMinutes || 20))),
-      passScore: Math.min(100, Math.max(0, Number(config?.passScore || 70))),
+      passScore: Math.min(100, Math.max(1, Number(config?.passScore || 70))),
     };
 
     if (!internshipTitle || !internshipDescription) {

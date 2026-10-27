@@ -57,7 +57,7 @@ const AdminMainPageContent = () => {
           className={`${isCompactLayout ? "hidden" : "flex"} items-center justify-center absolute top-4 z-50
           w-6 h-6 rounded-full bg-white border border-gray-300 shadow-md
           hover:bg-teal-50 hover:border-teal-400 transition-all duration-200`}
-          style={{ left: isDesktopSidebarOpen ? "248px" : "48px" }}
+          style={{ left: isDesktopSidebarOpen ? "244px" : "52px" }}
           title={isDesktopSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
           <FontAwesomeIcon

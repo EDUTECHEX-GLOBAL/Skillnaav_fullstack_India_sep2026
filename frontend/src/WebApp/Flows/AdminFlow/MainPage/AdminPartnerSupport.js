@@ -2541,22 +2541,55 @@ function ChatArea({
         </div>
       ) : (
         <div className="p-3 border-t border-gray-200 bg-white">
-          <div className="flex items-center gap-2">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              width: "100%",
+            }}
+          >
             <button
+              type="button"
               onClick={() => fileInput.current?.click()}
-              className="p-2 rounded-full flex-shrink-0 hover:scale-105 transition-all"
+              title="Attach files"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
                 background: "#f3f4f6",
                 color: isAutoEsc ? "#d97706" : isEsc ? "#f97316" : accent,
+                flexShrink: 0,
+                cursor: "pointer",
+                border: "none",
+                margin: 0,
+                padding: 0,
+                boxSizing: "border-box",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#e5e7eb";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f3f4f6";
               }}
             >
-              <FaPaperclip className="w-3.5 h-3.5" />
+              <FaPaperclip className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={toggleListening}
               title="Auto Type (Speech to Text)"
-              className="p-2 rounded-full flex-shrink-0 transition-all"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
                 background: isListening ? "#fef2f2" : "#f3f4f6",
                 color: isListening
                   ? "#ef4444"
@@ -2565,7 +2598,20 @@ function ChatArea({
                     : isEsc
                       ? "#f97316"
                       : accent,
+                flexShrink: 0,
+                cursor: "pointer",
+                border: isListening ? "1px solid #fca5a5" : "none",
+                margin: 0,
+                padding: 0,
+                boxSizing: "border-box",
+                transition: "all 0.15s ease",
                 position: "relative",
+              }}
+              onMouseEnter={(e) => {
+                if (!isListening) e.currentTarget.style.background = "#e5e7eb";
+              }}
+              onMouseLeave={(e) => {
+                if (!isListening) e.currentTarget.style.background = "#f3f4f6";
               }}
             >
               {isListening && (
@@ -2581,11 +2627,11 @@ function ChatArea({
                   }}
                 />
               )}
-              <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {isListening ? (
-                  <FaMicrophoneSlash className="w-3.5 h-3.5" />
+                  <FaMicrophoneSlash className="w-4 h-4" />
                 ) : (
-                  <FaMicrophone className="w-3.5 h-3.5" />
+                  <FaMicrophone className="w-4 h-4" />
                 )}
               </div>
             </button>
@@ -2600,14 +2646,25 @@ function ChatArea({
                       ? "Add a caption…"
                       : "Reply… (Enter to send)"
               }
-              className="flex-1 border border-gray-300 rounded-full px-3 py-2 outline-none"
               style={{
-                fontSize: "0.8rem",
+                flex: 1,
+                height: 38,
+                boxSizing: "border-box",
+                border: `1.5px solid ${isAutoEsc ? "#41198b" : "#d1d5db"}`,
+                borderRadius: 999,
+                padding: "0 16px",
+                fontSize: "0.85rem",
+                outline: "none",
                 minWidth: 0,
-                borderColor: isAutoEsc ? "#41198b" : undefined,
                 boxShadow: isAutoEsc
                   ? "0 0 0 2px rgba(251,191,36,0.15)"
-                  : undefined,
+                  : "none",
+                fontFamily: "inherit",
+                background: "#fff",
+                color: "#1f2937",
+                transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                display: "flex",
+                alignItems: "center",
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = isAutoEsc
@@ -2634,11 +2691,24 @@ function ChatArea({
               disabled={sending}
             />
             <button
+              type="button"
               onClick={onSend}
               disabled={!canSend}
-              className="p-2 rounded-full transition-all flex-shrink-0"
-              style={
-                canSend
+              title="Send message"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
+                border: "none",
+                margin: 0,
+                padding: 0,
+                boxSizing: "border-box",
+                transition: "all 0.15s ease",
+                ...(canSend
                   ? {
                       background: isAutoEsc
                         ? G_AMBER
@@ -2647,18 +2717,19 @@ function ChatArea({
                           : G_INDIGO,
                       color: "#fff",
                       boxShadow: "0 3px 10px rgba(99,102,241,0.35)",
+                      cursor: "pointer",
                     }
                   : {
                       background: "#e5e7eb",
                       color: "#9ca3af",
                       cursor: "not-allowed",
-                    }
-              }
+                    }),
+              }}
             >
               {sending ? (
-                <FaSpinner className="w-3.5 h-3.5 animate-spin" />
+                <FaSpinner className="w-4 h-4 animate-spin" />
               ) : (
-                <FaPaperPlane className="w-3.5 h-3.5" />
+                <FaPaperPlane className="w-4 h-4 ml-0.5" />
               )}
             </button>
           </div>

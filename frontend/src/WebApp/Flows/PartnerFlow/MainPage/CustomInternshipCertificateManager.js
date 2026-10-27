@@ -368,7 +368,7 @@ const CustomInternshipCertificateManager = () => {
   ];
 
   return (
-    <div className="w-full min-h-screen bg-[#fafbfc] font-sans pb-20">
+    <div className="w-full min-h-screen bg-[#fafbfc] font-sans pb-32 sm:pb-24">
       {/* ── Image Lightbox ── */}
       <AnimatePresence>
         {lightboxData && (
@@ -376,7 +376,7 @@ const CustomInternshipCertificateManager = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
             onClick={() => setLightboxData(null)}
           >
             <motion.div
@@ -394,9 +394,9 @@ const CustomInternshipCertificateManager = () => {
             >
               <button
                 onClick={() => setLightboxData(null)}
-                className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 z-30 transition-colors"
+                className="absolute top-2 right-2 sm:-top-4 sm:-right-4 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white shadow-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 z-30 transition-colors"
               >
-                <X size={20} strokeWidth={2.5} />
+                <X size={18} strokeWidth={2.5} />
               </button>
 
               <div className="w-full h-full relative overflow-hidden rounded-2xl shadow-2xl bg-white flex items-center justify-center">
@@ -491,26 +491,26 @@ const CustomInternshipCertificateManager = () => {
 
       {/* ── Header ── */}
       <div className="border-b border-slate-200/80 bg-white">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center gap-4 py-7"
+            className="flex items-start sm:items-center gap-3.5 sm:gap-4 py-5 sm:py-7"
           >
             <div
-              className="w-12 h-12 rounded-[14px] flex items-center justify-center text-white shadow-lg"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] flex items-center justify-center text-white shadow-lg shrink-0"
               style={{
                 background: "linear-gradient(145deg, #6366f1, #8b5cf6)",
               }}
             >
-              <Award size={24} strokeWidth={2.2} />
+              <Award size={22} className="sm:w-6 sm:h-6" strokeWidth={2.2} />
             </div>
-            <div>
-              <h1 className="text-[22px] sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                 Certificate Templates
               </h1>
-              <p className="text-[13px] text-slate-500 font-medium mt-0.5">
+              <p className="text-xs sm:text-[13px] text-slate-500 font-medium mt-0.5 leading-relaxed">
                 Create and manage custom certificate designs for your internship
                 program.
               </p>
@@ -518,23 +518,23 @@ const CustomInternshipCertificateManager = () => {
           </motion.div>
 
           {/* ── Tab Bar ── */}
-          <div className="flex gap-1 -mb-px">
+          <div className="flex gap-1 -mb-px overflow-x-auto scrollbar-none">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors rounded-t-xl ${
+                className={`relative flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-colors rounded-t-xl shrink-0 ${
                   activeTab === tab.id
                     ? "text-indigo-600 bg-[#fafbfc]"
                     : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 {tab.icon}
-                {tab.label}
+                <span>{tab.label}</span>
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-3 right-3 h-[2.5px] bg-indigo-500 rounded-full"
+                    className="absolute bottom-0 left-2 right-2 sm:left-3 sm:right-3 h-[2.5px] bg-indigo-500 rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -545,7 +545,7 @@ const CustomInternshipCertificateManager = () => {
       </div>
 
       {/* ── Content Area ── */}
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-8 pt-5 sm:pt-8">
         <AnimatePresence mode="wait">
           {/* ─────────── UPLOAD TAB ─────────── */}
           {activeTab === "upload" && (
@@ -556,12 +556,12 @@ const CustomInternshipCertificateManager = () => {
               exit="hidden"
               variants={scaleIn}
             >
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-7">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-7">
                 {/* Upload form */}
                 <div className="lg:col-span-3">
-                  <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
-                    <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                      <Upload size={20} className="text-indigo-500" />
+                  <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-7 md:p-8 shadow-sm">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-5 sm:mb-6 flex items-center gap-2">
+                      <Upload size={20} className="text-indigo-500 shrink-0" />
                       Upload New Design
                     </h2>
 
@@ -588,7 +588,7 @@ const CustomInternshipCertificateManager = () => {
                           <span className="text-rose-500">*</span>
                         </label>
                         <label
-                          className={`group flex flex-col items-center justify-center w-full py-10 px-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 ${
+                          className={`group flex flex-col items-center justify-center w-full py-8 sm:py-10 px-3 sm:px-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 overflow-hidden ${
                             selectedFile
                               ? "border-indigo-300 bg-indigo-50/50"
                               : "border-slate-300 bg-slate-50/60 hover:border-indigo-300 hover:bg-indigo-50/30"
@@ -605,30 +605,35 @@ const CustomInternshipCertificateManager = () => {
                             <motion.div
                               initial={{ scale: 0.9, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
-                              className="text-center"
+                              className="text-center w-full min-w-0 max-w-full flex flex-col items-center px-2"
                             >
-                              <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white flex items-center justify-center mb-3 shadow-md">
+                              <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white flex items-center justify-center mb-3 shadow-md shrink-0">
                                 <CheckCircle2 size={24} />
                               </div>
-                              <p className="text-sm font-bold text-slate-800 truncate max-w-[240px]">
-                                {selectedFileName}
-                              </p>
+                              <div className="w-full min-w-0 max-w-full px-1 text-center">
+                                <p
+                                  className="text-xs sm:text-sm font-bold text-slate-800 truncate w-full block"
+                                  title={selectedFileName}
+                                >
+                                  {selectedFileName}
+                                </p>
+                              </div>
                               <p className="text-xs font-semibold text-indigo-600 mt-1">
                                 File selected — ready to save
                               </p>
                             </motion.div>
                           ) : (
-                            <>
-                              <div className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center mb-3 group-hover:text-indigo-500 group-hover:border-indigo-200 group-hover:scale-110 transition-all duration-300 shadow-sm">
+                            <div className="w-full min-w-0 max-w-full flex flex-col items-center px-2 text-center">
+                              <div className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center mb-3 group-hover:text-indigo-500 group-hover:border-indigo-200 group-hover:scale-110 transition-all duration-300 shadow-sm shrink-0">
                                 <FileImage size={20} />
                               </div>
-                              <p className="text-sm font-bold text-slate-600">
+                              <p className="text-xs sm:text-sm font-bold text-slate-600 break-words">
                                 Click to browse or drag an image here
                               </p>
                               <p className="text-xs text-slate-400 mt-1.5">
                                 PNG, JPG, WEBP — max 5 MB
                               </p>
-                            </>
+                            </div>
                           )}
                         </label>
                       </div>
@@ -636,16 +641,16 @@ const CustomInternshipCertificateManager = () => {
                       {/* Text Color Picker */}
                       <div>
                         <label className="block text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-1.5">
-                          <Palette size={16} className="text-indigo-500" />
+                          <Palette size={16} className="text-indigo-500 shrink-0" />
                           Certificate Text Color
                         </label>
-                        <div className="flex flex-wrap gap-3 items-center">
+                        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                           {colorOptions.map((color) => (
                             <button
                               key={color.value}
                               type="button"
                               onClick={() => setTextColor(color.value)}
-                              className={`relative w-10 h-10 rounded-full cursor-pointer transition-all ${
+                              className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full cursor-pointer transition-all shrink-0 ${
                                 textColor === color.value
                                   ? "ring-2 ring-offset-2 ring-indigo-500 scale-110 shadow-md"
                                   : "border border-slate-200 hover:scale-105"
@@ -661,8 +666,8 @@ const CustomInternshipCertificateManager = () => {
                               )}
                             </button>
                           ))}
-                          <div className="flex items-center gap-2 ml-2 pl-3 border-l border-slate-200">
-                            <span className="text-xs font-semibold text-slate-500">
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 shrink-0">
+                            <span className="text-xs font-semibold text-slate-600">
                               Custom:
                             </span>
                             <div className="relative">
@@ -670,7 +675,7 @@ const CustomInternshipCertificateManager = () => {
                                 type="color"
                                 value={textColor}
                                 onChange={(e) => setTextColor(e.target.value)}
-                                className="w-10 h-10 p-1 bg-white border border-slate-200 rounded-lg cursor-pointer"
+                                className="w-7 h-7 sm:w-8 sm:h-8 p-0.5 bg-transparent border-0 rounded cursor-pointer"
                                 title="Choose custom color"
                               />
                             </div>
@@ -714,7 +719,7 @@ const CustomInternshipCertificateManager = () => {
                         type="button"
                         onClick={handleAddCertificate}
                         disabled={isSaving}
-                        className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-white text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed relative z-10"
                         style={{
                           background:
                             "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import EdutechexLogo from "../assets/Edutech-logo.png";
 import Menu from "../assets/Menu.svg";
 import Close from "../assets/close.png";
@@ -7,12 +7,10 @@ const navLinks = [
   { name: "Discover", href: "/" }, // homepage
   { name: "Vision", href: "/vision" },   // keep inside home
   { name: "Features", href: "/features" },
-  { name: "Team", href: "/team" },
   { name: "Pricing", href: "/pricing" },
   { name: "FAQs", href: "/faqs" },
   { name: "Contact", href: "/contact" },
 ];
-
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -21,23 +19,33 @@ const Navbar = () => {
     setMenuOpen(!menuOpen);
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 w-full bg-white z-50">
-      <div className="flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5 lg:container lg:mx-auto lg:px-20">
-        <div className="flex items-center gap-x-3 sm:gap-x-5 pl-0 sm:pl-3 min-w-0">
-          <a href="/" aria-label="Home" className="flex items-center min-w-0">
+    <nav className="fixed top-0 left-0 w-full bg-white z-50 border-b border-gray-100 shadow-sm">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-20 py-2 sm:py-2.5 max-w-7xl 2xl:max-w-[1500px] mx-auto">
+        <div className="flex items-center gap-x-2 sm:gap-x-4 pl-0 min-w-0">
+          <a href="/" aria-label="Home" className="flex items-center shrink-0">
             <img
-              className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2 mt-1 sm:mt-1.5"
+              className="h-[36px] sm:h-[40px] xl:h-[42px] w-auto max-w-[150px] sm:max-w-[170px] xl:max-w-[180px] object-contain ml-0.5 sm:ml-2 mt-1 sm:mt-1.5 shrink-0"
               src={EdutechexLogo}
               alt="Edutechex Logo"
             />
           </a>
-          <div className="hidden lg:flex gap-x-8 ml-8">
+          <div className="hidden lg:flex items-center gap-x-4 xl:gap-x-7 2xl:gap-x-8 ml-4 xl:ml-8">
             {navLinks.map((item, index) => (
               <a
                 key={index}
                 href={item.href}
-                className="text-[#36485C] font-medium hover:text-[#451E5D] transition duration-300"
+                className="text-[#36485C] font-medium text-sm xl:text-base hover:text-[#451E5D] transition duration-300 whitespace-nowrap"
               >
                 {item.name}
               </a>
@@ -45,17 +53,17 @@ const Navbar = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-x-5">
+        <div className="flex items-center gap-x-3 sm:gap-x-5 shrink-0 ml-4">
           <a
             href="#contacts"
-            className="hidden lg:block font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-4 py-2 rounded-md transition duration-300"
+            className="hidden lg:inline-flex items-center justify-center font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-4 py-2 rounded-md transition duration-300 whitespace-nowrap text-sm xl:text-base shrink-0 shadow-sm"
           >
             Request Call Back
           </a>
           <div className="lg:hidden" onClick={toggleMenu}>
             <img
               src={menuOpen ? Close : Menu}
-              alt="Menu Button"
+              alt={menuOpen ? "Close Menu" : "Open Menu"}
               width={30}
               height={30}
               className="cursor-pointer transition-transform duration-300 transform hover:scale-110"
@@ -63,11 +71,20 @@ const Navbar = () => {
           </div>
         </div>
 
+        {/* Mobile Menu Backdrop */}
+        {menuOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+            onClick={toggleMenu}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Mobile Menu */}
         <div
           className={`${
             menuOpen ? "translate-x-0" : "translate-x-full"
-          } fixed top-0 right-0 w-full md:w-80 h-screen bg-white/95 backdrop-blur-lg shadow-2xl flex flex-col pt-24 px-8 gap-6 z-50 transition-transform duration-300 ease-in-out`}
+          } fixed top-0 right-0 w-full sm:w-80 h-screen bg-white/95 backdrop-blur-lg shadow-2xl flex flex-col pt-24 px-8 gap-6 z-50 transition-transform duration-300 ease-in-out`}
         >
           <div className="absolute top-6 right-6">
             <img

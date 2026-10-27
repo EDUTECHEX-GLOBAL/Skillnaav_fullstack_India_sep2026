@@ -52,7 +52,7 @@ function Login() {
           <div className="mb-4">
             <label
               htmlFor="username"
-              className="block text-gray-700 font-semibold"
+              className="block text-gray-700 font-semibold mb-1"
             >
               Username
             </label>
@@ -64,31 +64,32 @@ function Login() {
                 setUser({ ...user, username: e.target.value.trim() })
               }
               placeholder="Enter your username"
-              className="px-4 py-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:border-blue-500"
+              className="px-4 py-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:border-blue-500 !mt-0"
             />
           </div>
           <div className="mb-6">
             <label
               htmlFor="password"
-              className="block text-gray-700 font-semibold"
+              className="block text-gray-700 font-semibold mb-1"
             >
               Password
             </label>
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={user.password}
                 onChange={(e) => setUser({ ...user, password: e.target.value })}
                 placeholder="Enter your password"
-                className="px-4 py-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:border-blue-500 pr-12"
+                className="px-4 py-3 rounded-lg border border-gray-300 w-full focus:outline-none focus:border-blue-500 pr-12 !mt-0"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 pt-5 flex justify-center items-center text-gray-500"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <FaEye /> : <FaEyeSlash />}
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>

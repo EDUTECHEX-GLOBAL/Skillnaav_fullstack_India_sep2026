@@ -419,3 +419,220 @@ export const validateEmail = (email) => {
   return "";
 };
 
+/**
+ * Validates an Indian mobile phone number.
+ * - Disallows non-Indian country codes (e.g. +1, +44, +11)
+ * - Must be strictly 10 digits
+ * - First digit must be 6, 7, 8, or 9
+ *
+ * @param {string} phone - The phone string to validate.
+ * @param {boolean} required - Whether the field is mandatory.
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateIndianMobile = (phone, required = false) => {
+  if (!phone || !String(phone).trim()) {
+    return required ? "Mobile number is required." : "";
+  }
+
+  const raw = String(phone).trim();
+  const cleaned = raw.replace(/[\s\-\(\)]/g, "");
+
+  // Detect foreign country codes (+ followed by anything other than +91)
+  if (cleaned.startsWith("+") && !cleaned.startsWith("+91")) {
+    return "Only Indian mobile numbers (+91) are allowed.";
+  }
+
+  // Extract core digits
+  let digits = cleaned;
+  if (digits.startsWith("+91")) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith("91") && digits.length === 12) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith("0") && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+
+  // Must only contain numeric digits
+  if (!/^\d+$/.test(digits)) {
+    return "Mobile number must contain digits only.";
+  }
+
+  if (digits.length < 10) {
+    return `Mobile number must be 10 digits (currently ${digits.length}).`;
+  }
+
+  if (digits.length > 10) {
+    return `Mobile number cannot exceed 10 digits (currently ${digits.length}).`;
+  }
+
+  // Standard Indian mobile numbering: starts with 6, 7, 8, or 9
+  if (!/^[6-9]/.test(digits)) {
+    return "Indian mobile numbers must start with 6, 7, 8, or 9.";
+  }
+
+  return "";
+};
+
+/**
+ * Extracts the clean 10-digit Indian mobile number from any input/formatted string.
+ * Strips +91, leading 0, spaces, dashes.
+ *
+ * @param {string} phone
+ * @returns {string} 10-digit number or cleaned digits
+ */
+export const extractIndianMobileDigits = (phone) => {
+  if (!phone) return "";
+  const cleaned = String(phone).trim().replace(/[\s\-\(\)]/g, "");
+  let digits = cleaned;
+  if (digits.startsWith("+91")) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith("91") && digits.length === 12) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith("0") && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+  return digits.replace(/\D/g, "").slice(0, 10);
+};
+
+/**
+ * Formats a 10-digit Indian mobile number into standard display format: +91 98765 43210
+ *
+ * @param {string} phone
+ * @returns {string}
+ */
+export const formatIndianMobile = (phone) => {
+  const digits = extractIndianMobileDigits(phone);
+  if (!digits) return "";
+  if (digits.length <= 5) return `+91 ${digits}`;
+  return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+};
+
+/**
+ * Validates an Indian PIN code (Postal Index Number).
+ * - Must be strictly 6 numeric digits
+ * - First digit cannot be 0 (must be 1-9)
+ *
+ * @param {string} pin - The PIN code string to validate.
+ * @param {boolean} required - Whether the field is mandatory.
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateIndianPinCode = (pin, required = true) => {
+  if (!pin || !String(pin).trim()) {
+    return required ? "PIN code is required." : "";
+  }
+
+  const cleaned = String(pin).trim();
+
+  // Must only contain numeric digits
+  if (!/^\d+$/.test(cleaned)) {
+    return "PIN code must contain digits only.";
+  }
+
+  if (cleaned.startsWith("0")) {
+    return "PIN code cannot start with 0 (must start with 1-9).";
+  }
+
+  if (cleaned.length < 6) {
+    return `PIN code must be 6 digits (currently ${cleaned.length}/6).`;
+  }
+
+  if (cleaned.length > 6) {
+    return `PIN code cannot exceed 6 digits (currently ${cleaned.length}).`;
+  }
+
+  if (!/^[1-9][0-9]{5}$/.test(cleaned)) {
+    return "Please enter a valid 6-digit Indian PIN code.";
+  }
+
+  return "";
+};
+
+/**
+ * Extracts clean 6-digit PIN code from any input string.
+ *
+ * @param {string} pin
+ * @returns {string} 6-digit PIN code
+ */
+export const extractIndianPinCodeDigits = (pin) => {
+  if (!pin) return "";
+  return String(pin).replace(/\D/g, "").slice(0, 6);
+};
+
+/**
+ * Validates a Contact Name for job postings/inquiries.
+ * - Must start with a letter
+ * - Cannot contain numbers
+ * - Only letters, spaces, hyphens, periods, or apostrophes
+ * - Length between 2 and 60 characters
+ *
+ * @param {string} name
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateContactName = (name) => {
+  if (!name || !String(name).trim()) {
+    return "Contact name is required.";
+  }
+  const trimmed = String(name).trim();
+  if (/[0-9]/.test(trimmed)) {
+    return "Contact name cannot contain numbers.";
+  }
+  if (!/^[A-Za-z]/.test(trimmed)) {
+    return "Contact name must start with a letter.";
+  }
+  if (!/^[A-Za-z][A-Za-z\s'.-]*$/.test(trimmed)) {
+    return "Contact name can only contain letters, spaces, hyphens, periods, or apostrophes.";
+  }
+  if (trimmed.length < 2) {
+    return "Contact name must be at least 2 characters.";
+  }
+  if (trimmed.length > 60) {
+    return "Contact name cannot exceed 60 characters.";
+  }
+  return "";
+};
+
+/**
+ * Validates a Contact Phone number for job postings/inquiries.
+ * - Cannot contain letters
+ * - Allows digits, spaces, hyphens, and optional '+' prefix
+ * - If country is India: enforces valid 10-digit Indian mobile number (starts with 6-9)
+ * - Otherwise: enforces 7-15 digits
+ *
+ * @param {string} phone
+ * @param {string} country
+ * @returns {string} Error message string if invalid, or "" if valid.
+ */
+export const validateContactPhone = (phone, country = "India") => {
+  if (!phone || !String(phone).trim()) {
+    return "Contact phone is required.";
+  }
+  const raw = String(phone).trim();
+  if (/[a-zA-Z]/.test(raw)) {
+    return "Phone number cannot contain letters.";
+  }
+  if (!/^[\d\+\s\-\(\)]+$/.test(raw)) {
+    return "Phone number can only contain digits, spaces, hyphens, and '+' prefix.";
+  }
+
+  const digits = raw.replace(/\D/g, "");
+  if (country === "India") {
+    let coreDigits = digits;
+    if (coreDigits.startsWith("91") && coreDigits.length === 12) {
+      coreDigits = coreDigits.slice(2);
+    } else if (coreDigits.startsWith("0") && coreDigits.length === 11) {
+      coreDigits = coreDigits.slice(1);
+    }
+    if (coreDigits.length !== 10) {
+      return `Indian mobile number must be 10 digits (currently ${coreDigits.length}).`;
+    }
+    if (!/^[6-9]/.test(coreDigits)) {
+      return "Indian mobile numbers must start with 6, 7, 8, or 9.";
+    }
+  } else {
+    if (digits.length < 7 || digits.length > 15) {
+      return "Please enter a valid phone number (7-15 digits).";
+    }
+  }
+  return "";
+};
+

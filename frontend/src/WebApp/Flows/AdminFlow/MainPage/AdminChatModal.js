@@ -298,6 +298,8 @@ const AdminChatModal = ({ isOpen, internship, onClose, onReviewedUpdate }) => {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const pollerRef = useRef(null);
+  const socketRef = useRef(null);
+  const typingTimerRef = useRef(null);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const scrollToBottom = useCallback(
@@ -404,15 +406,24 @@ const AdminChatModal = ({ isOpen, internship, onClose, onReviewedUpdate }) => {
     const SOCKET_URL =
       process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
     const socket = ioClient(SOCKET_URL, { withCredentials: true });
+    socketRef.current = socket;
 
     const joinRooms = () => {
       socket.emit("joinAdminRoom");
       socket.emit("joinChatRoom", { internshipId: internship._id });
+      socket.emit("joinRoom", { internshipId: internship._id });
     };
 
+    if (socket.connected) {
+      joinRooms();
+    }
+
     const handleNewMessage = (message) => {
-      if (String(message?.internship) !== String(internship._id)) return;
-      if (String(message?.sender) === String(adminId)) return;
+      const msgInternship = message?.internship?._id || message?.internship;
+      const msgSender = message?.sender?._id || message?.sender;
+
+      if (String(msgInternship) !== String(internship._id)) return;
+      if (String(msgSender) === String(adminId)) return;
 
       setMessages((prev) =>
         prev.some((item) => String(item._id) === String(message._id))
@@ -443,6 +454,8 @@ const AdminChatModal = ({ isOpen, internship, onClose, onReviewedUpdate }) => {
     socket.on("messageDeleted", handleMessageDeleted);
 
     return () => {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      socketRef.current = null;
       socket.emit("leaveChatRoom", { internshipId: internship._id });
       socket.off("connect", joinRooms);
       socket.off("newMessage", handleNewMessage);
@@ -513,6 +526,14 @@ const AdminChatModal = ({ isOpen, internship, onClose, onReviewedUpdate }) => {
     setNewMessage("");
     setSending(true);
     setChatError(null);
+
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    if (socketRef.current && internship?._id) {
+      socketRef.current.emit("stopTyping", {
+        internshipId: internship._id,
+        senderId: adminId,
+      });
+    }
 
     // Upload file first if needed
     let fileMeta = uploadedMeta;
@@ -617,12 +638,26 @@ const AdminChatModal = ({ isOpen, internship, onClose, onReviewedUpdate }) => {
     }
   };
 
-  // ── Auto-resize textarea ───────────────────────────────────────────────────
+  // ── Auto-resize textarea & emit typing ────────────────────────────────────
   const handleTextareaChange = (e) => {
     setNewMessage(e.target.value);
     const el = e.target;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
+
+    if (socketRef.current && internship?._id) {
+      socketRef.current.emit("typing", {
+        internshipId: internship._id,
+        senderId: adminId,
+      });
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = setTimeout(() => {
+        socketRef.current?.emit("stopTyping", {
+          internshipId: internship._id,
+          senderId: adminId,
+        });
+      }, 2000);
+    }
   };
 
   const canSend = (newMessage.trim() || pendingFile) && !sending && !uploading;

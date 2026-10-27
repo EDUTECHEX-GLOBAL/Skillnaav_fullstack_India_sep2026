@@ -64,6 +64,17 @@ router.get(
 
     if (cached && cachedTag) {
       console.log("--> Cache hit");
+      if (Array.isArray(cached.pricingcard)) {
+        cached.pricingcard = cached.pricingcard.map((card) => {
+          let subhead = card.plantypesubhead;
+          if (subhead === "Ideal for individual students") {
+            subhead = "Basic Free Access";
+          } else if (subhead === "Student Plan") {
+            subhead = "Premium Student Access";
+          }
+          return { ...card, plantypesubhead: subhead };
+        });
+      }
       // ETag check — return 304 if client already has this version
       if (req.headers["if-none-match"] === cachedTag) {
         return res.status(304).end();
@@ -106,20 +117,33 @@ router.get(
       ]);
 
       console.log("--> DB Fetch success");
+      const sanitizedPricingCard = (pricingcard || []).map((card) => {
+        let subhead = card.plantypesubhead;
+        if (subhead === "Ideal for individual students") {
+          subhead = "Basic Free Access";
+        } else if (subhead === "Student Plan") {
+          subhead = "Premium Student Access";
+        }
+        return {
+          ...card,
+          plantypesubhead: subhead,
+        };
+      });
+
       const responseData = {
         discover: discovers,
-      discovercompimg,
-      visionhead,
-      visionpoint,
-      features,
-      team,
-      teammember,
-      pricing,
-      pricingcard,
-      faq,
-      faqcard,
-      footer,
-    };
+        discovercompimg,
+        visionhead,
+        visionpoint,
+        features,
+        team,
+        teammember,
+        pricing,
+        pricingcard: sanitizedPricingCard,
+        faq,
+        faqcard,
+        footer,
+      };
 
     // 3. Generate ETag from content hash (cheap — done once per TTL window)
     const etag = `"${crypto

@@ -7,6 +7,7 @@ import {
   FiClock,
   FiLink,
   FiChevronRight,
+  FiChevronDown,
   FiX,
   FiMapPin
 } from 'react-icons/fi';
@@ -14,6 +15,11 @@ import axios from "../../../../api/axiosInstance";
 import * as XLSX from 'xlsx';
 import CreateMeetingLink from './CreateMeetingLink';
 import DatePicker from "react-datepicker";
+import {
+  toCalendarDateInput,
+  formatCalendarDate,
+  parseCalendarDateNoon,
+} from "../../../../utils/dateUtils";
 import "react-datepicker/dist/react-datepicker.css";
 
 const isPastDate = (dateString) => {
@@ -121,6 +127,7 @@ const CustomTimePicker = ({
   disabled = false,
   required = false,
   className = "",
+  wrapperClassName = "",
   placeholder = "HH:MM",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -164,14 +171,14 @@ const CustomTimePicker = ({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full ${isOpen ? "z-[80]" : "z-[1]"}`}
+      className={`relative ${wrapperClassName || "w-full"} ${isOpen ? "z-[80]" : "z-[1]"}`}
     >
       {/* Top Box: Clean bordered input field */}
       <button
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`w-full flex items-center justify-between text-left px-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm text-sm transition-all ${className} ${
+        className={`w-full flex items-center justify-between text-left px-2 sm:px-2.5 py-1.5 border border-gray-300 rounded-lg bg-white shadow-sm text-xs sm:text-sm transition-all h-9 ${className} ${
           isOpen
             ? "ring-2 ring-indigo-500 border-indigo-500 shadow-sm"
             : "hover:border-gray-400"
@@ -181,8 +188,8 @@ const CustomTimePicker = ({
             : "cursor-pointer text-gray-900"
         }`}
       >
-        <span className="flex items-center gap-2.5">
-          <FiClock className="text-gray-400 flex-shrink-0" />
+        <span className="flex items-center gap-1.5 sm:gap-2">
+          <FiClock className="text-gray-400 flex-shrink-0 text-xs sm:text-sm" />
           <span
             className={
               value ? "text-gray-900 font-medium" : "text-gray-400 font-normal"
@@ -191,22 +198,21 @@ const CustomTimePicker = ({
             {value || placeholder}
           </span>
         </span>
-        <FiClock className="text-gray-400 text-sm flex-shrink-0" />
       </button>
 
       {/* Down Box (Dropdown Menu) - strictly w-full left-0 right-0 */}
       {isOpen && (
         <div
-          className="absolute z-[90] left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl p-2.5"
+          className="absolute z-[90] left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl p-2"
           style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
         >
-          <div className="grid grid-cols-2 text-center text-[11px] uppercase tracking-wider font-semibold text-gray-400 pb-1.5 border-b mb-1.5">
+          <div className="grid grid-cols-2 text-center text-[10px] uppercase tracking-wider font-semibold text-gray-400 pb-1 border-b mb-1">
             <span>Hour</span>
-            <span>Minute</span>
+            <span>Min</span>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 h-44">
+          <div className="grid grid-cols-2 gap-1 h-44">
             {/* Hours */}
-            <div className="overflow-y-auto pr-1 space-y-0.5">
+            <div className="overflow-y-auto pr-0.5 space-y-0.5">
               {hours.map((h) => {
                 const isSelected = selectedHour === h;
                 return (
@@ -226,7 +232,7 @@ const CustomTimePicker = ({
               })}
             </div>
             {/* Minutes */}
-            <div className="overflow-y-auto pr-1 space-y-0.5">
+            <div className="overflow-y-auto pr-0.5 space-y-0.5">
               {minutes.map((m) => {
                 const isSelected = selectedMin === m;
                 return (
@@ -249,7 +255,7 @@ const CustomTimePicker = ({
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="w-full mt-2 py-1.5 text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+            className="w-full mt-2 py-1 text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
           >
             Done
           </button>
@@ -259,7 +265,187 @@ const CustomTimePicker = ({
   );
 };
 
+// ─── CustomTypeDropdown ───────────────────────────────────────────────────────
+// Dropdown for online/offline mode where down box strictly matches top box size
+const CustomTypeDropdown = ({
+  value = "online",
+  onChange,
+  disabled = false,
+  className = "",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const currentVal = value || "online";
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative ${className} ${isOpen ? "z-[80]" : "z-[1]"}`}
+    >
+      {/* Top Box: stylish bordered select box matching CustomTimePicker */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
+        className={`w-full h-9 flex items-center justify-between text-left px-2 sm:px-2.5 border border-gray-300 rounded-lg bg-white shadow-sm text-xs sm:text-sm font-medium transition-all ${
+          isOpen
+            ? "ring-2 ring-indigo-500 border-indigo-500 shadow-sm"
+            : "hover:border-gray-400"
+        } ${
+          disabled
+            ? "opacity-60 cursor-not-allowed bg-gray-50 text-gray-400"
+            : "cursor-pointer text-gray-800"
+        }`}
+      >
+        <span className="capitalize truncate">{currentVal}</span>
+        <FiChevronDown
+          className={`text-gray-400 text-xs shrink-0 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Down Box: dropdown menu strictly matching top box width */}
+      {isOpen && (
+        <div
+          className="absolute z-[90] left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden py-1"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          {["online", "offline"].map((opt) => {
+            const isSelected = currentVal === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-2.5 py-1.5 text-xs capitalize transition-colors ${
+                  isSelected
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── CustomDatePicker ────────────────────────────────────────────────────────
+
+// ─── CustomSelectDropdown ─────────────────────────────────────────────────────
+// Custom dropdown where the down box (options list) strictly matches top box width (never overflows)
+const CustomSelectDropdown = ({
+  value = "Technical",
+  options = ["Technical", "HR", "AI Voice", "Coding", "Other"],
+  onChange,
+  disabled = false,
+  className = "",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const currentVal = value || options[0] || "";
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full ${className} ${isOpen ? "z-[80]" : "z-[1]"}`}
+    >
+      {/* Top Box: stylish bordered select box matching other inputs */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
+        className={`w-full h-[38px] flex items-center justify-between text-left px-2.5 py-1.5 border border-gray-300 rounded bg-white shadow-sm text-sm transition-all ${
+          isOpen
+            ? "ring-2 ring-indigo-500 border-indigo-500"
+            : "hover:border-gray-400"
+        } ${
+          disabled
+            ? "opacity-60 cursor-not-allowed bg-gray-50 text-gray-400"
+            : "cursor-pointer text-gray-800"
+        }`}
+      >
+        <span className="truncate">{currentVal}</span>
+        <FiChevronDown
+          className={`text-gray-500 text-xs shrink-0 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Down Box: dropdown menu strictly matching top box width */}
+      {isOpen && (
+        <div
+          className="absolute z-[90] left-0 right-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto"
+          style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+        >
+          {options.map((opt) => {
+            const isSelected = currentVal === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                  isSelected
+                    ? "bg-[#1967d2] text-white font-medium"
+                    : "text-gray-700 hover:bg-blue-50"
+                }`}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CustomDatePicker = ({
   value,
   onChange,
@@ -270,7 +456,7 @@ const CustomDatePicker = ({
   className = "",
   placeholder = "DD-MM-YYYY",
 }) => {
-  const parsedDate = value ? new Date(String(value).slice(0, 10) + "T00:00:00") : null;
+  const parsedDate = parseCalendarDateNoon(value);
 
   return (
     <div className="relative w-full">
@@ -1139,13 +1325,13 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-2 sm:p-4 z-50">
       <form
         onSubmit={saveSchedule}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-white">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 py-3 text-white">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold">Schedule Configuration</h2>
@@ -1175,7 +1361,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
         )}
 
         {/* Content Area */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1">
           {!previewed ? (
             <div className="space-y-8">
               {/* Date Range Section */}
@@ -1235,7 +1421,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
               </div>
 
               {/* Internship Type */}
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-6">
+              <div className="bg-gray-50 p-3.5 sm:p-5 rounded-xl border border-gray-200 space-y-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-800 mb-0">Internship Type</h3>
 
@@ -1274,21 +1460,21 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
 
                 {/* 2 + 3) Default Times + Default Meeting Link – combined only for online type */}
                 {form.defaultType === 'online' && (
-                  <div className="bg-white mt-6 p-5 rounded-xl border border-gray-300 space-y-6">
+                  <div className="bg-white mt-6 p-3.5 sm:p-5 rounded-xl border border-gray-300 space-y-6">
 
                     {/* ✅ Select Time Slot (Online) */}
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-md font-semibold text-gray-700 flex items-center">
-                          <FiClock className="mr-2 text-indigo-600" />
-                          <span className="mr-1">Select Time Slot</span>
-                          <span className="text-sm text-grey-500 font-normal">*</span>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <h4 className="text-sm sm:text-base font-semibold text-gray-700 flex items-center min-w-0">
+                          <FiClock className="mr-1.5 sm:mr-2 text-indigo-600 shrink-0 text-base" />
+                          <span className="mr-1 whitespace-nowrap">Select Time Slot</span>
+                          <span className="text-sm text-gray-400 font-normal shrink-0">*</span>
                         </h4>
 
                         <button
                           type="button"
                           onClick={() => addSlot('online')}
-                          className="px-3 py-1.5 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                          className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shrink-0 whitespace-nowrap transition-colors shadow-sm"
                         >
                           + Add Slot
                         </button>
@@ -1391,17 +1577,17 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
 
                     {/* ✅ Select Time Slot (Offline) */}
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-md font-semibold text-gray-700 flex items-center">
-                          <FiClock className="mr-2 text-indigo-600" />
-                          <span className="mr-1">Select Time Slot</span>
-                          <span className="text-sm text-grey-500 font-normal">*</span>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <h4 className="text-sm sm:text-base font-semibold text-gray-700 flex items-center min-w-0">
+                          <FiClock className="mr-1.5 sm:mr-2 text-indigo-600 shrink-0 text-base" />
+                          <span className="mr-1 whitespace-nowrap">Select Time Slot</span>
+                          <span className="text-sm text-gray-400 font-normal shrink-0">*</span>
                         </h4>
 
                         <button
                           type="button"
                           onClick={() => addSlot('offline')}
-                          className="px-3 py-1.5 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                          className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shrink-0 whitespace-nowrap transition-colors shadow-sm"
                         >
                           + Add Slot
                         </button>
@@ -1476,17 +1662,17 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
 
                     {/* ✅ Select Time Slot (Hybrid) */}
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-md font-semibold text-gray-700 flex items-center">
-                          <FiClock className="mr-2 text-indigo-600" />
-                          <span className="mr-1">Select Time Slot</span>
-                          <span className="text-sm text-grey-500 font-normal">*</span>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <h4 className="text-sm sm:text-base font-semibold text-gray-700 flex items-center min-w-0">
+                          <FiClock className="mr-1.5 sm:mr-2 text-indigo-600 shrink-0 text-base" />
+                          <span className="mr-1 whitespace-nowrap">Select Time Slot</span>
+                          <span className="text-sm text-gray-400 font-normal shrink-0">*</span>
                         </h4>
 
                         <button
                           type="button"
                           onClick={() => addSlot('hybrid')}
-                          className="px-3 py-1.5 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                          className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shrink-0 whitespace-nowrap transition-colors shadow-sm"
                         >
                           + Add Slot
                         </button>
@@ -1775,7 +1961,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                   type="button"
                   onClick={generatePreview}
                   disabled={aiGenerating}
-                  className={`flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 ${aiGenerating ? 'opacity-60 cursor-not-allowed' : ''
+                  className={`w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 ${aiGenerating ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                 >
                   {aiGenerating ? 'Generating with AI...' : 'Generate Preview'}
@@ -1786,7 +1972,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
           ) : (
             <div className="space-y-8">
               {/* Schedule Preview */}
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+              <div className="bg-gray-50 p-2 sm:p-5 rounded-xl border border-gray-200">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">Schedule Preview</h3>
                 </div>
@@ -1813,7 +1999,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                 
                 <div
                   ref={previewScrollRef}
-                  className="space-y-3 max-h-96 overflow-y-auto pr-2"
+                  className="space-y-3 max-h-96 overflow-y-auto pr-1 sm:pr-2"
                 >
                   {(batchTimetables[activeBatchTab] || []).map((day, idx) => {
                     const isPast = isPastDate(day.date);
@@ -1830,7 +2016,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                       <div
                         key={day.date}
                         ref={isPersisted && isToday(new Date(`${day.date}T00:00:00`)) ? todayRef : null}
-                        className={`p-4 rounded-lg transition-all ${readOnly
+                        className={`p-2.5 sm:p-4 rounded-lg transition-all ${readOnly
                           ? 'bg-white border border-indigo-100 shadow-sm'
                           : (!isPersisted
                             ? 'bg-white border border-indigo-100 shadow-sm'
@@ -1841,25 +2027,25 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                           }`}
                       >
                         {/* HEADER Row: Checkbox, Day, Type Dropdown */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex items-center space-x-3 sm:space-x-4">
                             {ro ? (
                               // When a row is blocked (readOnly OR saved schedule & past day), remove the checkbox
                               // but keep the same space so layout doesn’t shift.
-                              <span className="inline-block h-5 w-5" aria-hidden />
+                              <span className="inline-block h-5 w-5 shrink-0" aria-hidden />
                             ) : (
                               <input
                                 type="checkbox"
                                 checked={day.selected}
                                 onChange={() => toggleDay(idx)}
-                                className="h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                className="h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 shrink-0 cursor-pointer"
                               />
                             )}
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-semibold text-gray-900 leading-tight">
                                 {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-xs sm:text-sm text-gray-500">
                                 {new Date(day.date).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric',
@@ -1867,7 +2053,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                                 })}
                               </p>
                               <span
-                                className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${(form.defaultType === 'online')
+                                className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${(form.defaultType === 'online')
                                   ? 'bg-blue-100 text-blue-800'
                                   : (form.defaultType === 'offline')
                                     ? 'bg-green-100 text-green-800'
@@ -1880,26 +2066,24 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                           </div>
 
                           {day.selected && (
-                            <div className="flex items-center">
+                            <div className="flex items-center w-full sm:w-auto justify-end">
                               {form.defaultType === 'hybrid' ? (
                                 // Hybrid: keep only the online/offline selector (no time fields)
                                 canEditDay ? (
-                                  <select
+                                  <CustomTypeDropdown
                                     value={day.type}
-                                    onChange={(e) => changeField(idx, 'type', e.target.value)}
-                                    className="text-sm rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 px-2 py-[6px]"
-                                  >
-                                    <option value="online">online</option>
-                                    <option value="offline">offline</option>
-                                  </select>
+                                    onChange={(val) => changeField(idx, 'type', val)}
+                                    disabled={ro}
+                                    className="w-[84px] sm:w-[94px] flex-shrink-0"
+                                  />
                                 ) : (
-                                  <span className="px-3 py-1 bg-white border border-gray-300 rounded-lg shadow-sm capitalize">
+                                  <span className="px-2.5 sm:px-3 py-1 bg-white border border-gray-300 rounded-lg shadow-sm capitalize text-xs sm:text-sm font-medium h-9 flex items-center">
                                     {day.type}
                                   </span>
                                 )
                               ) : (
                                 // Online/Offline: show only type text (no time fields)
-                                <span className="px-3 py-1 bg-white border border-gray-300 rounded-lg shadow-sm capitalize">
+                                <span className="px-2.5 sm:px-3 py-1 bg-white border border-gray-300 rounded-lg shadow-sm capitalize text-xs sm:text-sm font-medium h-9 flex items-center">
                                   {day.type}
                                 </span>
                               )}
@@ -1909,7 +2093,7 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
 
                         {/* Editable Details Section */}
                         {day.selected && (
-                          <div className="mt-4 ml-14 space-y-4">
+                          <div className="mt-4 ml-0 sm:ml-10 space-y-4">
                             {/* Online Meeting Link */}
                             {day.type === 'online' && (
                               <div>
@@ -2077,16 +2261,9 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                 ) : (
                    <div className="space-y-4">
                      {mockInterviews.map((mi, idx) => {
-                        // Parse date for input value (YYYY-MM-DD)
-                        let dateInputValue = '';
-                        let displayDate = mi.date;
-                        if (mi.date) {
-                           const d = new Date(mi.date);
-                           if (!isNaN(d.getTime())) {
-                              dateInputValue = d.toISOString().split('T')[0];
-                              displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                           }
-                        }
+                        // Safely parse date without UTC timezone shift
+                        const dateInputValue = toCalendarDateInput(mi.date);
+                        const displayDate = formatCalendarDate(mi.date) || mi.date;
 
                         return (
                         <div key={idx} className="p-4 bg-white rounded-lg shadow-sm border border-indigo-100 relative">
@@ -2141,22 +2318,16 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                               </div>
                               <div>
                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-                                 <select
-                                   value={mi.interviewType}
-                                   disabled={readOnly}
-                                   onChange={(e) => {
-                                      const updated = [...mockInterviews];
-                                      updated[idx].interviewType = e.target.value;
-                                      setMockInterviews(updated);
-                                   }}
-                                   className="block w-full px-2 py-1.5 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                 >
-                                    <option value="Technical">Technical</option>
-                                    <option value="HR">HR</option>
-                                    <option value="AI Voice">AI Voice</option>
-                                    <option value="Coding">Coding</option>
-                                    <option value="Other">Other</option>
-                                 </select>
+                                 <CustomSelectDropdown
+                                    value={mi.interviewType}
+                                    disabled={readOnly}
+                                    options={["Technical", "HR", "AI Voice", "Coding", "Other"]}
+                                    onChange={(val) => {
+                                       const updated = [...mockInterviews];
+                                       updated[idx].interviewType = val;
+                                       setMockInterviews(updated);
+                                    }}
+                                  />
                               </div>
                               <div>
                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Meeting Link (Live/External)</label>
@@ -2215,12 +2386,14 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                              ? Math.max(...mockInterviews.map(m => m.weekNumber || 0)) + 3 
                              : 2;
                          // Default to a date within the internship if possible
-                         let defaultDate = new Date().toISOString();
+                         const today = new Date();
+                         let defaultDate = toCalendarDateInput(today);
                          if (mockInterviews.length > 0 && mockInterviews[mockInterviews.length - 1].date) {
-                             const lastDate = new Date(mockInterviews[mockInterviews.length - 1].date);
-                             if (!isNaN(lastDate.getTime())) {
-                                lastDate.setDate(lastDate.getDate() + 21); // add 3 weeks
-                                defaultDate = lastDate.toISOString();
+                             const prevDateStr = toCalendarDateInput(mockInterviews[mockInterviews.length - 1].date);
+                             if (prevDateStr) {
+                                const [py, pm, pd] = prevDateStr.split('-').map(Number);
+                                const nextDate = new Date(py, pm - 1, pd + 21, 12, 0, 0);
+                                defaultDate = toCalendarDateInput(nextDate);
                              }
                          }
 
@@ -2274,31 +2447,31 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-5 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 font-medium"
                   >
                     Close
                   </button>
                 </div>
               ) : (
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3 pt-4">
                   <button
                     type="button"
                     onClick={() => setPreviewed(false)}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors"
                   >
                     Back to Settings
                   </button>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center shadow-sm transition-colors"
                   >
                     {loading ? (
                       <>

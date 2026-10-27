@@ -4,12 +4,12 @@ import {
   FaEnvelope,
   FaUserPlus,
   FaUsers,
-  FaPaperPlane,
   FaSignOutAlt,
   FaBars,
   FaSpinner,
   FaRupeeSign,
   FaBell,
+  FaPaperPlane,
 } from "react-icons/fa";
 import EdutechLogo from "../../assets/Edutech-logo.png";
 
@@ -18,8 +18,8 @@ const AdminDashboardHome = lazy(() => import("./AdminDashboardHome"));
 const AdminContactSubmissions = lazy(() => import("./AdminContactSubmissions"));
 const AdminSubscribedEmails = lazy(() => import("./AdminSubscribedEmails"));
 const AdminVisitorsList = lazy(() => import("./AdminVisitorsList"));
-const AdminNewsletter = lazy(() => import("./AdminNewsletter"));
 const AdminPayments = lazy(() => import("./AdminPayments"));
+const AdminNewsletter = lazy(() => import("./AdminNewsletter"));
 
 // Loader component for suspense fallback
 const Loader = () => (
@@ -107,8 +107,8 @@ const Admin = () => {
       { id: "ContactUs", label: "Contact Us", component: <AdminContactSubmissions />, icon: <FaEnvelope /> },
       { id: "Subscribe", label: "Subscribe", component: <AdminSubscribedEmails />, icon: <FaUserPlus /> },
       { id: "Visitors", label: "Visitors", component: <AdminVisitorsList />, icon: <FaUsers /> },
-      { id: "Newsletter", label: "Newsletter", component: <AdminNewsletter />, icon: <FaPaperPlane /> },
       { id: "Payments", label: "Payments", component: <AdminPayments />, icon: <FaRupeeSign /> },
+      { id: "Newsletter", label: "Newsletter", component: <AdminNewsletter />, icon: <FaPaperPlane /> },
     ],
     []
   );

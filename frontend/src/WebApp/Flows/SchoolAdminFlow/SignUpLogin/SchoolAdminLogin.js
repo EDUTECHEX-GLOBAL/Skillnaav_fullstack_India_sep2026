@@ -87,25 +87,25 @@ const SchoolAdminLogin = () => {
             type="email"
             name="email"
             placeholder="Email"
-            className="w-full mb-4 p-3 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full !mt-0 mb-4 p-3 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
             onChange={handleChange}
             required
           />
 
-          <div className="relative mb-6">
+          <div className="relative flex items-center mb-6">
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
-              className="w-full p-3 border border-gray-300 rounded-md pr-10 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full !mt-0 p-3 border border-gray-300 rounded-md pr-10 outline-none focus:ring-2 focus:ring-blue-500"
               onChange={handleChange}
               required
             />
-            {/*Remove "-translate-y-1/2" for eye icon alignment - 05-08-2026*/}
             <button
               type="button"
-              className="absolute top-1/2 right-3 text-gray-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700 cursor-pointer focus:outline-none"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
             </button>

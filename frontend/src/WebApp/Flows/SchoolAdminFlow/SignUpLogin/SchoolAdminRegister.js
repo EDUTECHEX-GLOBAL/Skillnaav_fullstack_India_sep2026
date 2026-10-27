@@ -146,38 +146,40 @@ const SchoolAdminRegister = () => {
           />
 
           {/* Password */}
-          <div className="relative mb-4">
+          <div className="relative flex items-center mb-4">
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
-              className="w-full p-3 border border-gray-300 rounded-md"
+              className="w-full !mt-0 p-3 pr-11 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
               onChange={handleChange}
               required
             />
             <button
               type="button"
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700 cursor-pointer focus:outline-none"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
             </button>
           </div>
 
           {/* Confirm Password */}
-          <div className="relative mb-6">
+          <div className="relative flex items-center mb-6">
             <input
               type={showConfirm ? "text" : "password"}
               name="confirmPassword"
               placeholder="Confirm Password"
-              className="w-full p-3 border border-gray-300 rounded-md"
+              className="w-full !mt-0 p-3 pr-11 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
               onChange={handleChange}
               required
             />
             <button
               type="button"
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-500 hover:text-gray-700 cursor-pointer focus:outline-none"
               onClick={() => setShowConfirm(!showConfirm)}
+              aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
             >
               {showConfirm ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
             </button>

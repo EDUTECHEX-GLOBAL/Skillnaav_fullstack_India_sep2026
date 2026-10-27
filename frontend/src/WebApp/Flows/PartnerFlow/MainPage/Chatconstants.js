@@ -66,10 +66,32 @@ export const msgInitial = { list: [], loading: false, paging: false, currentPage
 export const msgReducer = (s, a) => {
   switch (a.type) {
     case "FETCH_START":   return { ...s, [a.isFirst ? "loading" : "paging"]: true };
-    case "FETCH_SUCCESS": return { ...s, loading: false, paging: false, list: a.data, totalPages: a.totalPages, totalCount: a.totalCount };
+    case "FETCH_SUCCESS": {
+      const pendingOptimistic = (s.list || []).filter((m) =>
+        String(m._id || "").startsWith("temp-"),
+      );
+      const serverIds = new Set((a.data || []).map((m) => String(m._id)));
+      const filteredOptimistic = pendingOptimistic.filter(
+        (opt) => !serverIds.has(String(opt._id)),
+      );
+      return {
+        ...s,
+        loading: false,
+        paging: false,
+        list: [...(a.data || []), ...filteredOptimistic],
+        totalPages: a.totalPages || 1,
+        totalCount: a.totalCount || (a.data || []).length,
+      };
+    }
     case "FETCH_ERROR":   return { ...s, loading: false, paging: false, list: [] };
     case "SET_PAGE":      return { ...s, currentPage: a.page };
-    case "APPEND":        return { ...s, list: [...s.list, a.msg] };
+    case "APPEND": {
+      if (!a.msg) return s;
+      const id = String(a.msg._id || "");
+      const exists = (s.list || []).some((m) => String(m._id || "") === id);
+      if (exists) return s;
+      return { ...s, list: [...(s.list || []), a.msg], totalCount: (s.totalCount || 0) + 1 };
+    }
     case "REPLACE_LAST":  return { ...s, list: [...s.list.slice(0, -1), a.msg], totalCount: s.totalCount + 1 };
     case "REMOVE":        return { ...s, list: s.list.filter((m) => m._id !== a.id) };
     case "RESET":         return { ...msgInitial };
@@ -79,8 +101,8 @@ export const msgReducer = (s, a) => {
 
 // ─── Styles ───────────────────────────────────────────────────
 export const S = {
-  appShell: { height: "100dvh", width: "100%", display: "flex", background: "#F7F8FC", overflow: "hidden", fontFamily: "'DM Sans','Inter',sans-serif" },
-  rowFull:  { height: "100dvh", width: "100%", display: "flex", overflow: "hidden", minWidth: 0 },
+  appShell: { height: "100%", maxHeight: "100%", width: "100%", display: "flex", background: "#F7F8FC", overflow: "hidden", fontFamily: "'DM Sans','Inter',sans-serif", flex: 1, minHeight: 0 },
+  rowFull:  { height: "100%", maxHeight: "100%", width: "100%", display: "flex", overflow: "hidden", minWidth: 0, flex: 1, minHeight: 0 },
   sidebarWrap: { width: 300, minWidth: 260, maxWidth: 320, flexShrink: 0, height: "100%", background: "#fff", borderRight: "1px solid #EAECF4", display: "flex", flexDirection: "column", overflow: "hidden" },
   chatCol:  { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", height: "100%", background: "#F7F8FC", overflow: "hidden" },
   chatHeader: { background: "#fff", borderBottom: "1px solid #EAECF4", padding: "10px 14px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, boxShadow: "0 1px 5px rgba(15,23,42,0.04)", minWidth: 0 },
@@ -97,12 +119,12 @@ export const S = {
   msgArea: { flex: 1, overflowY: "auto", overflowX: "hidden", padding: "16px 14px 8px", background: "#F7F8FC", minWidth: 0 },
   msgsPager: { display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "4px 0 12px" },
   pagerText: { margin: 0, fontSize: 11, color: "#94A3B8" },
-  inputBar: { background: "#fff", borderTop: "1px solid #EAECF4", padding: "10px 12px 12px", flexShrink: 0, boxShadow: "0 -2px 8px rgba(15,23,42,0.04)" },
-  inputRow: { display: "flex", alignItems: "flex-end", gap: 7 },
-  textarea: { flex: 1, minWidth: 0, padding: "10px 13px", border: "1.5px solid #E2E8F0", borderRadius: 12, fontSize: 14, color: "#0F172A", resize: "none", lineHeight: 1.5, minHeight: 42, maxHeight: 100, overflow: "auto", background: "#F8FAFC", outline: "none", fontFamily: "inherit" },
-  sendBtn: { width: 42, height: 42, borderRadius: 12, border: "none", background: "linear-gradient(135deg,#4A6CF7,#3154E8)", color: "#fff", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(74,108,247,0.28)" },
-  hintText: { margin: "6px 0 0", textAlign: "center", fontSize: 10.5, color: "#94A3B8" },
-  noSession: { height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F8FC", padding: "20px" },
+  inputBar: { background: "#fff", borderTop: "1px solid #EAECF4", padding: "12px 16px 10px 16px", flexShrink: 0, boxShadow: "0 -2px 8px rgba(15,23,42,0.04)", position: "relative", zIndex: 10, width: "100%", boxSizing: "border-box" },
+  inputRow: { display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "nowrap", width: "100%", gap: 10, boxSizing: "border-box" },
+  textarea: { flex: "1 1 0%", minWidth: 0, padding: "11px 16px", border: "1.5px solid #E2E8F0", borderRadius: 14, fontSize: 14, color: "#0F172A", resize: "none", lineHeight: "20px", height: 44, minHeight: 44, maxHeight: 120, overflow: "auto", background: "#fff", outline: "none", fontFamily: "inherit", boxSizing: "border-box", margin: 0, marginTop: 0, marginBottom: 0 },
+  sendBtn: { width: 44, minWidth: 44, height: 44, borderRadius: 14, border: "none", background: "#818CF8", color: "#fff", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(129,140,248,0.35)", transition: "all 0.15s ease", margin: 0, boxSizing: "border-box" },
+  hintText: { margin: "6px 0 0", textAlign: "center", fontSize: 11, color: "#94A3B8" },
+  noSession: { height: "100%", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F8FC", padding: "20px" },
   noSessionIcon: { width: 52, height: 52, borderRadius: 16, margin: "0 auto 14px", background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" },
 };
 
@@ -140,6 +162,14 @@ export const globalCss = `
   @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
   @keyframes slideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
   @keyframes slideInRight { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes sa-pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+  .sa-ping-red {
+    animation: sa-pulse-red 1.5s infinite;
+  }
 
   /* ── Detail panel: bottom sheet on mobile, side panel on desktop ── */
   .detail-overlay {

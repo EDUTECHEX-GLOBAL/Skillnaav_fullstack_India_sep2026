@@ -10,10 +10,26 @@ function Pricing() {
 
   const priceheading =
     edutechexData?.pricing?.[0]?.priceheading || staticPricingData.priceheading;
-  const pricingcard =
+  const rawPricingCard =
     edutechexData?.pricingcard?.length > 0
       ? edutechexData.pricingcard
       : staticPricingData.pricingcard;
+
+  const pricingcard = rawPricingCard.map((card, index) => {
+    const staticCard = staticPricingData.pricingcard[index];
+    let subhead = card.plantypesubhead;
+    if (
+      !subhead ||
+      subhead === "Ideal for individual students" ||
+      subhead === "Student Plan"
+    ) {
+      subhead = staticCard?.plantypesubhead || subhead;
+    }
+    return {
+      ...card,
+      plantypesubhead: subhead,
+    };
+  });
 
   const colorClasses = {
     teal: {
@@ -98,7 +114,11 @@ function Pricing() {
                 <button
                   className={`mt-4 bg-white py-3 ${colorClass.text} font-medium rounded ${colorClass.hoverBg} transition cursor-pointer`}
                   onClick={() => {
-                    navigate("/choose-role");
+                    if (card.plantype === "Student (B2C)" || card.pricebtn === "Get Student Plan") {
+                      navigate("/user");
+                    } else {
+                      navigate("/choose-role");
+                    }
                   }}
                 >
                   {card.pricebtn || "Get Started"}

@@ -408,7 +408,6 @@ const ChatInterface = () => {
     setInput("");
     setPendingFiles([]);
     setSending(true);
-    setIsTyping(true);
 
     const optimistic = {
       _id: `temp-${Date.now()}`,
@@ -463,7 +462,6 @@ const ChatInterface = () => {
       setPendingFiles(filesToSend);
     } finally {
       setSending(false);
-      setTimeout(() => setIsTyping(false), 400);
     }
   }, [input, pendingFiles, partnerId, selected.id, sending]);
 

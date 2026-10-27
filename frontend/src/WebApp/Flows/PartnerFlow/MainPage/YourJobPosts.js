@@ -55,6 +55,9 @@ import {
 import {
   validateJobTitle,
   validateCompanyName,
+  validateContactName,
+  validateEmail,
+  validateContactPhone,
 } from "../../../../utils/validators";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -429,10 +432,27 @@ const DateInput = ({ label, value, onChange, min }) => {
 
 const QualTagInput = ({ qualifications, onChange }) => {
   const [inputVal, setInputVal] = useState("");
+  const [skillError, setSkillError] = useState("");
 
   const addTag = () => {
     const val = inputVal.trim();
-    if (!val || qualifications.includes(val)) return;
+    if (!val) return;
+    if (/^\d+$/.test(val)) {
+      setSkillError("Skills cannot be just numbers. Please enter a valid skill name.");
+      return;
+    }
+    if (
+      !/[a-zA-Z]/.test(val) ||
+      (val.length < 2 && !["C", "R"].includes(val.toUpperCase()))
+    ) {
+      setSkillError("Please enter a valid skill name with letters (min 2 characters).");
+      return;
+    }
+    if (qualifications.some((q) => q.toLowerCase() === val.toLowerCase())) {
+      setSkillError("This skill has already been added.");
+      return;
+    }
+    setSkillError("");
     onChange([...qualifications, val]);
     setInputVal("");
   };
@@ -475,7 +495,10 @@ const QualTagInput = ({ qualifications, onChange }) => {
         <input
           type="text"
           value={inputVal}
-          onChange={(e) => setInputVal(e.target.value)}
+          onChange={(e) => {
+            setInputVal(e.target.value);
+            if (skillError) setSkillError("");
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -500,6 +523,11 @@ const QualTagInput = ({ qualifications, onChange }) => {
           Add
         </button>
       </div>
+      {skillError && (
+        <p className="text-xs text-red-500 font-medium mt-1">
+          {skillError}
+        </p>
+      )}
       <p
         className="text-xs text-gray-400 mt-1"
         style={{ fontFamily: "'Poppins', sans-serif" }}
@@ -515,11 +543,11 @@ const QualTagInput = ({ qualifications, onChange }) => {
 const ViewModalBody = ({ internship: i, onEdit, onClose }) => (
   <>
     {/* ── Gradient hero header ── */}
-    <div className="flex-shrink-0 relative bg-gradient-to-r from-indigo-600 to-purple-600 px-6 pt-6 pb-14 rounded-t-2xl">
+    <div className="flex-shrink-0 relative bg-gradient-to-r from-indigo-600 to-purple-600 px-6 pt-6 pb-6 rounded-t-2xl">
       <button
         onClick={onClose}
         className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full
-          bg-white/20 text-white hover:bg-white/40 transition font-bold"
+          bg-white/20 text-white hover:bg-white/40 transition font-bold z-20"
         style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         <FontAwesomeIcon icon={faXmark} />
@@ -533,38 +561,40 @@ const ViewModalBody = ({ internship: i, onEdit, onClose }) => (
           height="56"
           loading="eager"
           fetchPriority="high"
-          className="w-14 h-14 rounded-xl object-contain bg-white p-1 shadow"
+          className="w-14 h-14 rounded-xl object-contain bg-white p-1 shadow flex-shrink-0"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 overflow-hidden">
           <h2
-            className="text-xl font-bold text-white leading-tight"
+            className="text-xl font-bold text-white leading-tight break-words"
             style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             {i.jobTitle}
           </h2>
           <p
-            className="text-indigo-100 text-sm mt-0.5 font-medium flex items-center gap-1.5"
+            className="text-indigo-100 text-sm mt-0.5 font-medium flex items-center gap-1.5 break-words"
             style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             <FontAwesomeIcon
               icon={faBriefcase}
-              className="text-[10px] opacity-70"
+              className="text-[10px] opacity-70 flex-shrink-0"
             />
-            {i.companyName}
+            <span className="truncate">{i.companyName}</span>
           </p>
           <p
-            className="text-indigo-200 text-xs mt-0.5 flex items-center gap-1"
+            className="text-indigo-200 text-xs mt-0.5 flex items-start gap-1 break-words break-all"
             style={{ fontFamily: "'Poppins', sans-serif" }}
           >
-            <FontAwesomeIcon icon={faLocationDot} className="text-[10px]" />
-            {i.location ||
-              [i.city, i.state, i.country].filter(Boolean).join(", ")}
+            <FontAwesomeIcon icon={faLocationDot} className="text-[10px] mt-0.5 flex-shrink-0" />
+            <span className="break-words break-all">
+              {i.location ||
+                [i.city, i.state, i.country].filter(Boolean).join(", ")}
+            </span>
           </p>
         </div>
       </div>
 
-      {/* ── Floating badge strip ── */}
-      <div className="absolute -bottom-5 left-6 right-6 flex flex-wrap items-center gap-2 z-10">
+      {/* ── Header badge strip (in-flow, never overflows boundary) ── */}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <StatusPill
           adminStatus={i.adminStatus}
           adminReviewed={i.adminReviewed}
@@ -602,7 +632,7 @@ const ViewModalBody = ({ internship: i, onEdit, onClose }) => (
     </div>
 
     {/* ── Scrollable body ── */}
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-10 pb-4 space-y-5 bg-white">
+    <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-5 pb-4 space-y-5 bg-white">
       {/* Rejection reason banner */}
       {(i.adminStatus === "rejected" ||
         (!i.adminStatus && !i.adminApproved && i.adminReviewed)) &&
@@ -1521,6 +1551,31 @@ const YourJobPosts = () => {
       return;
     }
 
+    if (selectedInternship.contactInfo?.name) {
+      const cNameErr = validateContactName(selectedInternship.contactInfo.name);
+      if (cNameErr) {
+        alert(cNameErr);
+        return;
+      }
+    }
+    if (selectedInternship.contactInfo?.email) {
+      const cEmailErr = validateEmail(selectedInternship.contactInfo.email);
+      if (cEmailErr) {
+        alert(cEmailErr);
+        return;
+      }
+    }
+    if (selectedInternship.contactInfo?.phone) {
+      const cPhoneErr = validateContactPhone(
+        selectedInternship.contactInfo.phone,
+        selectedInternship.country || "India"
+      );
+      if (cPhoneErr) {
+        alert(cPhoneErr);
+        return;
+      }
+    }
+
     // Send only the editable fields — never let the frontend decide adminApproved/adminStatus.
     // The backend PUT route always resets to "pending" on partner edits.
     const {
@@ -1902,7 +1957,7 @@ const YourJobPosts = () => {
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[999]"
       >
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden"
           style={{ maxHeight: "90vh", fontFamily: "'Poppins', sans-serif" }}
         >
           {selectedInternship &&

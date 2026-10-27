@@ -128,7 +128,7 @@ function App() {
                 {/* Website */}
                 <Route path="/" element={<Home />} />
                 <Route path="/features" element={<FeaturesPage />} />
-                <Route path="/team" element={<TeamPage />} />
+                <Route path="/team" element={<Navigate to="/" replace />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/faqs" element={<FaqPage />} />
                 <Route path="/immigration-faq" element={<FaqPage />} />

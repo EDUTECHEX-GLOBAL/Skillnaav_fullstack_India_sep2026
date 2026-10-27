@@ -78,6 +78,14 @@ const BodyContent = () => {
       content = <div className="flex items-center justify-center h-full text-gray-500">Select a tab from the sidebar</div>;
   }
 
+  if (selectedTab === "messages") {
+    return (
+      <div className="flex-1 h-full w-full overflow-hidden flex flex-col bg-gray-50">
+        {content}
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="p-2 sm:p-4 md:p-6 min-h-full">

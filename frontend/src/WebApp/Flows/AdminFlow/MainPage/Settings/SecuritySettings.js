@@ -358,7 +358,7 @@ export const SecuritySettings = () => {
               {!otpSent && passwordStatus?.type !== 'success' ? (
                 <>
                   <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">New Password</label>
-                  <div className="relative mb-2">
+                  <div className="relative flex items-center mb-2">
                     <input
                       type={showPassword ? "text" : "password"}
                       value={newPassword}
@@ -367,12 +367,13 @@ export const SecuritySettings = () => {
                         setPasswordStatus(null);
                       }}
                       disabled={isChangingPassword}
-                      className="w-full rounded-xl border border-gray-300 py-3 pl-4 pr-12 text-gray-800 focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] outline-none"
+                      className="w-full !mt-0 rounded-xl border border-gray-300 py-3 pl-4 pr-12 text-gray-800 focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>

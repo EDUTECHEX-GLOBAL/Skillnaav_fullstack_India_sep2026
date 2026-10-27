@@ -319,18 +319,17 @@ function generateFeedback({ mcqScore, correctCount, total, domainStats, pass, pa
 
   // Overall result
   if (pass) {
-    feedback.push(`✅ Congratulations! You passed with ${mcqScore}% (${correctCount}/${total} correct).`);
+    feedback.push(`Congratulations! You passed with ${mcqScore}% (${correctCount}/${total} correct).`);
   } else {
     feedback.push(`You scored ${mcqScore}% (${correctCount}/${total} correct). Pass score is ${passScore}%.`);
   }
 
   // Domain breakdown
   if (Object.keys(domainStats).length > 1) {
-    feedback.push("\n**Performance by domain:**");
+    feedback.push("\nPerformance by domain:");
     Object.entries(domainStats).forEach(([domain, stats]) => {
       const domainScore = Math.round((stats.correct / stats.total) * 100);
-      const status = domainScore >= 70 ? "✅" : "⚠️";
-      feedback.push(`${status} ${domain}: ${stats.correct}/${stats.total} (${domainScore}%)`);
+      feedback.push(`- ${domain}: ${stats.correct}/${stats.total} (${domainScore}%)`);
     });
   }
 
@@ -341,7 +340,7 @@ function generateFeedback({ mcqScore, correctCount, total, domainStats, pass, pa
       .map(([domain]) => domain);
 
     if (weakDomains.length > 0) {
-      feedback.push(`\n**Areas to improve:** ${weakDomains.join(", ")}`);
+      feedback.push(`\nAreas to improve: ${weakDomains.join(", ")}`);
     }
   }
 

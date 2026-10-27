@@ -16,28 +16,24 @@ export const staticDiscoverData = {
 export const staticVisionData = {
   visionheading: "Our Vision",
   visionsub:
-    "Aligning with Indian Vision Priorities, National Education Policy (NEP 2020), and Skill India initiatives, our mission is to empower Indian youth with early opportunities, multidisciplinary career pathways, and access to quality internships while supporting lifelong learning and practical skill development.",
+    "Empowering Indian youth with early career pathways, industry-aligned skill development, and top-tier internships under NEP 2020 and Skill India.",
   visionImg: VisionImage,
   visionpoints: [
     {
       visionpoint:
-        "Enable Indian students to explore multidisciplinary career pathways from an early stage, aligning with NEP 2020 to help them make informed academic and professional decisions.",
+        "Multidisciplinary Pathways: Early guidance aligned with NEP 2020 helping students make informed academic and career choices.",
     },
     {
       visionpoint:
-        "Provide access to high-quality internships offering hands-on industry experience and career growth opportunities across emerging sectors, including aerospace and deep tech.",
+        "High-Impact Internships: Practical industry experience in emerging technologies, AI, and aerospace.",
     },
     {
       visionpoint:
-        "Bridge the academia-industry gap by offering dedicated career guidance, skill-building resources, and mentorship for students across all regions of India.",
+        "Industry Mentorship: Bridging academia and industry through dedicated skill-building and continuous learning.",
     },
     {
       visionpoint:
-        "Promote lifelong learning and continuous upskilling through industry-aligned educational resources throughout each student’s career journey.",
-    },
-    {
-      visionpoint:
-        "Offer specialized programs and internships in aerospace, artificial intelligence, and frontier technologies, fostering innovation and self-reliance (Atmanirbhar Bharat) among Indian students.",
+        "Lifelong Upskilling: Continuous learning resources and industry-aligned skill development throughout every student's career journey.",
     },
   ],
 };
@@ -70,7 +66,7 @@ export const staticPricingData = {
   pricingcard: [
     {
       plantype: "Free Trial",
-      plantypesubhead: "Ideal for individual students",
+      plantypesubhead: "Basic Free Access",
       price: "₹0",
       pricepoint1: "Access to basic internships",
       pricepoint2: "Limited Support",
@@ -81,7 +77,7 @@ export const staticPricingData = {
     },
     {
       plantype: "Student (B2C)",
-      plantypesubhead: "Student Plan",
+      plantypesubhead: "Premium Student Access",
       price: "₹2400",
       pricepoint1: "Full Access to Platform",
       pricepoint2: "Discounted Pricing",

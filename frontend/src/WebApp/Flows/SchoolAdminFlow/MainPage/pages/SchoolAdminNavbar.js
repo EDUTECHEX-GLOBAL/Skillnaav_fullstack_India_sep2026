@@ -104,7 +104,7 @@ const SchoolAdminNavbar = React.memo(({ onLogout, onToggleSidebar }) => {
 
   return (
     <>
-    <header className="bg-white font-poppins text-gray-800 py-2 sm:py-2.5 px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 w-full">
+    <header className="bg-white font-poppins text-gray-800 h-[72px] px-3 sm:px-6 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center gap-2 w-full box-border flex-shrink-0">
 
       {/* Left: Hamburger + Logo */}
       <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0 flex-shrink">
@@ -119,7 +119,7 @@ const SchoolAdminNavbar = React.memo(({ onLogout, onToggleSidebar }) => {
         <img
           src={logo}
           alt="Edutechex Logo"
-          className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+          className="h-[42px] sm:h-[46px] w-auto max-w-[160px] sm:max-w-[190px] object-contain ml-0.5 sm:ml-2"
         />
       </div>
 

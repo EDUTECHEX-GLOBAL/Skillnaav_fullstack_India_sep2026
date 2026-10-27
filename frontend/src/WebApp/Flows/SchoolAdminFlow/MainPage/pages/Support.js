@@ -2427,9 +2427,40 @@ const SchoolAdminSupport = () => {
                     </div>
                   )}
                   <div className="p-3 border-t border-gray-200 bg-white">
-                    <div className="flex items-center gap-2">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        width: "100%",
+                      }}
+                    >
                       <label
-                        className="flex-shrink-0 p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full cursor-pointer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 38,
+                          height: 38,
+                          borderRadius: "50%",
+                          background: "#f3f4f6",
+                          color: "#6b7280",
+                          flexShrink: 0,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                          border: "none",
+                          margin: 0,
+                          padding: 0,
+                          boxSizing: "border-box",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#e5e7eb";
+                          e.currentTarget.style.color = "#4f46e5";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "#f3f4f6";
+                          e.currentTarget.style.color = "#6b7280";
+                        }}
                         title="Attach files (max 10 MB each)"
                       >
                         <FaPaperclip className="w-4 h-4" />
@@ -2443,9 +2474,39 @@ const SchoolAdminSupport = () => {
                         />
                       </label>
                       <button
+                        type="button"
                         onClick={toggleListening}
-                        className={`flex-shrink-0 p-2 rounded-full cursor-pointer transition-colors ${isListening ? "text-red-500 bg-red-50 animate-pulse" : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"}`}
+                        className={isListening ? "sa-ping-red" : ""}
                         title="Auto Type (Speech to Text)"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 38,
+                          height: 38,
+                          borderRadius: "50%",
+                          background: isListening ? "#fef2f2" : "#f3f4f6",
+                          color: isListening ? "#ef4444" : "#6b7280",
+                          flexShrink: 0,
+                          cursor: "pointer",
+                          border: isListening ? "1px solid #fca5a5" : "none",
+                          margin: 0,
+                          padding: 0,
+                          boxSizing: "border-box",
+                          transition: "all 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isListening) {
+                            e.currentTarget.style.background = "#e5e7eb";
+                            e.currentTarget.style.color = "#4f46e5";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isListening) {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.color = "#6b7280";
+                          }
+                        }}
                       >
                         {isListening ? (
                           <FaMicrophoneSlash className="w-4 h-4" />
@@ -2464,7 +2525,31 @@ const SchoolAdminSupport = () => {
                                 ? "Message to main admin…"
                                 : "Reply to student…"
                         }
-                        className={`flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:ring-2 ${pRing} focus:border-transparent outline-none`}
+                        style={{
+                          flex: 1,
+                          height: 38,
+                          boxSizing: "border-box",
+                          border: "1.5px solid #d1d5db",
+                          borderRadius: 999,
+                          padding: "0 16px",
+                          fontSize: "0.85rem",
+                          outline: "none",
+                          minWidth: 0,
+                          fontFamily: "inherit",
+                          background: "#fff",
+                          color: "#1f2937",
+                          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = "#6366f1";
+                          e.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.15)";
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = "#d1d5db";
+                          e.target.style.boxShadow = "none";
+                        }}
                         value={msgInput}
                         onChange={(e) => setMsgInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -2476,14 +2561,41 @@ const SchoolAdminSupport = () => {
                         disabled={sending}
                       />
                       <button
+                        type="button"
                         onClick={handleSend}
                         disabled={!canSend}
-                        className={`flex-shrink-0 p-2.5 rounded-full transition-all ${canSend ? `bg-gradient-to-r ${pBg} text-white shadow hover:shadow-md hover:scale-105` : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
+                        title="Send message"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          width: 38,
+                          height: 38,
+                          borderRadius: "50%",
+                          border: "none",
+                          margin: 0,
+                          padding: 0,
+                          boxSizing: "border-box",
+                          transition: "all 0.15s ease",
+                          ...(canSend
+                            ? {
+                                background: `linear-gradient(to right, ${pBg ? "#4f46e5, #7c3aed" : "#6366f1, #4f46e5"})`,
+                                color: "#fff",
+                                boxShadow: "0 3px 10px rgba(99,102,241,0.35)",
+                                cursor: "pointer",
+                              }
+                            : {
+                                background: "#e5e7eb",
+                                color: "#9ca3af",
+                                cursor: "not-allowed",
+                              }),
+                        }}
                       >
                         {sending ? (
                           <FaSpinner className="w-4 h-4 animate-spin" />
                         ) : (
-                          <FaPaperPlane className="w-4 h-4" />
+                          <FaPaperPlane className="w-4 h-4 ml-0.5" />
                         )}
                       </button>
                     </div>
@@ -2935,22 +3047,33 @@ const SchoolAdminSupport = () => {
               )}
 
               {/* Drop zone / click to pick */}
-              <label className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 transition-all cursor-pointer group">
-                <FaPaperclip className="w-4 h-4 group-hover:text-purple-500 transition-colors" />
-                <span className="group-hover:text-purple-600 transition-colors">
-                  {raiseAtts.length === 0
-                    ? "Click to attach files"
-                    : `${raiseAtts.length} file${raiseAtts.length > 1 ? "s" : ""} attached — click to add more`}
-                </span>
-                <input
-                  ref={raiseFileRef}
-                  type="file"
-                  className="hidden"
-                  multiple
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt,.xlsx,.xls,.zip"
-                  onChange={handleRaiseFileChange}
-                />
-              </label>
+              <div
+                onClick={() => raiseFileRef.current?.click()}
+                className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full px-4 py-4 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50/50 transition-all cursor-pointer group text-center select-none"
+              >
+                <div className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-purple-100 flex items-center justify-center transition-colors shrink-0">
+                  <FaPaperclip className="w-4 h-4 text-gray-500 group-hover:text-purple-600 transition-colors" />
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-1">
+                  <span className="font-medium text-gray-700 group-hover:text-purple-600 transition-colors">
+                    {raiseAtts.length === 0
+                      ? "Click to attach files"
+                      : `${raiseAtts.length} file${raiseAtts.length > 1 ? "s" : ""} selected`}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {raiseAtts.length === 0 ? "or browse from device" : "— click to add more"}
+                  </span>
+                </div>
+              </div>
+              <input
+                ref={raiseFileRef}
+                type="file"
+                style={{ display: "none" }}
+                className="hidden !hidden"
+                multiple
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.csv,.txt,.xlsx,.xls,.zip"
+                onChange={handleRaiseFileChange}
+              />
             </div>
 
             <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-xl p-4">

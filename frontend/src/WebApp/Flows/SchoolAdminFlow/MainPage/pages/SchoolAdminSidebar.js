@@ -170,9 +170,9 @@ const SchoolAdminSidebar = ({
     return (
       <button
         onClick={() => handleTabClick(id)}
-        className={`flex items-center w-full p-3 rounded-lg font-medium transition-colors ${
+        className={`flex items-center rounded-xl font-medium transition-colors ${
           isActive ? "bg-teal-100 text-teal-700" : "text-gray-600 hover:bg-gray-100"
-        } ${!isDesktopOpen ? "justify-center" : ""}`}
+        } ${!isDesktopOpen ? "justify-center w-11 h-11 mx-auto p-0" : "w-full p-3"}`}
         title={!isDesktopOpen ? label : ""}
       >
         <span className={`text-lg flex-shrink-0 ${isActive ? "text-teal-600" : "text-gray-500"} ${isDesktopOpen ? "mr-3" : ""}`}>
@@ -187,7 +187,7 @@ const SchoolAdminSidebar = ({
     <>
       {isOpen && (
         <div
-          className="fixed top-14 right-0 bottom-0 left-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed top-[72px] right-0 bottom-0 left-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={onClose}
         />
       )}
@@ -195,18 +195,18 @@ const SchoolAdminSidebar = ({
       <div
         className={`
           fixed md:relative z-50 md:z-auto
-          top-14 bottom-0 left-0 md:top-0 md:bottom-auto
+          top-[72px] bottom-0 left-0 md:top-0 md:bottom-auto
           bg-white shadow-lg font-poppins
           transition-all duration-300 ease-in-out
           flex flex-col overflow-hidden
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
-          ${!isDesktopOpen ? "md:w-14" : "md:w-64"}
+          ${!isDesktopOpen ? "md:w-16" : "md:w-64"}
           w-64
         `}
       >
         <div className="w-full h-full flex flex-col">
-          <div className={`flex-1 overflow-y-auto pt-4 pb-6 hide-scrollbar ${isDesktopOpen ? "px-3" : "px-1"}`}>
+          <div className={`flex-1 overflow-y-auto ${isDesktopOpen ? "px-3 pt-4" : "px-1.5 pt-10"} pb-6 hide-scrollbar`}>
             <ul className="space-y-1">
               {menuItems.map((item) => (
                 <li key={item.id}>
@@ -217,8 +217,8 @@ const SchoolAdminSidebar = ({
               <li>
                 <button
                   onClick={() => handleTabClick("logout")}
-                  className={`flex items-center w-full p-3 rounded-lg font-medium text-red-500 hover:bg-red-50 transition-colors ${
-                    !isDesktopOpen ? "justify-center" : ""
+                  className={`flex items-center rounded-xl font-medium text-red-500 hover:bg-red-50 transition-colors ${
+                    !isDesktopOpen ? "justify-center w-11 h-11 mx-auto p-0" : "w-full p-3"
                   }`}
                   title={!isDesktopOpen ? "Logout" : ""}
                 >

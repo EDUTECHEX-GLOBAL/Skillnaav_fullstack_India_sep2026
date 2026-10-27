@@ -3,6 +3,7 @@ import axios from "../../../../api/axiosInstance";
 import Modal from "react-modal";
 import { ClipLoader } from "react-spinners";
 import { CSVLink } from "react-csv";
+import { Download } from "lucide-react";
 
 Modal.setAppElement("#root");
 
@@ -128,7 +129,7 @@ const StipendDetails = () => {
 
   /* ---------------- UI ---------------------------------------------------- */
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-8 font-[Poppins]">
+    <div className="min-h-screen bg-slate-50 px-3 sm:px-6 py-4 sm:py-8 font-[Poppins]">
 
       {/* Header */}
       <div className="max-w-5xl mx-auto mb-6">
@@ -195,40 +196,56 @@ const StipendDetails = () => {
               {internships.map((internship) => (
                 <div
                   key={internship._id}
-                  className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row gap-5 hover:shadow-md hover:border-teal-100 transition-all duration-200"
+                  className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row gap-4 lg:gap-5 justify-between lg:items-center hover:shadow-md hover:border-teal-200 transition-all duration-200"
                 >
-                  {internship.imgUrl && (
-                    <img
-                      src={internship.imgUrl}
-                      alt={internship.jobTitle}
-                      className="w-20 h-20 rounded-lg object-contain bg-slate-100 flex-shrink-0"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-slate-900">{internship.jobTitle}</h3>
-                    <p className="text-sm text-slate-600 mt-0.5">{internship.companyName}</p>
-                    <p className="text-sm text-slate-500 mt-1">
-                      {internship.location} •{" "}
-                      {formatDateRange(internship.startDate, internship.endDateOrDuration)}
-                    </p>
-                    <p className="text-sm text-teal-700 font-medium mt-2">
-                      Stipend:{" "}
-                      {internship.compensationDetails?.amount
-                        ? `${internship.compensationDetails.amount} ${internship.compensationDetails.currency}`
-                        : "N/A"}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {internship.qualifications?.map((q, i) => (
-                        <span key={i} className="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600">
-                          {q}
-                        </span>
-                      ))}
+                  <div className="flex gap-3.5 sm:gap-4 items-start flex-1 min-w-0">
+                    {internship.imgUrl ? (
+                      <img
+                        src={internship.imgUrl}
+                        alt={internship.jobTitle}
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-contain bg-slate-50 border border-slate-100 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0 text-teal-600 font-bold text-lg">
+                        {internship.companyName?.[0] || "I"}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
+                        {internship.jobTitle}
+                      </h3>
+                      <p className="text-xs sm:text-sm font-medium text-slate-600 mt-0.5">
+                        {internship.companyName}
+                      </p>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+                        {internship.location && <span>{internship.location} • </span>}
+                        {formatDateRange(internship.startDate, internship.endDateOrDuration)}
+                      </p>
+                      <p className="text-xs sm:text-sm text-teal-700 font-semibold mt-1.5">
+                        Stipend:{" "}
+                        {internship.compensationDetails?.amount
+                          ? `${internship.compensationDetails.amount} ${internship.compensationDetails.currency}`
+                          : "N/A"}
+                      </p>
+                      {internship.qualifications?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2.5">
+                          {internship.qualifications.map((q, i) => (
+                            <span
+                              key={i}
+                              className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full font-medium"
+                            >
+                              {q}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-start sm:items-center flex-shrink-0">
+
+                  <div className="flex items-center justify-end shrink-0 pt-3 border-t border-slate-100 lg:border-t-0 lg:pt-0">
                     <button
                       onClick={() => openStipends(internship)}
-                      className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95"
+                      className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95 shadow-sm hover:shadow"
                     >
                       View Stipends
                     </button>
@@ -267,31 +284,30 @@ const StipendDetails = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        overlayClassName="fixed inset-0 bg-black/60 z-50 flex items-center justify-center"
-        className="bg-white rounded-2xl max-w-6xl w-full mx-4 outline-none shadow-2xl flex flex-col"
-        style={{ content: { maxHeight: "90vh" } }}
+        overlayClassName="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4"
+        className="bg-white rounded-2xl max-w-6xl w-full mx-auto outline-none shadow-2xl flex flex-col max-h-[92vh]"
       >
         {/* Modal Header */}
-        <div className="flex-shrink-0 flex justify-between px-8 pt-8 pb-4 border-b border-slate-100">
+        <div className="flex-shrink-0 flex justify-between px-5 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-slate-100">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">{selectedInternship?.jobTitle}</h2>
-            <p className="text-sm text-slate-500 mt-0.5">{selectedInternship?.companyName}</p>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">{selectedInternship?.jobTitle}</h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{selectedInternship?.companyName}</p>
           </div>
-          <button onClick={closeModal} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+          <button onClick={closeModal} className="text-slate-400 hover:text-slate-700 text-xl leading-none p-1">✕</button>
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 py-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-5 sm:py-6">
 
           {/* KPI Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="bg-slate-50 border rounded-lg p-4">
-              <p className="text-sm text-slate-500">Submissions</p>
-              <p className="text-2xl font-semibold">{stipends.length}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5 sm:mb-6">
+            <div className="bg-slate-50 border rounded-xl sm:rounded-lg p-4">
+              <p className="text-xs sm:text-sm text-slate-500">Submissions</p>
+              <p className="text-xl sm:text-2xl font-semibold">{stipends.length}</p>
             </div>
-            <div className="bg-slate-50 border rounded-lg p-4">
-              <p className="text-sm text-slate-500">Stipend Amount</p>
-              <p className="text-lg font-medium text-teal-700">
+            <div className="bg-slate-50 border rounded-xl sm:rounded-lg p-4">
+              <p className="text-xs sm:text-sm text-slate-500">Stipend Amount</p>
+              <p className="text-base sm:text-lg font-medium text-teal-700">
                 {selectedInternship?.compensationDetails?.amount
                   ? `${selectedInternship.compensationDetails.amount} ${selectedInternship.compensationDetails.currency}`
                   : "N/A"}
@@ -300,9 +316,10 @@ const StipendDetails = () => {
             <CSVLink
               data={filtered}
               filename={`stipends-${selectedInternship?.jobTitle}.csv`}
-              className="flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium text-sm transition"
+              className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-sm min-h-[50px] sm:min-h-0 py-3.5 sm:py-3 px-5 shadow-sm hover:shadow transition-all"
             >
-              Export CSV
+              <Download size={18} className="shrink-0" />
+              <span>Export CSV</span>
             </CSVLink>
           </div>
 

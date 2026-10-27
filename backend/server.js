@@ -281,6 +281,20 @@ io.on("connection", (socket) => {
     if (internshipId) socket.join(internshipId);
   });
 
+  socket.on("typing", ({ internshipId, senderId } = {}) => {
+    if (internshipId) {
+      socket.to(`chat_${internshipId}`).emit("userTyping", { internshipId, senderId });
+      socket.to(String(internshipId)).emit("userTyping", { internshipId, senderId });
+    }
+  });
+
+  socket.on("stopTyping", ({ internshipId, senderId } = {}) => {
+    if (internshipId) {
+      socket.to(`chat_${internshipId}`).emit("userStopTyping", { internshipId, senderId });
+      socket.to(String(internshipId)).emit("userStopTyping", { internshipId, senderId });
+    }
+  });
+
   socket.on("sendMessage", async (msg = {}) => {
     try {
       const Chat = require("./models/webapp-models/ChatModel");

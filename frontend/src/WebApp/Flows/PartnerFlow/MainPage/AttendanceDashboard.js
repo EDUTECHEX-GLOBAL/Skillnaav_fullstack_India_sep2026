@@ -3,7 +3,7 @@ import axios from '../../../../api/axiosInstance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faUserCheck, faCog, faCheckCircle, faTimesCircle,
-    faEdit, faCalendarCheck, faClock, faPlayCircle, faStopCircle
+    faEdit, faCalendarCheck, faClock, faPlayCircle, faStopCircle, faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { format, parseISO } from 'date-fns';
 
@@ -20,7 +20,12 @@ export default function AttendanceDashboard({
     const [selectedTimetableDate, setSelectedTimetableDate] = useState(null);
 
     const [markOfflineModal, setMarkOfflineModal] = useState({ open: false, timetableDate: null, students: [] });
-    const [overrideModal, setOverrideModal] = useState({ open: false, studentId: null, timetableDate: null, isPresent: true, reason: '' });
+    const [overrideModal, setOverrideModal] = useState({ open: false, studentId: null, studentName: '', timetableDate: null, isPresent: true, reason: '' });
+    const [alertInfo, setAlertInfo] = useState(null);
+
+    const showAlert = (message, type = "success", title) => {
+        setAlertInfo({ message, type, title });
+    };
     const [settingsModal, setSettingsModal] = useState({ open: false, minAttendancePercent: 80, onlineMinDurationMins: 0, trackingEnabled: true });
     const [studentSummaryModal, setStudentSummaryModal] = useState({ open: false, student: null });
 
@@ -81,7 +86,7 @@ export default function AttendanceDashboard({
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
             await fetchDashboard(false);  // ← awaited so OTP data arrives before spinner stops
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to start session');
+            showAlert(err.response?.data?.message || err.response?.data?.error || 'Failed to start session', 'error', 'Session Notice');
         } finally {
             setStartingSession(false);
         }
@@ -117,7 +122,7 @@ export default function AttendanceDashboard({
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
             await fetchDashboard(false);  // ← awaited
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to end session');
+            showAlert(err.response?.data?.message || err.response?.data?.error || 'Failed to end session', 'error', 'Session Notice');
         } finally {
             setEndingSession(false);
         }
@@ -135,8 +140,9 @@ export default function AttendanceDashboard({
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
             setSettingsModal({ ...settingsModal, open: false });
             fetchDashboard(false);
+            showAlert('Attendance settings updated successfully.', 'success');
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to update settings');
+            showAlert(err.response?.data?.message || err.response?.data?.error || 'Failed to update settings', 'error');
         }
     };
 
@@ -151,8 +157,9 @@ export default function AttendanceDashboard({
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
             setMarkOfflineModal({ open: false, timetableDate: null, students: [] });
             fetchDashboard(false);
+            showAlert('Offline attendance saved successfully.', 'success');
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to mark offline attendance');
+            showAlert(err.response?.data?.message || err.response?.data?.error || 'Failed to mark offline attendance', 'error');
         }
     };
 
@@ -167,10 +174,11 @@ export default function AttendanceDashboard({
                 reason: overrideModal.reason,
                 partnerId
             }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-            setOverrideModal({ open: false, studentId: null, timetableDate: null, isPresent: true, reason: '' });
+            setOverrideModal({ open: false, studentId: null, studentName: '', timetableDate: null, isPresent: true, reason: '' });
             fetchDashboard(false);
+            showAlert('Attendance overridden successfully.', 'success');
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to override attendance');
+            showAlert(err.response?.data?.message || err.response?.data?.error || 'Failed to override attendance', 'error');
         }
     };
 
@@ -279,7 +287,7 @@ export default function AttendanceDashboard({
                                                 <span
                                                     className="text-indigo-600 hover:underline cursor-pointer text-xs"
                                                     title={slot.sectionSummary}
-                                                    onClick={(e) => { e.stopPropagation(); alert(slot.sectionSummary); }}
+                                                    onClick={(e) => { e.stopPropagation(); showAlert(slot.sectionSummary, 'info', 'Session Summary'); }}
                                                 >
                                                     View Summary
                                                 </span>
@@ -501,7 +509,8 @@ export default function AttendanceDashboard({
                                                     onClick={() => setOverrideModal({
                                                         open: true,
                                                         studentId: student.studentId,
-                                                        timetableDate: selectedTimetableDate.split('T')[0],
+                                                        studentName: student.name,
+                                                        timetableDate: selectedTimetableDate,
                                                         isPresent: !isPres,
                                                         reason: ""
                                                     })}
@@ -695,7 +704,8 @@ export default function AttendanceDashboard({
                                                                     setOverrideModal({
                                                                         open: true,
                                                                         studentId: studentSummaryModal.student.studentId,
-                                                                        timetableDate: sess.date.split('T')[0],
+                                                                        studentName: studentSummaryModal.student.name,
+                                                                        timetableDate: sess.date,
                                                                         isPresent: !sess.isPresent,
                                                                         reason: ''
                                                                     });
@@ -812,7 +822,14 @@ export default function AttendanceDashboard({
             {overrideModal.open && (
                 <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-                        <h3 className="text-lg font-bold mb-4 text-gray-900 border-b pb-2">Override Attendance</h3>
+                        <div className="border-b pb-3 mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">Override Attendance</h3>
+                            {overrideModal.studentName && (
+                                <p className="text-xs text-indigo-600 font-semibold mt-0.5">
+                                    Student: {overrideModal.studentName}
+                                </p>
+                            )}
+                        </div>
                         <form onSubmit={handleOverrideSubmit}>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -883,6 +900,62 @@ export default function AttendanceDashboard({
                                 <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">Save Settings</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* ═══ CENTERED FEEDBACK / NOTIFICATION MODAL ═══ */}
+            {alertInfo && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-[3px] animate-fade-in"
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={() => setAlertInfo(null)}
+                >
+                    <div
+                        className="bg-white rounded-[24px] shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] w-full max-w-sm p-6 sm:p-7 border border-slate-100 flex flex-col items-center text-center transform transition-all scale-100 animate-zoom-in"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm ${
+                                alertInfo.type === 'error'
+                                    ? 'bg-rose-50 text-rose-500 border border-rose-100'
+                                    : alertInfo.type === 'info'
+                                    ? 'bg-sky-50 text-sky-600 border border-sky-100'
+                                    : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                            }`}
+                        >
+                            <FontAwesomeIcon
+                                icon={
+                                    alertInfo.type === 'error'
+                                        ? faTimesCircle
+                                        : alertInfo.type === 'info'
+                                        ? faInfoCircle
+                                        : faCheckCircle
+                                }
+                                className="text-2xl"
+                            />
+                        </div>
+
+                        <h3 className="text-lg font-bold text-slate-900 mb-1.5">
+                            {alertInfo.title ||
+                                (alertInfo.type === 'error'
+                                    ? 'Error'
+                                    : alertInfo.type === 'info'
+                                    ? 'Notice'
+                                    : 'Success')}
+                        </h3>
+
+                        <p className="text-sm text-slate-600 mb-6 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
+                            {alertInfo.message}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={() => setAlertInfo(null)}
+                            className="w-full py-2.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold shadow-lg shadow-violet-200/70 transition-all focus:outline-none focus:ring-4 focus:ring-violet-500/20 active:scale-[0.98]"
+                        >
+                            OK
+                        </button>
                     </div>
                 </div>
             )}
