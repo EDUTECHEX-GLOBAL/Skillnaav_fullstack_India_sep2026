@@ -1,9 +1,11 @@
 import React from "react";
 import edutechexlogo from "../assets/Edutech-logo.png";
+import { useNavigate } from "react-router-dom";
 
 const TryforFree = () => {
+  const navigate = useNavigate();
   const handleOptionClick = (path) => {
-    window.open(path, "_blank");
+    navigate(path);
   };
 
   return (
@@ -15,48 +17,63 @@ const TryforFree = () => {
         justifyContent: "center",
         minHeight: "100vh",
         textAlign: "center",
-        padding: "20px",
+        padding: "20px 16px",
         fontFamily: "'Poppins', sans-serif",
+        backgroundColor: "#ffffff",
         color: "#333",
+        boxSizing: "border-box",
       }}
     >
+      {/* Revamp Edutechex Logo */}
       <img
         src={edutechexlogo}
-        style={{ width: "175px", height: "auto", marginBottom: "20px" }}
+        style={{
+          width: "155px",
+          maxWidth: "80%",
+          height: "auto",
+          marginBottom: "16px",
+          objectFit: "contain",
+        }}
         alt="Edutechex Logo"
       />
 
       <h1
         style={{
-          marginBottom: "20px",
-          fontWeight: "700",
-          color: "#004d40",
-          fontSize: "2.5rem",
+          marginBottom: "8px",
+          fontWeight: "800",
+          color: "#014438",
+          fontSize: "2.1rem",
+          letterSpacing: "-0.5px",
+          lineHeight: 1.2,
         }}
       >
         Try for Free
       </h1>
+
       <h2
         style={{
-          marginBottom: "30px",
+          marginBottom: "22px",
           color: "#00796b",
-          fontSize: "1.25rem",
+          fontSize: "1.05rem",
+          fontWeight: "500",
+          lineHeight: 1.3,
         }}
       >
         Choose how you'd like to continue:
       </h2>
+
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "15px",
-          maxWidth: "450px",
+          gap: "12px",
+          maxWidth: "380px",
           width: "100%",
           margin: "0 auto",
         }}
       >
         <button
-          style={buttonStyle("#7F56D9")}
+          style={buttonStyle("#744bd8")}
           onClick={() => handleOptionClick("/user")}
           onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
@@ -65,7 +82,7 @@ const TryforFree = () => {
         </button>
 
         <button
-          style={buttonStyle("#009688")}
+          style={buttonStyle("#008e7b")}
           onClick={() => handleOptionClick("/partner")}
           onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
@@ -74,7 +91,7 @@ const TryforFree = () => {
         </button>
 
         <button
-          style={buttonStyle("#81d4fa")}
+          style={buttonStyle("#70caf6")}
           onClick={() => handleOptionClick("/admin/login")}
           onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
@@ -82,9 +99,8 @@ const TryforFree = () => {
           Continue as Admin
         </button>
 
-        {/* ✅ New School Admin Button */}
         <button
-          style={buttonStyle("#FF7043")} // Orange tone for School Admin
+          style={buttonStyle("#fa6738")}
           onClick={() => handleOptionClick("/schooladmin/login")}
           onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
@@ -96,19 +112,21 @@ const TryforFree = () => {
   );
 };
 
-// Common button style generator
+// Common button style generator matching revamp choose-role exactly
 const buttonStyle = (bgColor) => ({
   backgroundColor: bgColor,
-  color: "#fff",
+  color: "#ffffff",
   border: "none",
-  padding: "15px 25px",
+  padding: "12px 20px",
   fontWeight: "600",
   borderRadius: "10px",
   cursor: "pointer",
-  fontSize: "1rem",
-  transition: "background-color 0.3s, transform 0.2s",
-  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  fontSize: "0.95rem",
+  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
   outline: "none",
+  width: "100%",
+  letterSpacing: "0.2px",
 });
 
 export default TryforFree;

@@ -183,47 +183,68 @@ export const validateInstitutionId = (id) => {
 // Stricter email regex requiring valid format
 export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
 
-// Common recognized gTLDs
-const VALID_GTLDS = new Set([
+// Researched primary and generic TLDs (.com, .org, .net, .edu, etc.)
+const VALID_PRIMARY_TLDS = new Set([
   "com", "org", "net", "edu", "gov", "mil", "int", "info", "biz",
-  "io", "co", "ai", "me", "app", "dev", "tech", "xyz", "site", "online",
-  "store", "cloud", "digital", "link", "pro", "live", "space", "club",
-  "global", "life", "world", "agency", "media", "solutions", "studio",
-  "design", "academy", "center", "support", "zone", "team", "hub",
-  "work", "works", "email", "group", "news", "today", "website", "press",
-  "blog", "mobi", "asia", "jobs", "travel", "museum", "coop", "name",
+  "io", "ai", "tech", "dev", "app", "cloud", "digital", "pro", "global",
+  "online", "site", "store", "media", "agency", "solutions", "software",
+  "academy", "university", "school", "institute", "network", "center",
+  "team", "hub", "space", "me", "live", "link", "club", "life", "world",
+  "design", "support", "zone", "work", "works", "email", "group", "news",
+  "today", "website", "press", "blog", "mobi", "asia", "jobs", "travel",
   "expert", "guru", "care", "city", "services", "community", "consulting",
-  "software", "security", "capital", "partners", "ventures", "network",
-  "vip", "direct", "top", "run", "shop", "market", "school", "university"
+  "capital", "partners", "ventures", "vip", "direct", "top", "run", "shop", "market"
 ]);
 
-// Valid 2-letter country code TLDs (ISO 3166-1 alpha-2)
+// Researched multi-part TLDs (critical for India, UK, Australia, etc.)
+const VALID_MULTIPART_TLDS = new Set([
+  // India (.in)
+  "co.in", "org.in", "net.in", "edu.in", "ac.in", "gov.in", "res.in", "gen.in",
+  // United Kingdom (.uk)
+  "co.uk", "org.uk", "ac.uk", "gov.uk", "net.uk", "me.uk", "ltd.uk", "plc.uk",
+  // Australia (.au)
+  "com.au", "net.au", "org.au", "edu.au", "gov.au",
+  // New Zealand (.nz)
+  "co.nz", "org.nz", "ac.nz", "edu.nz", "govt.nz", "net.nz",
+  // South Africa (.za)
+  "co.za", "org.za", "ac.za", "edu.za", "gov.za", "net.za",
+  // Singapore (.sg)
+  "com.sg", "edu.sg", "gov.sg", "net.sg", "org.sg",
+  // Brazil (.br)
+  "com.br", "org.br", "edu.br", "gov.br",
+  // Mexico (.mx)
+  "com.mx", "org.mx", "edu.mx", "gob.mx",
+  // Malaysia (.my)
+  "com.my", "edu.my", "org.my", "gov.my"
+]);
+
+// Valid country code TLDs (ISO 3166-1 alpha-2) - excluding standalone 'co' which is abused by temporary services or mistyped for .com/.co.in
 const VALID_CCTLDS = new Set([
-  "ac", "ad", "ae", "af", "ag", "ai", "al", "am", "ao", "aq", "ar", "as", "at", "au", "aw", "ax", "az",
-  "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bw", "by", "bz",
-  "ca", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "cr", "cu", "cv", "cw", "cx", "cy", "cz",
-  "de", "dj", "dk", "dm", "do", "dz", "ec", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm", "fo", "fr",
-  "ga", "gb", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy",
-  "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "io", "iq", "ir", "is", "it",
-  "je", "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz",
-  "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mf", "mg", "mh", "mk",
-  "ml", "mm", "mn", "mo", "mp", "mq", "mr", "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz",
-  "na", "nc", "ne", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om",
-  "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "ps", "pt", "pw", "py", "qa",
-  "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sk", "sl", "sm", "sn", "so", "sr",
-  "ss", "st", "sv", "sx", "sy", "sz", "tc", "td", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tr", "tt",
-  "tv", "tw", "tz", "ua", "ug", "uk", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu",
-  "ws", "ye", "yt", "za", "zm", "zw"
+  "in", "us", "uk", "ca", "au", "de", "fr", "jp", "sg", "ae", "sa", "nz",
+  "br", "mx", "za", "nl", "se", "ch", "es", "it", "ie", "no", "dk", "fi",
+  "be", "at", "pl", "pt", "gr", "ru", "kr", "hk", "tw", "my", "id", "th",
+  "vn", "ph", "pk", "bd", "lk", "np", "ng", "ke", "eg", "ar", "cl",
+  "pe", "is", "lu", "cz", "hu", "ro", "bg", "hr", "sk", "si", "lt", "lv",
+  "ee", "cy", "mt", "tr", "qa", "kw", "om", "bh", "cr", "pa", "uy"
 ]);
 
-// Common mistyped TLDs with their intended replacement
+// Common mistyped TLDs with their intended replacement (researched)
 const INVALID_TLD_SUGGESTIONS = {
+  // .co / .com typos
+  co: "com",
   con: "com", cmo: "com", cpm: "com", coom: "com", comm: "com",
   col: "com", vom: "com", xom: "com", ocm: "com", kom: "com",
-  cm: "com", om: "com",
-  met: "net", ner: "net", ney: "net",
-  ogr: "org", orgg: "org",
-  eddu: "edu"
+  cm: "com", om: "com", copm: "com", cpn: "com", cok: "com",
+  // .in typos
+  inn: "in", im: "in", iin: "in", kn: "in", jn: "in", ib: "in",
+  // .org typos
+  ogr: "org", orgg: "org", og: "org", or: "org", prg: "org", irg: "org",
+  // .net typos
+  met: "net", ner: "net", ney: "net", nt: "net", neet: "net",
+  // .edu typos
+  eddu: "edu", eduu: "edu", deu: "edu", eud: "edu", ed: "edu",
+  // .io / .ai typos
+  iio: "io", oi: "io", aai: "ai", ia: "ai"
 };
 
 // Recognized provider TLD extensions including .in, .org, .net, .com, .co.in, etc.
@@ -243,11 +264,24 @@ const MAJOR_PROVIDERS = {
   aol: "aol"
 };
 
-// Disposable/throwaway temporary domains
+// Disposable, temporary burner email domains (including hiringview.co/com, goldvester.co/com, and temp-mail.org networks)
 const DISPOSABLE_EMAIL_DOMAINS = new Set([
-  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
-  "throwawaymail.com", "yopmail.com", "sharklasers.com", "trashmail.com",
-  "dispostable.com", "fake.com", "test.com", "example.com"
+  "goldvester.co", "goldvester.com",
+  "hiringview.co", "hiringview.com",
+  "mailinator.com", "mailinator.net", "mailinator2.com",
+  "tempmail.com", "temp-mail.org", "temp-mail.io", "temp-mail.de",
+  "10minutemail.com", "10minutemail.net", "10minemail.com",
+  "guerrillamail.com", "guerrillamail.net", "guerrillamail.org", "guerrillamail.biz", "grr.la", "sharklasers.com",
+  "throwawaymail.com", "yopmail.com", "yopmail.fr", "yopmail.net",
+  "trashmail.com", "trashmail.net", "trashmail.org", "trashmail.me",
+  "dispostable.com", "getairmail.com", "dropmail.me",
+  "fake.com", "test.com", "example.com", "example.org", "example.net",
+  "mohmal.com", "burnermail.io", "getnada.com", "inboxkitten.com",
+  "fakemailgenerator.com", "crazymailing.com", "maildrop.cc", "mytemp.email",
+  "generator.email", "emailfake.com",
+  "chacuo.net", "crossmail.site", "crossmail.co", "dpptd.com", "fawkesmail.com", "fawkesmail.co", "greencafe24.com",
+  "armyspy.com", "cuvox.de", "dayrep.com", "dayrep.co", "einrot.com", "einrot.co", "fleckens.hu",
+  "gustr.com", "jourrapide.com", "rhyta.com", "superrito.com", "teleworm.us", "tinypm.com"
 ]);
 
 /**
@@ -317,7 +351,7 @@ export function findDomainSuggestion(domain) {
 }
 
 /**
- * Suggests an entire email fix if there is a typo in the domain.
+ * Suggests an entire email fix if there is a typo in the domain or TLD.
  * @param {string} email
  * @returns {string|null} Full corrected email or null
  */
@@ -326,6 +360,18 @@ export function getEmailSuggestion(email) {
   const parts = email.trim().toLowerCase().split("@");
   if (parts.length !== 2) return null;
   const [localPart, domain] = parts;
+
+  // 1. Check if TLD has a known typo (e.g. .con -> .com, .inn -> .in, .ogr -> .org)
+  const domainParts = domain.split(".");
+  if (domainParts.length >= 2) {
+    const tld = domainParts[domainParts.length - 1];
+    if (INVALID_TLD_SUGGESTIONS[tld]) {
+      const fixedParts = [...domainParts.slice(0, -1), INVALID_TLD_SUGGESTIONS[tld]];
+      return `${localPart}@${fixedParts.join(".")}`;
+    }
+  }
+
+  // 2. Check provider suggestions (e.g. gamil.com -> gmail.com, gmail.co -> gmail.com)
   const suggestedDomain = findDomainSuggestion(domain);
   if (suggestedDomain && suggestedDomain !== domain) {
     return `${localPart}@${suggestedDomain}`;
@@ -379,39 +425,51 @@ export const validateEmail = (email) => {
 
   const domainParts = domain.split(".");
   if (domainParts.length < 2) {
-    return "Please enter a valid domain (e.g., example.com).";
+    return "Please enter a valid domain (e.g., example.com, example.in, example.org).";
   }
 
   const tld = domainParts[domainParts.length - 1];
+  const multiPartTld = domainParts.length >= 3
+    ? `${domainParts[domainParts.length - 2]}.${domainParts[domainParts.length - 1]}`
+    : null;
 
-  // Common TLD typos (.con -> .com, etc.)
+  // 1. Block disposable / temporary email addresses (e.g. hiringview.co, goldvester.co, tempmail)
+  if (DISPOSABLE_EMAIL_DOMAINS.has(domain)) {
+    return "Disposable or temporary email addresses are not permitted. Please use a valid personal or work email (e.g., .com, .in, .org).";
+  }
+
+  // 2. Disallow standalone .co extension (except legitimate multi-part extensions like .co.in, .co.uk)
+  if (tld === "co" && !multiPartTld) {
+    return "Invalid domain ending '.co'. Please enter a valid email address (e.g., .com, .in, .org, .co.in).";
+  }
+
+  // 3. Common TLD typos (.con -> .com, .inn -> .in, .ogr -> .org, etc.)
   if (INVALID_TLD_SUGGESTIONS[tld]) {
     return `Invalid domain ending '.${tld}'. Did you mean '.${INVALID_TLD_SUGGESTIONS[tld]}'?`;
   }
 
-  // Disposable domain block
-  if (DISPOSABLE_EMAIL_DOMAINS.has(domain)) {
-    return "Disposable or temporary email addresses are not permitted.";
-  }
-
-  // Provider typo & suggestion (e.g. gmmmail.co -> gmail.com)
+  // 3. Provider typo & suggestion (e.g. gmmmail.co -> gmail.com, gmail.co -> gmail.com)
   const suggestedDomain = findDomainSuggestion(domain);
   if (suggestedDomain && suggestedDomain !== domain) {
     return `Invalid domain '${domain}'. Did you mean '${localPart}@${suggestedDomain}'?`;
   }
 
-  // TLD validity check against valid ccTLDs and gTLDs
-  const isValidTLD = VALID_CCTLDS.has(tld) || VALID_GTLDS.has(tld);
+  // 4. TLD validity check against valid multipart TLDs, primary TLDs, and ccTLDs
+  const isValidTLD =
+    (multiPartTld && VALID_MULTIPART_TLDS.has(multiPartTld)) ||
+    VALID_PRIMARY_TLDS.has(tld) ||
+    VALID_CCTLDS.has(tld);
+
   if (!isValidTLD) {
     return `Invalid domain ending '.${tld}'. Please enter a valid email address (e.g., .com, .in, .org).`;
   }
 
-  // Strict regex check for full email pattern
+  // 5. Strict regex check for full email pattern
   if (!EMAIL_REGEX.test(cleaned)) {
     return "Please enter a valid email address (e.g., name@example.com).";
   }
 
-  // Gmail specific length rule (Google enforces 6-30 chars for Gmail usernames)
+  // 6. Gmail specific length rule (Google enforces 6-30 chars for Gmail usernames)
   if (domain.startsWith("gmail.") && (localPart.length < 6 || localPart.length > 30)) {
     return "Gmail usernames must be between 6 and 30 characters.";
   }

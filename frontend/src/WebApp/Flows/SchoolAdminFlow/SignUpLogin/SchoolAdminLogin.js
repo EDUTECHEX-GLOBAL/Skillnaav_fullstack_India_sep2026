@@ -6,6 +6,7 @@ import SchoolAdminForgotPassword from "./SchoolAdminForgotPassword";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "../../../../api/axiosInstance";
 import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
+import { validateEmail } from "../../../../utils/validators";
 
 const SchoolAdminLogin = () => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -27,6 +28,12 @@ const SchoolAdminLogin = () => {
 
     if (!credentials.email || !credentials.password) {
       setErrorMessage("Please enter both email and password.");
+      return;
+    }
+
+    const emailErr = validateEmail(credentials.email);
+    if (emailErr) {
+      setErrorMessage(emailErr);
       return;
     }
 

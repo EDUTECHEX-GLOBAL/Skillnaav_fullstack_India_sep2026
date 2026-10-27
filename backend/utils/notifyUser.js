@@ -1,29 +1,20 @@
 //File: notifyUser.js
 
 const { transporter } = require("./mailer");
-const fs = require("fs");
-const path = require("path");
 
 const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
   try {
-    let logoPath = null;
-    const logoFileName = 'Edutech-logo.png'; 
-    const resolvedLogoPath = path.resolve(__dirname, `../../frontend/src/assets/${logoFileName}`);
-    try {
-      fs.accessSync(resolvedLogoPath, fs.constants.R_OK);
-      logoPath = resolvedLogoPath;
-    } catch (e) {
-      console.error("Could not load logo for email:", e);
-    }
+    // Hosted logo URL for edutechex_logo-250w.png (high availability Cloudflare CDN, supported by Gmail proxy)
+    const logoUrl = "https://iili.io/nv1ZJxS.png";
 
     // Always use the Edutechex template wrapper
     const htmlContent = `
       <div style="background-color: #f3f4f6; padding: 20px 10px;">
         <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
           
-          <header style="text-align: center; padding: 25px 20px 15px; background-color: #ffffff;">
-            ${logoPath ? `<img src="cid:edutechex_logo" alt="Edutechex Logo" style="width: 120px; max-width: 100%; height: auto;" />` : '<h1 style="color: #1a1a2e; margin: 0;">Edutechex</h1>'}
-          </header>
+          <div style="text-align: center; padding: 25px 20px 15px; background-color: #ffffff;">
+            <img src="${logoUrl}" alt="Edutechex Logo" width="170" style="width: 170px; max-width: 100%; height: auto; display: inline-block; border: 0; outline: none; text-decoration: none;" />
+          </div>
 
           <!-- Gradient Line -->
           <div style="height: 4px; background: linear-gradient(90deg, #f97316, #d946ef);"></div>
@@ -43,16 +34,8 @@ const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
       </div>
     `;
 
+    // Only forward caller-specified attachments (do not attach logo as file attachment)
     const finalAttachments = [...attachments];
-
-    // Add logo as inline CID attachment so Gmail and other clients render it
-    if (logoPath) {
-      finalAttachments.push({
-        filename: logoFileName,
-        path: logoPath,
-        cid: 'edutechex_logo',
-      });
-    }
 
     const senderEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || "skillnaav@gmail.com";
     const replyToEmail = process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER || "skillnaav@gmail.com";

@@ -10,6 +10,7 @@ const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_SIGNUP_CLIENT_ID);
 const Partnerwebapp = require("../models/webapp-models/partnerModel");
 const SchoolAdmin = require("../models/webapp-models/schoolAdmin/SchoolAdminModel");
+const { validateEmailBackend } = require("../utils/emailValidator");
 
 
 const POSTAL_CODE_PATTERNS = {
@@ -652,10 +653,10 @@ const getPremiumStatus = asyncHandler(async (req, res) => {
 // Send verification code for signup
 const sendSignupVerificationCode = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  const emailErr = validateEmailBackend(email);
+  if (emailErr) {
     res.status(400);
-    throw new Error("Invalid email format.");
+    throw new Error(emailErr);
   }
   const existingUser = await Userwebapp.findOne({ email });
 
@@ -880,10 +881,10 @@ const verifyOTPOnly = asyncHandler(async (req, res) => {
 const sendAgeGateVerificationCode = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  const emailErr = validateEmailBackend(email);
+  if (emailErr) {
     res.status(400);
-    throw new Error("Invalid email format.");
+    throw new Error(emailErr);
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();

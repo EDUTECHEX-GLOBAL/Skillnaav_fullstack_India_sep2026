@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, Search, UserCog, CheckCircle2, AlertTriangle, Calendar, UsersRound, UserPlus, X, Trash2 } from 'lucide-react';
 
 import axios from 'axios';
+import { validateEmail } from '../../../../../utils/validators';
 
 const settingsApi = axios.create({ baseURL: process.env.REACT_APP_API_BASE || "" });
 
@@ -116,6 +117,11 @@ export const AdminRolesSettings = () => {
 
   const createAdmin = async (event) => {
     event.preventDefault();
+    const emailErr = validateEmail(newAdmin.email);
+    if (emailErr) {
+      setNotice({ type: "error", text: emailErr });
+      return;
+    }
     setCreating(true);
     setNotice(null);
     try {

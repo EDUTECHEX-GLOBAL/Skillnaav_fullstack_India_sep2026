@@ -38,20 +38,23 @@ export default function Footer() {
 
     try {
       await axios.post("/api/contact/subscribe", { email });
+      setEmailError("");
+      setIsSubscribed(true);
+      // Bug-020: Clear field after successful subscribe
+      setEmail("");
+
+      // Bug-021: Revert to "Subscribe" after ~3 seconds
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setIsSubscribed(false);
+      }, 3000);
     } catch (err) {
       console.error("Subscription request error:", err);
+      const serverMsg = err.response?.data?.message;
+      if (serverMsg) {
+        setEmailError(serverMsg);
+      }
     }
-
-    setEmailError("");
-    setIsSubscribed(true);
-    // Bug-020: Clear field after successful subscribe
-    setEmail("");
-
-    // Bug-021: Revert to "Subscribe" after ~3 seconds
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setIsSubscribed(false);
-    }, 3000);
   };
 
   const handleEmailChange = (e) => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
+import { validateEmail } from "../../../../utils/validators";
 
 const OTP_EXPIRY_SECONDS = 300; // 5 minutes
 const RESEND_COOLDOWN_SECONDS = 60; // 1 minute
@@ -250,6 +251,13 @@ const PartnerForgotPasswordModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setMessage("");
     setError("");
+
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setError(emailErr);
+      return;
+    }
+
     setIsLoading(true);
     try {
       // ✅ Partner-specific endpoint

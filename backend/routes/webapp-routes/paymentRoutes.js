@@ -191,26 +191,7 @@ router.post("/razorpay/verify", authenticate, async (req, res) => {
     }
     const premiumExpiration = new Date(baseTime + days * MS_PER_DAY);
 
-    // Generate PDF Invoice
-    let invoiceId = null;
-    let invoiceUrl = null;
-    try {
-      const invoiceResult = await generateAndUploadInvoice({
-        userName: userDoc.name || "Student",
-        userEmail: userDoc.email,
-        planType,
-        amount: parsedAmount,
-        transactionId: captureId,
-        orderId: razorpay_order_id,
-        date: new Date()
-      });
-      invoiceId = invoiceResult.invoiceId;
-      invoiceUrl = invoiceResult.pdfUrl;
-    } catch (invErr) {
-      console.error("⚠️ Failed to generate invoice PDF:", invErr.message);
-    }
-
-    // Atomically mark the Processing record as Success
+    // Atomically mark the Processing record as Success immediately
     await Payment.findOneAndUpdate(
       { orderId: razorpay_order_id, status: "Processing" },
       {
@@ -218,8 +199,6 @@ router.post("/razorpay/verify", authenticate, async (req, res) => {
           paymentId: captureId,
           status: "Success",
           premiumExpiration,
-          invoiceId,
-          invoiceUrl,
           updatedAt: new Date(),
         },
       }
@@ -245,23 +224,51 @@ router.post("/razorpay/verify", authenticate, async (req, res) => {
 
     console.log(`✅ Premium activated for user ${userId} until ${premiumExpiration.toISOString()}`);
 
-    // Send confirmation email (non-fatal)
-    try {
-      await sendPaymentConfirmationEmail({
-        email: userDoc.email,
-        name: userDoc.name || "Student",
-        planType,
-        amount: parsedAmount,
-        captureId,
-        orderId: razorpay_order_id,
-        premiumExpiration,
-        invoiceUrl,
-      });
-    } catch (emailErr) {
-      console.error("⚠️ Failed to send confirmation email:", emailErr.message);
-    }
+    // Return success response to user immediately (<100ms)
+    res.json({ success: true, user: updatedUser });
 
-    return res.json({ success: true, user: updatedUser });
+    // Generate PDF invoice and send email in background (non-blocking)
+    setImmediate(async () => {
+      let invoiceId = null;
+      let invoiceUrl = null;
+      try {
+        const invoiceResult = await generateAndUploadInvoice({
+          userName: userDoc.name || "Student",
+          userEmail: userDoc.email,
+          planType,
+          amount: parsedAmount,
+          transactionId: captureId,
+          orderId: razorpay_order_id,
+          date: new Date()
+        });
+        invoiceId = invoiceResult.invoiceId;
+        invoiceUrl = invoiceResult.pdfUrl;
+
+        await Payment.findOneAndUpdate(
+          { orderId: razorpay_order_id },
+          { $set: { invoiceId, invoiceUrl } }
+        );
+      } catch (invErr) {
+        console.error("⚠️ Failed to generate invoice PDF in background:", invErr.message);
+      }
+
+      try {
+        await sendPaymentConfirmationEmail({
+          email: userDoc.email,
+          name: userDoc.name || "Student",
+          planType,
+          amount: parsedAmount,
+          captureId,
+          orderId: razorpay_order_id,
+          premiumExpiration,
+          invoiceUrl,
+        });
+      } catch (emailErr) {
+        console.error("⚠️ Failed to send confirmation email in background:", emailErr.message);
+      }
+    });
+
+    return;
   } catch (err) {
     // Ensure we mark any Pending/Processing record as Failed on unexpected errors
     try {

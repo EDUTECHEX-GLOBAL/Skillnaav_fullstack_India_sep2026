@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "../../../../api/axiosInstance";
 import registrationImg from "../../../../assets-webapp/school-reg.png";
+import { validateEmail } from "../../../../utils/validators";
 
 const SchoolAdminRegister = () => {
   const [formData, setFormData] = useState({
@@ -30,8 +31,9 @@ const SchoolAdminRegister = () => {
   const sendOtp = async () => {
     const { email, password, confirmPassword } = formData;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrorMessage("Please enter a valid email.");
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setErrorMessage(emailErr);
       return;
     }
 

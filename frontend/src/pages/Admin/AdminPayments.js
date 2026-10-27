@@ -14,23 +14,20 @@ import {
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import axios from "../../api/axiosInstance";
-import { initialPayments, initialStats } from "./mockAdminData";
+import { initialPayments } from "./mockAdminData";
+import Pagination from "./Pagination";
+import AdminDatePicker from "./AdminDatePicker";
 
 const AdminPayments = () => {
   const [payments, setPayments] = useState(initialPayments);
   const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(() =>
-    new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    })
-  );
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
@@ -45,13 +42,6 @@ const AdminPayments = () => {
       const res = await axios.get("/api/contact/payments");
       if (res.data?.payments && Array.isArray(res.data.payments) && res.data.payments.length > 0) {
         setPayments(res.data.payments);
-        setLastUpdated(
-          new Date().toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          })
-        );
       }
     } catch (err) {
       console.error("Failed to load live payments:", err);
@@ -104,6 +94,7 @@ const AdminPayments = () => {
     setAppliedEnd(endDate);
     setAppliedType(selectedType);
     setAppliedStatus(selectedStatus);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
@@ -117,6 +108,7 @@ const AdminPayments = () => {
     setAppliedEnd("");
     setAppliedType("All");
     setAppliedStatus("All");
+    setCurrentPage(1);
   };
 
   // Filtered payments
@@ -143,6 +135,13 @@ const AdminPayments = () => {
     });
   }, [payments, appliedType, appliedStatus, appliedStart, appliedEnd]);
 
+  const paginatedPayments = useMemo(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredPayments.length / pageSize));
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+    const start = (safePage - 1) * pageSize;
+    return filteredPayments.slice(start, start + pageSize);
+  }, [filteredPayments, currentPage, pageSize]);
+
   // Dynamic Metrics based on filtered items
   const statsMetrics = useMemo(() => {
     const totalCollected = filteredPayments
@@ -158,19 +157,22 @@ const AdminPayments = () => {
   }, [filteredPayments]);
 
   const exportToExcel = () => {
-    const exportData = filteredPayments.map((p, index) => ({
-      "#": index + 1,
-      "Order ID": p.orderId,
-      "Payment ID": p.paymentId,
-      "Customer Name": p.payerName,
-      "Customer Email": p.payerEmail,
-      "Account Type": p.type,
-      Plan: p.plan,
-      "Amount (INR)": p.amount,
-      Status: p.status,
-      Date: p.date,
-      "Invoice URL": p.invoiceUrl || "N/A",
-    }));
+    const listToExport = filteredPayments.length > 0 ? filteredPayments : payments;
+    const exportData = listToExport.map((p, index) => {
+      return {
+        "#": index + 1,
+        "Order ID": p.orderId,
+        "Payment ID": p.paymentId,
+        "Customer Name": p.payerName,
+        "Customer Email": p.payerEmail,
+        "Account Type": p.type,
+        Plan: p.plan,
+        "Amount (INR)": p.amount,
+        Status: p.status,
+        Date: p.date,
+        "Invoice URL": p.invoiceUrl || "N/A",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Payments");
@@ -209,11 +211,11 @@ const AdminPayments = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => fetchLivePayments(true)}
             disabled={loading}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
             title="Refresh payments from database"
           >
             <FaSyncAlt
@@ -226,7 +228,7 @@ const AdminPayments = () => {
 
           <button
             onClick={exportToExcel}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
           >
             <FaFileExcel className="text-sm" />
             <span>Export to Excel</span>
@@ -235,82 +237,84 @@ const AdminPayments = () => {
       </div>
 
       {/* Summary Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">
             <FaRupeeSign className="text-emerald-600" />
-            <span>Total Collected</span>
+            <span className="truncate">Total Collected</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">
+          <div className="text-xl sm:text-2xl font-black text-slate-800">
             ₹{statsMetrics.totalCollected.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Verified platform payments</div>
+          <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate">Verified platform payments</div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+        <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">
             <FaCheckCircle className="text-blue-600" />
-            <span>Successful Orders</span>
+            <span className="truncate">Successful Orders</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">
+          <div className="text-xl sm:text-2xl font-black text-slate-800">
             {statsMetrics.successCount}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Completed transactions</div>
+          <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate">Completed transactions</div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+        <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">
             <FaClock className="text-amber-500" />
-            <span>Pending Orders</span>
+            <span className="truncate">Pending Orders</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">
+          <div className="text-xl sm:text-2xl font-black text-slate-800">
             {statsMetrics.pendingCount}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Incomplete checkout sessions</div>
+          <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate">Incomplete checkout sessions</div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+        <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">
             <FaFileInvoiceDollar className="text-purple-600" />
-            <span>Average Order Value</span>
+            <span className="truncate">Average Order</span>
           </div>
-          <div className="text-2xl font-black text-slate-800">
+          <div className="text-xl sm:text-2xl font-black text-slate-800">
             ₹{statsMetrics.avgAmount.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Per successful transaction</div>
+          <div className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate">Per successful transaction</div>
         </div>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-sm">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleFilter();
           }}
-          className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
+          className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end"
         >
           {/* Date Range */}
           <div className="md:col-span-5">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
               Date Range
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="Start date"
-                className="w-full pl-3 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-slate-400 text-xs">→</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="End date"
-                className="w-full pl-3 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="relative flex-1 min-w-0">
+                <span className="sm:hidden text-[10px] text-slate-400 font-medium block mb-0.5">Start Date</span>
+                <AdminDatePicker
+                  value={startDate}
+                  onChange={setStartDate}
+                  placeholder="Start date"
+                />
+              </div>
+              <span className="hidden sm:inline text-slate-400 text-xs font-bold text-center">→</span>
+              <div className="relative flex-1 min-w-0">
+                <span className="sm:hidden text-[10px] text-slate-400 font-medium block mb-0.5">End Date</span>
+                <AdminDatePicker
+                  value={endDate}
+                  onChange={setEndDate}
+                  placeholder="End date"
+                />
+              </div>
             </div>
           </div>
 
@@ -423,7 +427,7 @@ const AdminPayments = () => {
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
             >
               <FaUndo size={10} />
               <span>Reset</span>
@@ -435,7 +439,7 @@ const AdminPayments = () => {
       {/* Payments Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700 border-collapse">
+          <table className="min-w-[850px] w-full text-left text-xs text-slate-700 border-collapse">
             <thead className="bg-[#0284c7] text-white uppercase text-[11px] font-bold tracking-wider">
               <tr>
                 <th className="py-3 px-3 w-10 text-center">#</th>
@@ -467,10 +471,12 @@ const AdminPayments = () => {
                   </td>
                 </tr>
               ) : (
-                filteredPayments.map((p, index) => (
+                paginatedPayments.map((p, index) => {
+                  const rowNum = (Math.min(currentPage, Math.max(1, Math.ceil(filteredPayments.length / pageSize))) - 1) * pageSize + index + 1;
+                  return (
                   <tr key={p.id || index} className="hover:bg-sky-50/50 transition-colors">
                     <td className="py-3 px-3 font-semibold text-slate-500 text-center">
-                      {index + 1}
+                      {rowNum}
                     </td>
                     <td className="py-3 px-3 font-mono">
                       <div className="font-bold text-slate-800 text-[11px]">{p.orderId}</div>
@@ -530,11 +536,20 @@ const AdminPayments = () => {
                       )}
                     </td>
                   </tr>
-                ))
+                );
+                })
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          totalItems={filteredPayments.length}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="transactions"
+        />
       </div>
     </div>
   );

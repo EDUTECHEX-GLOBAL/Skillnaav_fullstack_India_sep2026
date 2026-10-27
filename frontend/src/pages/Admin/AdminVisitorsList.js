@@ -3,22 +3,19 @@ import { FaFileExcel, FaFilter, FaUndo, FaSyncAlt } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import axios from "../../api/axiosInstance";
 import { initialVisitors } from "./mockAdminData";
+import Pagination from "./Pagination";
+import AdminDatePicker from "./AdminDatePicker";
 
 const AdminVisitorsList = () => {
   const [visitors, setVisitors] = useState(initialVisitors);
   const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(() =>
-    new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    })
-  );
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const [appliedStart, setAppliedStart] = useState("");
   const [appliedEnd, setAppliedEnd] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch live visitors from MongoDB
   const fetchLiveVisitors = useCallback(async (isManual = false) => {
@@ -27,13 +24,6 @@ const AdminVisitorsList = () => {
       const res = await axios.get("/api/contact/visitors");
       if (res.data?.visitors && Array.isArray(res.data.visitors) && res.data.visitors.length > 0) {
         setVisitors(res.data.visitors);
-        setLastUpdated(
-          new Date().toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          })
-        );
       }
     } catch (err) {
       console.error("Failed to load live visitors:", err);
@@ -60,6 +50,7 @@ const AdminVisitorsList = () => {
     }
     setAppliedStart(startDate);
     setAppliedEnd(endDate);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
@@ -67,6 +58,7 @@ const AdminVisitorsList = () => {
     setEndDate("");
     setAppliedStart("");
     setAppliedEnd("");
+    setCurrentPage(1);
   };
 
   const filteredVisitors = useMemo(() => {
@@ -78,16 +70,26 @@ const AdminVisitorsList = () => {
     });
   }, [visitors, appliedStart, appliedEnd]);
 
+  const paginatedVisitors = useMemo(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredVisitors.length / pageSize));
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+    const start = (safePage - 1) * pageSize;
+    return filteredVisitors.slice(start, start + pageSize);
+  }, [filteredVisitors, currentPage, pageSize]);
+
   const exportToExcel = () => {
-    const exportData = filteredVisitors.map((v, index) => ({
-      "#": index + 1,
-      "IP Address": v.ipAddress,
-      City: v.city,
-      Region: v.region,
-      "Postal Code": v.postalCode,
-      Country: v.country,
-      "Visited On": v.visitedOn,
-    }));
+    const listToExport = filteredVisitors.length > 0 ? filteredVisitors : visitors;
+    const exportData = listToExport.map((v, index) => {
+      return {
+        "#": index + 1,
+        "IP Address": v.ipAddress,
+        City: v.city,
+        Region: v.region,
+        "Postal Code": v.postalCode,
+        Country: v.country,
+        "Visited On": v.visitedOn,
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Visitors");
@@ -104,23 +106,19 @@ const AdminVisitorsList = () => {
               VISITORS LIST
             </h1>
           </div>
-          <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
-            <span>
-              {appliedStart || appliedEnd
-                ? `Filtered: Showing ${filteredVisitors.length} of ${visitors.length} visitors`
-                : `${visitors.length} visitors found`}
-            </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-400">Updated: {lastUpdated}</span>
+          <p className="text-xs text-slate-500 mt-1">
+            {appliedStart || appliedEnd
+              ? `Filtered: Showing ${filteredVisitors.length} of ${visitors.length} visitors`
+              : `${visitors.length} visitors found`}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => fetchLiveVisitors(true)}
             disabled={loading}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
             title="Refresh live visitor logs"
           >
             <FaSyncAlt
@@ -133,7 +131,7 @@ const AdminVisitorsList = () => {
           <button
             type="button"
             onClick={exportToExcel}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
           >
             <FaFileExcel className="text-sm" />
             <span>Export to Excel</span>
@@ -142,34 +140,36 @@ const AdminVisitorsList = () => {
       </div>
 
       {/* Filter Row */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-sm">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleFilter();
           }}
-          className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
+          className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end"
         >
           <div className="md:col-span-6">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
               Date Range
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="Start date"
-                className="w-full pl-3 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-slate-400 text-xs">→</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="End date"
-                className="w-full pl-3 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="relative flex-1 min-w-0">
+                <span className="sm:hidden text-[10px] text-slate-400 font-medium block mb-0.5">Start Date</span>
+                <AdminDatePicker
+                  value={startDate}
+                  onChange={setStartDate}
+                  placeholder="Start date"
+                />
+              </div>
+              <span className="hidden sm:inline text-slate-400 text-xs font-bold text-center">→</span>
+              <div className="relative flex-1 min-w-0">
+                <span className="sm:hidden text-[10px] text-slate-400 font-medium block mb-0.5">End Date</span>
+                <AdminDatePicker
+                  value={endDate}
+                  onChange={setEndDate}
+                  placeholder="End date"
+                />
+              </div>
             </div>
           </div>
 
@@ -185,7 +185,7 @@ const AdminVisitorsList = () => {
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
             >
               <FaUndo size={10} />
               <span>Reset</span>
@@ -197,7 +197,7 @@ const AdminVisitorsList = () => {
       {/* Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700 border-collapse">
+          <table className="min-w-[720px] w-full text-left text-xs text-slate-700 border-collapse">
             <thead className="bg-[#0284c7] text-white uppercase text-[11px] font-bold tracking-wider">
               <tr>
                 <th className="py-3 px-3 w-10 text-center">#</th>
@@ -227,13 +227,15 @@ const AdminVisitorsList = () => {
                   </td>
                 </tr>
               ) : (
-                filteredVisitors.map((v, index) => (
+                paginatedVisitors.map((v, index) => {
+                  const rowNum = (Math.min(currentPage, Math.max(1, Math.ceil(filteredVisitors.length / pageSize))) - 1) * pageSize + index + 1;
+                  return (
                   <tr
                     key={v.id || index}
                     className="hover:bg-sky-50/50 transition-colors"
                   >
                     <td className="py-3 px-3 font-semibold text-slate-500 text-center">
-                      {index + 1}
+                      {rowNum}
                     </td>
                     <td className="py-3 px-3 font-mono font-medium text-slate-800">
                       {v.ipAddress}
@@ -250,11 +252,20 @@ const AdminVisitorsList = () => {
                       {v.visitedOn}
                     </td>
                   </tr>
-                ))
+                );
+                })
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          totalItems={filteredVisitors.length}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="visitors"
+        />
       </div>
     </div>
   );

@@ -21,6 +21,50 @@ const {
 
 const User = require("../models/userModel");
 
+// Disposable & temporary burner email domains
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  "goldvester.co", "goldvester.com",
+  "hiringview.co", "hiringview.com",
+  "mailinator.com", "mailinator.net", "mailinator2.com",
+  "tempmail.com", "temp-mail.org", "temp-mail.io", "temp-mail.de",
+  "10minutemail.com", "10minutemail.net", "10minemail.com",
+  "guerrillamail.com", "guerrillamail.net", "guerrillamail.org", "guerrillamail.biz", "grr.la", "sharklasers.com",
+  "throwawaymail.com", "yopmail.com", "yopmail.fr", "yopmail.net",
+  "trashmail.com", "trashmail.net", "trashmail.org", "trashmail.me",
+  "dispostable.com", "getairmail.com", "dropmail.me",
+  "fake.com", "test.com", "example.com", "example.org", "example.net",
+  "mohmal.com", "burnermail.io", "getnada.com", "inboxkitten.com",
+  "fakemailgenerator.com", "crazymailing.com", "maildrop.cc", "mytemp.email",
+  "generator.email", "emailfake.com",
+  "chacuo.net", "crossmail.site", "crossmail.co", "dpptd.com", "fawkesmail.com", "fawkesmail.co", "greencafe24.com",
+  "armyspy.com", "cuvox.de", "dayrep.com", "dayrep.co", "einrot.com", "einrot.co", "fleckens.hu",
+  "gustr.com", "jourrapide.com", "rhyta.com", "superrito.com", "teleworm.us", "tinypm.com"
+]);
+
+function validateEmailBackend(email) {
+  if (!email || typeof email !== "string") return "Email is required.";
+  const cleaned = email.trim().toLowerCase();
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
+  if (!EMAIL_REGEX.test(cleaned) || cleaned.includes("..")) {
+    return "Please provide a valid email address.";
+  }
+  const parts = cleaned.split("@");
+  if (parts.length !== 2) return "Please provide a valid email address.";
+  const domain = parts[1];
+  if (DISPOSABLE_EMAIL_DOMAINS.has(domain)) {
+    return "Disposable or temporary email addresses are not permitted. Please use a valid personal or work email (e.g., .com, .in, .org).";
+  }
+  const domainParts = domain.split(".");
+  if (domainParts.length < 2) return "Please provide a valid email address.";
+  const tld = domainParts[domainParts.length - 1];
+  const multiPartTld = domainParts.length >= 3 ? `${domainParts[domainParts.length - 2]}.${domainParts[domainParts.length - 1]}` : null;
+  if (tld === "co" && !multiPartTld) {
+    return "Invalid domain ending '.co'. Please enter a valid email address (e.g., .com, .in, .org, .co.in).";
+  }
+  if (tld.length < 2) return "Please provide a valid email address with a standard domain (e.g., .com, .in, .org).";
+  return null;
+}
+
 // ─── Cache ────────────────────────────────────────────────────────────────────
 // TTL 10 min, check every 2 min.  Store the pre-serialised string so we only
 // JSON.stringify once per cache population, not once per request.
@@ -293,15 +337,12 @@ router.post("/", asyncHandler(async (req, res) => {
   if (!name || typeof name !== "string" || !name.trim()) {
     return res.status(400).json({ success: false, message: "Name is required." });
   }
-  if (!email || typeof email !== "string" || !email.trim()) {
-    return res.status(400).json({ success: false, message: "Email is required." });
+  const emailErr = validateEmailBackend(email);
+  if (emailErr) {
+    return res.status(400).json({ success: false, message: emailErr });
   }
 
   const cleanedEmail = email.trim().toLowerCase();
-  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
-  if (!EMAIL_REGEX.test(cleanedEmail) || cleanedEmail.includes("..")) {
-    return res.status(400).json({ success: false, message: "Please provide a valid email address." });
-  }
 
   if (!message || typeof message !== "string" || !message.trim()) {
     return res.status(400).json({ success: false, message: "Message is required." });
@@ -362,15 +403,12 @@ router.get("/dashboard-stats", asyncHandler(async (req, res) => {
 
 router.post("/subscribe", asyncHandler(async (req, res) => {
   const { email, name = "" } = req.body;
-  if (!email || typeof email !== "string" || !email.trim()) {
-    return res.status(400).json({ success: false, message: "Email is required." });
+  const emailErr = validateEmailBackend(email);
+  if (emailErr) {
+    return res.status(400).json({ success: false, message: emailErr });
   }
 
   const cleanedEmail = email.trim().toLowerCase();
-  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
-  if (!EMAIL_REGEX.test(cleanedEmail) || cleanedEmail.includes("..")) {
-    return res.status(400).json({ success: false, message: "Please provide a valid email address." });
-  }
 
   const db = mongoose.connection.db;
   const existing = await db.collection("subscribers").findOne({ email: cleanedEmail });

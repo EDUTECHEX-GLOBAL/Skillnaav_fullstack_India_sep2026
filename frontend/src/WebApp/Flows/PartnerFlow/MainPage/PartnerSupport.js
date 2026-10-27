@@ -2996,7 +2996,11 @@ const PartnerSupport = () => {
                         setNewTicket({ ...newTicket, priority: "" });
                         setPriorityOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-50 transition-colors"
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        !newTicket.priority
+                          ? "bg-[#bae6fd] text-gray-900 font-medium"
+                          : "text-gray-900 hover:bg-gray-50"
+                      }`}
                     >
                       Select Priority
                     </button>
@@ -3010,16 +3014,13 @@ const PartnerSupport = () => {
                             setNewTicket({ ...newTicket, priority: p.id });
                             setPriorityOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors ${
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                             isSelected
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
-                              : "text-gray-700 hover:bg-gray-50"
+                              ? "bg-[#bae6fd] text-gray-900 font-medium"
+                              : "text-gray-900 hover:bg-gray-50"
                           }`}
                         >
-                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${p.color}`}>
-                            {p.name}
-                          </span>
-                          {isSelected && <FaCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                          {p.name}
                         </button>
                       );
                     })}

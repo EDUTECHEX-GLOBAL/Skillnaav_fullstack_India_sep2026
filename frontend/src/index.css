@@ -10,8 +10,8 @@
 @tailwind utilities;
 
 /* ── Global input / textarea defaults ───────────────────────────────────────── */
-input:not(.input-reset):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="image"]),
-textarea {
+input:not(.input-reset):not([class*="Mui"]):not([class*="mui"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="image"]):not([type="color"]),
+textarea:not([class*="Mui"]):not([class*="mui"]) {
   height: 40px;
   border: 1px solid gray;
   width: 100%;
@@ -19,7 +19,7 @@ textarea {
   margin-top: 20px;
 }
 
-input:not(.input-reset):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="image"]):focus {
+input:not(.input-reset):not([class*="Mui"]):not([class*="mui"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="image"]):not([type="color"]):focus {
   outline: none;
   border: 2px solid rgb(86, 65, 65);
 }
@@ -42,6 +42,48 @@ input[type="radio"] {
 }
 input[type="radio"] {
   border-radius: 9999px;
+}
+
+/* ── Color input styling ─────────────────────────────────────────────────────── */
+input[type="color"] {
+  height: 2rem !important;
+  width: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  outline: none !important;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0 !important;
+  border-radius: 9999px !important;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 9999px !important;
+}
+input[type="color"]::-moz-color-swatch {
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 9999px !important;
+}
+
+
+/* ── Material-UI input reset ────────────────────────────────────────────────── */
+.MuiInputBase-root input,
+.MuiInputBase-input,
+.MuiOutlinedInput-input,
+input[class*="MuiInputBase-input"],
+input[class*="MuiOutlinedInput-input"] {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  margin-top: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ── Input reset for input groups / nested inputs ───────────────────────────── */

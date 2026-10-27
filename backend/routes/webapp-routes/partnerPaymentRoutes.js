@@ -181,36 +181,17 @@ router.post("/razorpay/verify", partnerProtect, async (req, res) => {
       baseTime + days * 24 * 60 * 60 * 1000
     );
 
-    // Generate PDF Invoice (non-fatal)
-    let invoiceId  = null;
-    let invoiceUrl = null;
-    try {
-      const invoiceResult = await generateAndUploadInvoice({
-        userName:      partnerDoc.name || "Partner",
-        userEmail:     partnerDoc.email,
-        planType,
-        amount:        parsedAmount,
-        transactionId: captureId,
-        orderId:       razorpay_order_id,
-        date:          new Date()
-      });
-      invoiceId  = invoiceResult.invoiceId;
-      invoiceUrl = invoiceResult.pdfUrl;
-    } catch (invErr) {
-      console.error("⚠️ Failed to generate partner invoice PDF:", invErr.message);
-    }
-
+    // 1. Immediately update payment record to Success
     await PartnerPayment.findOneAndUpdate(
       { orderId: razorpay_order_id },
       {
         paymentId: captureId,
         status: "Success",
         premiumExpiration,
-        invoiceId,
-        invoiceUrl,
       }
     );
 
+    // 2. Immediately activate partner premium
     const updatedPartner = await Partner.findByIdAndUpdate(
       partnerId,
       {
@@ -221,7 +202,7 @@ router.post("/razorpay/verify", partnerProtect, async (req, res) => {
       { new: true }
     ).select("-password");
 
-    // ✅ SOCKET EMIT
+    // 3. Socket emit
     const io = getIO();
     if (io) {
       io.to(`partner_${partnerId}`).emit("partner:updated", {
@@ -232,23 +213,51 @@ router.post("/razorpay/verify", partnerProtect, async (req, res) => {
       });
     }
 
-    // Optional email
-    try {
-      await sendPaymentConfirmationEmail({
-        email:             partnerDoc.email,
-        name:              partnerDoc.name || "Partner",
-        planType,
-        amount:            parsedAmount,
-        captureId,
-        orderId:           razorpay_order_id,
-        premiumExpiration,
-        invoiceUrl,
-      });
-    } catch (e) {
-      console.warn("Email failed:", e.message);
-    }
+    // 4. Return success to the client IMMEDIATELY so verification is instant (<100ms)
+    res.json({ success: true, partner: updatedPartner });
 
-    return res.json({ success: true, partner: updatedPartner });
+    // 5. Generate PDF Invoice and send confirmation email in background (non-blocking)
+    setImmediate(async () => {
+      let invoiceId = null;
+      let invoiceUrl = null;
+      try {
+        const invoiceResult = await generateAndUploadInvoice({
+          userName:      partnerDoc.name || "Partner",
+          userEmail:     partnerDoc.email,
+          planType,
+          amount:        parsedAmount,
+          transactionId: captureId,
+          orderId:       razorpay_order_id,
+          date:          new Date()
+        });
+        invoiceId  = invoiceResult.invoiceId;
+        invoiceUrl = invoiceResult.pdfUrl;
+
+        await PartnerPayment.findOneAndUpdate(
+          { orderId: razorpay_order_id },
+          { invoiceId, invoiceUrl }
+        );
+      } catch (invErr) {
+        console.error("⚠️ Failed to generate partner invoice PDF in background:", invErr.message);
+      }
+
+      try {
+        await sendPaymentConfirmationEmail({
+          email:             partnerDoc.email,
+          name:              partnerDoc.name || "Partner",
+          planType,
+          amount:            parsedAmount,
+          captureId,
+          orderId:           razorpay_order_id,
+          premiumExpiration,
+          invoiceUrl,
+        });
+      } catch (e) {
+        console.warn("⚠️ Background email failed:", e.message);
+      }
+    });
+
+    return;
   } catch (err) {
     await PartnerPayment.findOneAndUpdate(
       { orderId: razorpay_order_id, status: { $in: ["Pending", "Processing"] } },

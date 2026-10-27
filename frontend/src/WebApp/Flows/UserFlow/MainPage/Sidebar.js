@@ -23,29 +23,24 @@ import { userFlowQuestions } from "../../../../components/FeedbackModal/question
 
 const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const [showSectors, setShowSectors] = useState(false);
+  const [showAllSectors, setShowAllSectors] = useState(false);
   const { selectedTab, handleSelectTab } = useTabContext();
   const navigate = useNavigate();
   const { openFeedback } = useFeedback();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const topSectors = [
-    { id: "advanced-ai", name: "Advanced AI & Autonomous Systems" },
-    { id: "quantum-computing", name: "Quantum Computing & Next-Gen Computing" },
-    { id: "climate-tech", name: "Climate Tech & Carbon Capture" },
-    { id: "biotech", name: "Biotechnology & Synthetic Biology" },
-    { id: "materials-science", name: "Advanced Materials Science" },
-    { id: "space-exploration", name: "Space Exploration & Commercial Space" },
-    {
-      id: "neurotechnology",
-      name: "Neurotechnology & Brain-Computer Interfaces",
-    },
-    { id: "precision-agriculture", name: "Precision Agriculture & AgriTech" },
-    {
-      id: "advanced-robotics",
-      name: "Advanced Robotics & Human-Machine Collaboration",
-    },
-    { id: "renewable-energy", name: "Renewable Energy & Grid Innovation" },
-    { id: "architecture-built-environment", name: "Architecture & Built Environment" },
+    { id: "advanced-ai", name: "AI & Autonomous" },
+    { id: "quantum-computing", name: "Quantum Computing" },
+    { id: "climate-tech", name: "Climate Tech" },
+    { id: "biotech", name: "Biotech" },
+    { id: "materials-science", name: "Materials Science" },
+    { id: "space-exploration", name: "Space Exploration" },
+    { id: "neurotechnology", name: "Neurotechnology" },
+    { id: "precision-agriculture", name: "Precision Agriculture" },
+    { id: "advanced-robotics", name: "Advanced Robotics" },
+    { id: "renewable-energy", name: "Renewable Energy" },
+    { id: "architecture-built-environment", name: "Architecture & Built Env" },
   ];
 
   const menuItems = [
@@ -241,17 +236,35 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
                   </button>
 
                   {showSectors && (
-                    <ul className="pl-8 mt-2 space-y-1">
-                      {topSectors.map((sector, index) => (
-                        <li
-                          key={index}
-                          className="text-sm text-gray-600 hover:text-[#7520A9] cursor-pointer"
-                          onClick={() => handleTabClick(sector.id)}
+                    <div className="mt-1">
+                      <div className="divide-y divide-gray-100">
+                        {(showAllSectors ? topSectors : topSectors.slice(0, 5)).map(
+                          (sector) => (
+                            <button
+                              key={sector.id}
+                              type="button"
+                              onClick={() => handleTabClick(sector.id)}
+                              className={`w-full text-left py-2.5 px-3 text-xs sm:text-[13px] transition-colors rounded-md ${
+                                selectedTab === sector.id
+                                  ? "bg-[#F0DEFD] text-[#7520A9] font-semibold"
+                                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                              }`}
+                            >
+                              {sector.name}
+                            </button>
+                          )
+                        )}
+                      </div>
+                      <div className="pt-2 px-1 pb-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowAllSectors(!showAllSectors)}
+                          className="w-full py-1.5 px-4 text-xs font-medium text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-colors text-center"
                         >
-                          • {sector.name}
-                        </li>
-                      ))}
-                    </ul>
+                          {showAllSectors ? "Show less" : "Show all sectors"}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

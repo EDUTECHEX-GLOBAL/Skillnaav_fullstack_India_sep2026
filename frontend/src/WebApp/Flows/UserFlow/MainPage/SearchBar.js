@@ -304,6 +304,7 @@ const SearchBar = () => {
               placeholder="Search for internships and jobs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              inputProps={{ className: "input-reset" }}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "0.5rem",
@@ -323,6 +324,11 @@ const SearchBar = () => {
                 },
                 "& .MuiInputBase-input": {
                   padding: "8px 12px",
+                  border: "none !important",
+                  borderWidth: "0 !important",
+                  outline: "none !important",
+                  boxShadow: "none !important",
+                  marginTop: "0 !important",
                 },
               }}
               InputProps={{

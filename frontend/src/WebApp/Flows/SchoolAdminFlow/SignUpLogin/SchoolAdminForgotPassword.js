@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "../../../../api/axiosInstance";
+import { validateEmail } from "../../../../utils/validators";
 
 const OTP_EXPIRY_SECONDS = 300;
 const OTP_RESEND_COOLDOWN_SECONDS = 60; //1 minute -- 18-08-2026
@@ -283,6 +284,13 @@ const SchoolAdminForgotPassword = ({ onClose }) => {
     e.preventDefault();
     setMessage("");
     setError("");
+
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setError(emailErr);
+      return;
+    }
+
     setIsLoading(true);
 
     try {

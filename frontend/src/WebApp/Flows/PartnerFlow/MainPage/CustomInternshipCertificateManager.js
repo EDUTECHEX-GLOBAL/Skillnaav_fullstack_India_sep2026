@@ -666,20 +666,51 @@ const CustomInternshipCertificateManager = () => {
                               )}
                             </button>
                           ))}
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 shrink-0">
+                          <label
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors cursor-pointer shrink-0 select-none shadow-sm"
+                            title="Choose custom text color"
+                          >
                             <span className="text-xs font-semibold text-slate-600">
                               Custom:
                             </span>
-                            <div className="relative">
+                            <div
+                              className="relative w-8 h-8 rounded-full border border-slate-300 shadow-sm overflow-hidden flex items-center justify-center shrink-0 transition-transform hover:scale-105"
+                              style={{ backgroundColor: textColor }}
+                            >
                               <input
                                 type="color"
                                 value={textColor}
                                 onChange={(e) => setTextColor(e.target.value)}
-                                className="w-7 h-7 sm:w-8 sm:h-8 p-0.5 bg-transparent border-0 rounded cursor-pointer"
+                                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: "100%",
+                                  height: "100%",
+                                  opacity: 0,
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  margin: 0,
+                                  border: "none",
+                                }}
                                 title="Choose custom color"
                               />
+                              {!colorOptions.some(
+                                (c) =>
+                                  c.value.toLowerCase() ===
+                                  textColor?.toLowerCase()
+                              ) && (
+                                <CheckCircle2
+                                  size={15}
+                                  className="absolute inset-0 m-auto text-white drop-shadow-sm pointer-events-none"
+                                />
+                              )}
                             </div>
-                          </div>
+                            <span className="text-xs font-mono font-medium text-slate-600 uppercase">
+                              {textColor}
+                            </span>
+                          </label>
                         </div>
                       </div>
 

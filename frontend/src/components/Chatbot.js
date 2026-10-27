@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import axiosInstance from "../api/axiosInstance";
 import { LiveAvatarSession, SessionEvent } from "@heygen/liveavatar-web-sdk";
 import aiAssistantBg from "../assets/Aiassistant.png";
-import assistantVideo from "../assets/edutechex-corporate-assistant-body-only-v3-silent_1.mp4";
+import assistantVideo from "../assets/edutechex_final.mp4";
 import chatbotIcon from "../assets-webapp/chat-bot.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Minimize2, X, ChevronUp, Mic, MicOff, MoreHorizontal, MessageSquare, PhoneOff } from 'lucide-react';

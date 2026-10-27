@@ -132,6 +132,7 @@ export default function PartnerPremiumPage() {
     
     setSelectedPlanType(plan.title);
     setSelectedIndex(idx);
+    setProcessingMessage("Preparing checkout…");
     setIsProcessing(true);
 
     try {
@@ -157,6 +158,7 @@ export default function PartnerPremiumPage() {
         description: `${plan.title} Subscription`,
         order_id: orderRes.id,
         handler: async function (response) {
+          setProcessingMessage("Verifying payment…");
           setIsProcessing(true);
           try {
             // 3. Verify Payment
@@ -231,6 +233,7 @@ export default function PartnerPremiumPage() {
         setSelectedPlanType(null);
         setAlert({ type: "error", message: response.error.description || "Payment failed" });
       });
+      setIsProcessing(false);
       rzp.open();
     } catch (err) {
       console.error("Payment flow error:", err);
@@ -310,7 +313,7 @@ export default function PartnerPremiumPage() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
             </svg>
-            <p className="text-gray-700 font-medium">Verifying payment…</p>
+            <p className="text-gray-700 font-medium">{processingMessage}</p>
             <p className="text-gray-400 text-sm">Do not close this window</p>
           </div>
         </div>

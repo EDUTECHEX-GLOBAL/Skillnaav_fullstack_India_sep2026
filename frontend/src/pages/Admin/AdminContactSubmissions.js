@@ -3,7 +3,6 @@ import {
   FaFileExcel,
   FaFilter,
   FaUndo,
-  FaCalendarAlt,
   FaChevronDown,
   FaCheck,
   FaSyncAlt,
@@ -11,20 +10,17 @@ import {
 import * as XLSX from "xlsx";
 import axios from "../../api/axiosInstance";
 import { initialContacts } from "./mockAdminData";
+import Pagination from "./Pagination";
+import AdminDatePicker from "./AdminDatePicker";
 
 const AdminContactSubmissions = () => {
   const [contacts, setContacts] = useState(initialContacts);
   const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(() =>
-    new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    })
-  );
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [areaInterest, setAreaInterest] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -81,13 +77,6 @@ const AdminContactSubmissions = () => {
             };
           });
           setContacts(formatted);
-          setLastUpdated(
-            new Date().toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })
-          );
         }
       } catch (err) {
         console.error("Failed to load live contacts, retaining initialContacts:", err);
@@ -133,6 +122,7 @@ const AdminContactSubmissions = () => {
     setAppliedStart(startDate);
     setAppliedEnd(endDate);
     setAppliedArea(areaInterest);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
@@ -143,6 +133,7 @@ const AdminContactSubmissions = () => {
     setAppliedStart("");
     setAppliedEnd("");
     setAppliedArea("All");
+    setCurrentPage(1);
   };
 
   // Filter logic
@@ -162,19 +153,29 @@ const AdminContactSubmissions = () => {
     });
   }, [contacts, appliedArea, appliedStart, appliedEnd]);
 
+  const paginatedContacts = useMemo(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredContacts.length / pageSize));
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+    const start = (safePage - 1) * pageSize;
+    return filteredContacts.slice(start, start + pageSize);
+  }, [filteredContacts, currentPage, pageSize]);
+
   const exportToExcel = () => {
-    const exportData = filteredContacts.map((c, index) => ({
-      "#": index + 1,
-      "Full Name": c.fullName,
-      Email: c.email,
-      Organization: c.organization,
-      Country: c.country,
-      "Area of Interest": c.areaOfInterest,
-      "Project Stage": c.projectStage,
-      Phone: c.phone,
-      Message: c.message,
-      Date: c.date,
-    }));
+    const listToExport = filteredContacts.length > 0 ? filteredContacts : contacts;
+    const exportData = listToExport.map((c, index) => {
+      return {
+        "#": index + 1,
+        "Full Name": c.fullName,
+        Email: c.email,
+        Organization: c.organization,
+        Country: c.country,
+        "Area of Interest": c.areaOfInterest,
+        "Project Stage": c.projectStage,
+        Phone: c.phone,
+        Message: c.message,
+        Date: c.date,
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Contact_Submissions");
@@ -203,27 +204,27 @@ const AdminContactSubmissions = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Title & Export / Refresh */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight">
               CONTACT SUBMISSIONS
             </h1>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-0.5 sm:mt-1">
             {appliedStart || appliedEnd || (appliedArea && appliedArea !== "All")
               ? `Filtered: Showing ${filteredContacts.length} of ${contacts.length} entries`
               : `${contacts.length} entries found`}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => fetchLiveContacts(true)}
             disabled={loading}
-            className="group inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 hover:text-blue-600 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
             title="Refresh contacts from database"
           >
             <FaSyncAlt
@@ -236,7 +237,7 @@ const AdminContactSubmissions = () => {
 
           <button
             onClick={exportToExcel}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
           >
             <FaFileExcel className="text-sm" />
             <span>Export to Excel</span>
@@ -245,37 +246,35 @@ const AdminContactSubmissions = () => {
       </div>
 
       {/* Filter Row */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-sm">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleFilter();
           }}
-          className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
+          className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end"
         >
           {/* Date Range */}
           <div className="md:col-span-5">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
               Date Range
             </label>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="date"
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="relative flex-1 min-w-0">
+                <span className="sm:hidden text-[10px] text-slate-400 font-medium block mb-0.5">Start Date</span>
+                <AdminDatePicker
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={setStartDate}
                   placeholder="Start date"
-                  className="w-full pl-3 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <span className="text-slate-400 text-xs">→</span>
-              <div className="relative flex-1">
-                <input
-                  type="date"
+              <span className="hidden sm:inline text-slate-400 text-xs font-bold text-center">→</span>
+              <div className="relative flex-1 min-w-0">
+                <span className="sm:hidden text-[10px] text-slate-400 font-medium block mb-0.5">End Date</span>
+                <AdminDatePicker
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={setEndDate}
                   placeholder="End date"
-                  className="w-full pl-3 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -347,7 +346,7 @@ const AdminContactSubmissions = () => {
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
             >
               <FaUndo size={10} />
               <span>Reset</span>
@@ -359,7 +358,7 @@ const AdminContactSubmissions = () => {
       {/* Data Table */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700 border-collapse">
+          <table className="min-w-[820px] w-full text-left text-xs text-slate-700 border-collapse">
             <thead className="bg-[#0284c7] text-white uppercase text-[11px] font-bold tracking-wider">
               <tr>
                 <th className="py-3 px-3 w-10 text-center">#</th>
@@ -391,13 +390,15 @@ const AdminContactSubmissions = () => {
                   </td>
                 </tr>
               ) : (
-                filteredContacts.map((c, index) => (
+                paginatedContacts.map((c, index) => {
+                  const rowNum = (Math.min(currentPage, Math.max(1, Math.ceil(filteredContacts.length / pageSize))) - 1) * pageSize + index + 1;
+                  return (
                   <tr
                     key={c.id || index}
                     className="hover:bg-sky-50/50 transition-colors"
                   >
                     <td className="py-3 px-3 font-semibold text-slate-500 text-center">
-                      {index + 1}
+                      {rowNum}
                     </td>
                     <td className="py-3 px-3 font-bold text-slate-800 whitespace-nowrap">
                       {c.fullName}
@@ -440,11 +441,20 @@ const AdminContactSubmissions = () => {
                       {c.message}
                     </td>
                   </tr>
-                ))
+                );
+                })
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          totalItems={filteredContacts.length}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="submissions"
+        />
       </div>
     </div>
   );

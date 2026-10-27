@@ -1203,21 +1203,23 @@ const InternshipList = () => {
   return (
     <div className="font-poppins max-w-5xl mx-auto px-4 py-6">
       {/* ── Page Header ── */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-2.5">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">My Internships</h2>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+            My Internships
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
             Manage your posted internships and candidates
           </p>
         </div>
         {partnerData && (
           <div
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 whitespace-nowrap shrink-0 border shadow-xs ${
               partnerData.isPremium
                 ? partnerData.planType === "Premium Plus"
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-blue-100 text-blue-700"
-                : "bg-gray-100 text-gray-600"
+                  ? "bg-purple-50 text-purple-700 border-purple-200"
+                  : "bg-blue-50 text-blue-700 border-blue-200"
+                : "bg-gray-100 text-gray-600 border-gray-200"
             }`}
           >
             {partnerData.isPremium && (
@@ -1230,11 +1232,13 @@ const InternshipList = () => {
                 }
               />
             )}
-            {partnerData.planType === "Freemium"
-              ? "Free Plan"
-              : partnerData.planType}
+            <span>
+              {partnerData.planType === "Freemium"
+                ? "Free Plan"
+                : partnerData.planType}
+            </span>
             {partnerData.premiumExpiration && partnerData.isPremium && (
-              <span className="opacity-60 ml-1">
+              <span className="opacity-75 font-normal ml-0.5">
                 · Expires{" "}
                 {new Date(partnerData.premiumExpiration).toLocaleDateString()}
               </span>
@@ -1256,7 +1260,7 @@ const InternshipList = () => {
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder="Search by title, company, location…"
-            className="!mt-0 w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-400 transition"
+            className="!mt-0 w-full !h-10 pl-9 pr-9 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white placeholder-gray-400 transition shadow-xs"
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">

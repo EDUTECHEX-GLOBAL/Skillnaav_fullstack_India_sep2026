@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Carousel } from "antd";
 import HeroImage from "../assets/app_mockup_edutechex.png";
@@ -14,10 +15,11 @@ import { staticDiscoverData } from "../data/websiteContentData";
 const Gradient = "/Gradient.webp";
 
 const Discover = () => {
+  const navigate = useNavigate();
   const { edutechexData } = useSelector((state) => state.root);
 
   const handleButtonClick = () => {
-    window.open("/choose-role", "_blank");
+    navigate("/choose-role");
   };
 
   useEffect(() => {

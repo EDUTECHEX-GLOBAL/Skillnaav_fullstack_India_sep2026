@@ -5,11 +5,17 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
-import Loading from "../../../Warnings/Loading/Loading";
 import adminImage from "../../../../assets-webapp/partner.jpg";
+import { validateEmail } from "../../../../utils/validators";
 
 const validationSchema = Yup.object({
-  email: Yup.string().email("Invalid email address").required("Required"),
+  email: Yup.string()
+    .required("Email is required.")
+    .test("valid-email", function (value) {
+      const err = validateEmail(value);
+      if (err) return this.createError({ message: err });
+      return true;
+    }),
 });
 
 const AdminForgotPassword = () => {

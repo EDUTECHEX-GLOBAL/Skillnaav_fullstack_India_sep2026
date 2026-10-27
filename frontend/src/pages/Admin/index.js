@@ -6,6 +6,7 @@ import {
   FaUsers,
   FaSignOutAlt,
   FaBars,
+  FaTimes,
   FaSpinner,
   FaRupeeSign,
   FaBell,
@@ -30,7 +31,12 @@ const Loader = () => (
 
 const Admin = () => {
   const [selectedTab, setSelectedTab] = useState("Home");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationRef = useRef(null);
@@ -118,6 +124,13 @@ const Admin = () => {
     [selectedTab, dashboardItems]
   );
 
+  const handleSelectTab = (tabId) => {
+    setSelectedTab(tabId);
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("edutechexAdminSession");
     window.location.href = "/admin-login";
@@ -155,12 +168,27 @@ const Admin = () => {
   }
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] font-poppins overflow-hidden">
-      {/* Sidebar - Sleek reduced width */}
+    <div className="flex h-screen bg-[#f8fafc] font-poppins overflow-hidden relative">
+      {/* Mobile Backdrop Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar - Off-canvas drawer on mobile, collapsible on desktop */}
       <aside
-        className={`${
-          sidebarOpen ? "w-56 sm:w-60" : "w-16"
-        } bg-white border-r border-slate-200 transition-all duration-300 flex flex-col justify-between z-20 shadow-xs flex-shrink-0 font-poppins`}
+        className={`
+          fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out flex flex-col justify-between shadow-2xl md:shadow-xs font-poppins
+          ${
+            sidebarOpen
+              ? "translate-x-0 w-64 sm:w-60 md:w-56 lg:w-60"
+              : "-translate-x-full md:translate-x-0 md:w-16"
+          }
+          md:static md:z-20 md:flex-shrink-0
+        `}
       >
         <div>
           {/* Logo & Toggle Header */}
@@ -171,7 +199,7 @@ const Admin = () => {
                   <img
                     src={EdutechLogo}
                     alt="EDUTECHEX"
-                    className="h-[38px] sm:h-[42px] w-auto max-w-[160px] sm:max-w-[180px] object-contain ml-0.5 sm:ml-2"
+                    className="h-[36px] sm:h-[42px] w-auto max-w-[150px] sm:max-w-[170px] object-contain ml-0.5 sm:ml-2"
                   />
                 </div>
                 <button
@@ -180,11 +208,12 @@ const Admin = () => {
                   className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer flex-shrink-0"
                   title="Close sidebar"
                 >
-                  <FaBars size={14} />
+                  <FaTimes className="md:hidden" size={16} />
+                  <FaBars className="hidden md:block" size={14} />
                 </button>
               </>
             ) : (
-              <div className="w-full flex justify-center">
+              <div className="w-full hidden md:flex justify-center">
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(true)}
@@ -205,10 +234,10 @@ const Admin = () => {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setSelectedTab(item.id)}
+                  onClick={() => handleSelectTab(item.id)}
                   className={`w-full flex items-center ${
                     sidebarOpen ? "gap-2.5 px-3" : "justify-center px-0"
-                  } py-2 rounded-xl text-xs transition-all font-poppins ${
+                  } py-2.5 md:py-2 rounded-xl text-xs transition-all font-poppins ${
                     isActive
                       ? "bg-sky-100 text-sky-800 font-bold shadow-xs"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium"
@@ -232,7 +261,7 @@ const Admin = () => {
             onClick={handleLogout}
             className={`w-full flex items-center ${
               sidebarOpen ? "gap-2.5 px-3" : "justify-center px-0"
-            } py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer font-poppins`}
+            } py-2.5 md:py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer font-poppins`}
             title="Logout"
           >
             <FaSignOutAlt className="text-rose-500 text-sm flex-shrink-0" />
@@ -244,22 +273,30 @@ const Admin = () => {
       {/* Main Body */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden font-poppins">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-xs font-poppins">
-          {/* Left: Clean Active Title (No "Admin /") */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-base sm:text-lg font-bold text-slate-800 tracking-tight font-poppins">
+        <header className="h-14 sm:h-16 bg-white border-b border-slate-200 px-3.5 sm:px-6 flex items-center justify-between shadow-xs font-poppins flex-shrink-0">
+          {/* Left: Hamburger (mobile) + Active Title */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 -ml-1 text-slate-600 hover:text-sky-600 hover:bg-slate-100 rounded-lg transition cursor-pointer flex-shrink-0"
+              title="Open menu"
+            >
+              <FaBars size={16} />
+            </button>
+            <h1 className="text-base sm:text-lg font-bold text-slate-800 tracking-tight font-poppins truncate">
               {activeItem.label}
             </h1>
           </div>
 
           {/* Right: Notifications & Profile */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4">
             {/* Working Notification Bell with Dropdown */}
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((prev) => !prev)}
-                className={`relative w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer shadow-xs border ${
+                className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition cursor-pointer shadow-xs border ${
                   notificationsOpen
                     ? "bg-sky-100 text-sky-700 border-sky-300"
                     : "bg-slate-50 hover:bg-sky-50 text-slate-600 hover:text-sky-600 border-slate-200"
@@ -276,84 +313,92 @@ const Admin = () => {
 
               {/* Notification Popover Dropdown */}
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden font-poppins animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-800">Notifications</span>
+                <>
+                  {/* Backdrop on mobile */}
+                  <div
+                    className="fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-xs sm:hidden"
+                    onClick={() => setNotificationsOpen(false)}
+                    aria-hidden="true"
+                  />
+                  <div className="fixed sm:absolute top-[58px] sm:top-full left-3 right-3 sm:left-auto sm:right-0 sm:mt-2 w-auto sm:w-80 max-w-sm bg-white rounded-2xl shadow-2xl sm:shadow-xl border border-slate-100 z-50 overflow-hidden font-poppins animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800">Notifications</span>
+                        {unreadCount > 0 && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-sky-100 text-sky-700 rounded-full">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
                       {unreadCount > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-sky-100 text-sky-700 rounded-full">
-                          {unreadCount} new
-                        </span>
+                        <button
+                          type="button"
+                          onClick={markAllNotificationsRead}
+                          className="text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition cursor-pointer"
+                        >
+                          Mark all read
+                        </button>
                       )}
                     </div>
-                    {unreadCount > 0 && (
+
+                    <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+                      {notifications.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-slate-400">
+                          No notifications
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={() => markNotificationRead(n.id)}
+                            className={`p-3 text-xs transition cursor-pointer hover:bg-slate-50 flex items-start gap-2.5 ${
+                              !n.read ? "bg-sky-50/50" : ""
+                            }`}
+                          >
+                            <div
+                              className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                !n.read ? "bg-sky-500" : "bg-transparent"
+                              }`}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <p
+                                  className={`font-semibold truncate ${
+                                    !n.read ? "text-slate-900" : "text-slate-600"
+                                  }`}
+                                >
+                                  {n.title}
+                                </p>
+                                <span className="text-[10px] text-slate-400 flex-shrink-0">
+                                  {n.time}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
+                                {n.desc}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="p-2 border-t border-slate-100 bg-slate-50 flex justify-between items-center text-[11px]">
                       <button
                         type="button"
-                        onClick={markAllNotificationsRead}
-                        className="text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition cursor-pointer"
+                        onClick={clearAllNotifications}
+                        className="text-slate-500 hover:text-rose-600 font-medium px-2 py-1 rounded transition cursor-pointer"
                       >
-                        Mark all read
+                        Clear all
                       </button>
-                    )}
+                      <span className="text-slate-400 font-medium px-2">Live System Alerts</span>
+                    </div>
                   </div>
-
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
-                    {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-xs text-slate-400">
-                        No notifications
-                      </div>
-                    ) : (
-                      notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          onClick={() => markNotificationRead(n.id)}
-                          className={`p-3 text-xs transition cursor-pointer hover:bg-slate-50 flex items-start gap-2.5 ${
-                            !n.read ? "bg-sky-50/50" : ""
-                          }`}
-                        >
-                          <div
-                            className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                              !n.read ? "bg-sky-500" : "bg-transparent"
-                            }`}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1">
-                              <p
-                                className={`font-semibold truncate ${
-                                  !n.read ? "text-slate-900" : "text-slate-600"
-                                }`}
-                              >
-                                {n.title}
-                              </p>
-                              <span className="text-[10px] text-slate-400 flex-shrink-0">
-                                {n.time}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
-                              {n.desc}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <div className="p-2 border-t border-slate-100 bg-slate-50 flex justify-between items-center text-[11px]">
-                    <button
-                      type="button"
-                      onClick={clearAllNotifications}
-                      className="text-slate-500 hover:text-rose-600 font-medium px-2 py-1 rounded transition cursor-pointer"
-                    >
-                      Clear all
-                    </button>
-                    <span className="text-slate-400 font-medium px-2">Live System Alerts</span>
-                  </div>
-                </div>
+                </>
               )}
             </div>
 
             {/* Profile Avatar & Info */}
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
+            <div className="flex items-center gap-2 sm:gap-2.5 pl-2 sm:pl-3 border-l border-slate-200">
               <div className="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center font-bold text-xs shadow-sm font-poppins">
                 A
               </div>
@@ -370,15 +415,15 @@ const Admin = () => {
         </header>
 
         {/* View Content */}
-        <main className="flex-1 p-5 md:p-8 overflow-y-auto bg-[#f8fafc]">
+        <main className="flex-1 p-3.5 sm:p-5 md:p-8 overflow-y-auto bg-[#f8fafc]">
           <div className="max-w-7xl mx-auto">
             <Suspense fallback={<Loader />}>
               {activeItem
                 ? React.cloneElement(activeItem.component, {
                     key: selectedTab,
-                    onSelectTab: setSelectedTab,
+                    onSelectTab: handleSelectTab,
                   })
-                : <AdminDashboardHome onSelectTab={setSelectedTab} />}
+                : <AdminDashboardHome onSelectTab={handleSelectTab} />}
             </Suspense>
           </div>
         </main>
