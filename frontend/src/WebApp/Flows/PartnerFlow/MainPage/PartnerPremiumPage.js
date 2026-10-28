@@ -71,6 +71,7 @@ export default function PartnerPremiumPage() {
   const [, setSelectedIndex]                   = useState(null);
 
   const [isProcessing, setIsProcessing]       = useState(false);
+  const [processingMessage, setProcessingMessage] = useState("");
   const [, setTick]                           = useState(0);
   const [paymentHistory, setPaymentHistory]   = useState([]);
   const [showHistory, setShowHistory]         = useState(false);

@@ -7,6 +7,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import adminImage from "../../../../assets-webapp/partner.jpg";
 import { validateEmail } from "../../../../utils/validators";
+import Loading from "../../../Warnings/Loading/Loading";
 
 const validationSchema = Yup.object({
   email: Yup.string()
