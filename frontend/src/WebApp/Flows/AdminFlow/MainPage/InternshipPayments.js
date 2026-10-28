@@ -497,7 +497,7 @@ const InternshipPayments = () => {
       {/* ── User profile modal ───────────────────────────────────────────────── */}
       {selectedUser && !userLoading && (
         <div
-          className="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-6"
+          className="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-2.5 sm:p-6"
           onClick={() => setSelectedUser(null)}
         >
           <div onClick={(e) => e.stopPropagation()}>

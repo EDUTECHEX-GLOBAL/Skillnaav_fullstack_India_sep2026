@@ -1,9 +1,16 @@
-const generateOtpEmailHtml = (otp, type = "signing in to your Edutechex account") => {
+const EDUTECHEX_LOGO_URL = "https://img.mailinblue.com/11399089/images/rnb/original/6ae1af262bd3da336905052f.png";
+
+const generateOtpEmailHtml = (otp, type = "signing in to your Edutechex account", includeLogo = false) => {
   const otpBlocks = String(otp).split('').map(digit => 
     `<span style="display: inline-block; width: 32px; height: 40px; line-height: 40px; background-color: #f4f5f7; margin: 0 4px; border-radius: 6px; font-size: 20px; font-weight: bold; color: #1a202c; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center;">${digit}</span>`
   ).join('');
 
   return `
+    ${includeLogo ? `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="${EDUTECHEX_LOGO_URL}" alt="Edutechex Logo" width="170" style="width: 170px; max-width: 100%; height: auto; display: inline-block; border: 0; outline: none; text-decoration: none;" />
+      </div>
+    ` : ''}
     <h2 style="color: #1a202c; font-size: 22px; font-weight: 700; margin: 0 0 5px;">Verify it's you</h2>
     <p style="color: #6b7280; font-size: 14px; margin: 0 0 15px; line-height: 1.5;">Enter this one-time code to continue ${type}.</p>
     
@@ -19,4 +26,4 @@ const generateOtpEmailHtml = (otp, type = "signing in to your Edutechex account"
   `;
 };
 
-module.exports = { generateOtpEmailHtml };
+module.exports = { generateOtpEmailHtml, EDUTECHEX_LOGO_URL };

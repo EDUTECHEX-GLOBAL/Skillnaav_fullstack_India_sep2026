@@ -384,75 +384,77 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
     <div className="w-full">
       <motion.div
         ref={cardRef}
-        className={`relative bg-white rounded-2xl shadow-xl border border-gray-200 pt-6 px-6 pb-4 w-full max-w-4xl h-[92vh] overflow-hidden flex flex-col font-poppins ${className}`}
+        className={`relative bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 pt-4 px-3.5 sm:px-6 sm:pt-6 pb-3 sm:pb-4 w-full max-w-4xl h-[92vh] max-h-[92vh] overflow-hidden flex flex-col font-poppins ${className}`}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition z-10"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition z-10"
           aria-label="Close"
         >
-          <AiOutlineClose size={20} />
+          <AiOutlineClose className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Header */}
-        <div className="flex items-start gap-5 pb-3 border-b border-gray-200 shrink-0 pr-14">
+        <div className="flex items-start gap-3 sm:gap-5 pb-3 border-b border-gray-200 shrink-0 pr-8 sm:pr-14 min-w-0">
           <div className="relative flex-shrink-0">
             {user.profileImage ? (
               <img
                 src={user.profileImage}
                 alt={user.name}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover border-2 sm:border-4 border-white shadow-md sm:shadow-lg"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.parentNode.innerHTML = `
-                  <div class="w-24 h-24 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-3xl bg-gradient-to-br ${getAvatarColor(user.name)}">
+                  <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 sm:border-4 border-white shadow-md sm:shadow-lg flex items-center justify-center text-white font-bold text-xl sm:text-2xl md:text-3xl bg-gradient-to-br ${getAvatarColor(user.name)}">
                     ${getAvatarInitial(user.name)}
                   </div>
                 `;
                 }}
               />
             ) : (
-              <div className={`w-24 h-24 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-3xl bg-gradient-to-br ${getAvatarColor(user.name)}`}>
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 sm:border-4 border-white shadow-md sm:shadow-lg flex items-center justify-center text-white font-bold text-xl sm:text-2xl md:text-3xl bg-gradient-to-br ${getAvatarColor(user.name)}`}>
                 {getAvatarInitial(user.name)}
               </div>
             )}
           </div>
 
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900">{user.name || "No name"}</h2>
-            <p className="text-base text-gray-600 flex items-center gap-2 mt-1">
-              <AiOutlineMail className="text-sky-600" />
-              {user.email || "No email"}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{user.name || "No name"}</h2>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 flex items-center gap-1.5 mt-0.5 sm:mt-1 min-w-0">
+              <AiOutlineMail className="text-sky-600 shrink-0 text-sm sm:text-base" />
+              <span className="truncate break-all" title={user.email}>
+                {user.email || "No email"}
+              </span>
             </p>
             {user.universityName && (
-              <p className="text-sm font-medium text-sky-700 bg-sky-50 px-3 py-1 rounded-full mt-2 inline-block">
+              <p className="text-xs sm:text-sm font-medium text-sky-700 bg-sky-50 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full mt-1.5 sm:mt-2 inline-block max-w-full truncate">
                 {user.universityName}
               </p>
             )}
 
             {/* ✅ Status + Age Category (Modern UI) */}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
               {/* Status */}
               <span
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${getStatusPill(user.status).pill}`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold border shadow-sm ${getStatusPill(user.status).pill}`}
               >
-                <span className={`h-2 w-2 rounded-full ${getStatusPill(user.status).dot}`} />
+                <span className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${getStatusPill(user.status).dot}`} />
                 {user.status || "Pending Approval"}
               </span>
 
               {/* Age Category */}
               {getUserAgeCategory(user) && (
                 <span
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${getUserAgeCategory(user) === "OVER_18"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold border shadow-sm ${getUserAgeCategory(user) === "OVER_18"
                     ? "bg-cyan-50 text-cyan-700 border-cyan-200"
                     : "bg-purple-50 text-purple-700 border-purple-200"
                     }`}
                 >
                   <span
-                    className={`h-2 w-2 rounded-full ${getUserAgeCategory(user) === "OVER_18" ? "bg-cyan-500" : "bg-purple-500"
+                    className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${getUserAgeCategory(user) === "OVER_18" ? "bg-cyan-500" : "bg-purple-500"
                       }`}
                   />
                   {getUserAgeCategory(user) === "OVER_18" ? "Over 18" : "Under 18"}
@@ -490,67 +492,67 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
         </div>
 
         {/* Scrollable Details Section */}
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-4 sm:pb-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {/* Modern Details UI Wrapper */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
 
             {/* Two Columns Layout (Modern Cards) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-3.5 sm:mt-6">
               {/* Personal & Academic */}
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-                    <AiOutlineUser className="text-indigo-600" />
+              <div className="rounded-xl sm:rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div className="flex items-center gap-2.5 sm:gap-3 mb-3.5 sm:mb-4">
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                    <AiOutlineUser className="text-indigo-600 text-lg sm:text-xl" />
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900">Personal & Academic</h3>
-                    <p className="text-xs text-gray-500">Profile and education details</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate">Personal & Academic</h3>
+                    <p className="text-[11px] sm:text-xs text-gray-500 truncate">Profile and education details</p>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {user.dob && (
-                    <div className="flex items-start gap-3">
-                      <AiOutlineCalendar className="mt-0.5 text-indigo-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500">Date of Birth</p>
-                        <p className="text-sm font-semibold text-gray-900">{formatDate(user.dob)}</p>
+                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                      <AiOutlineCalendar className="mt-0.5 text-indigo-600 shrink-0 text-sm sm:text-base" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] sm:text-xs font-semibold text-gray-500">Date of Birth</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 break-words">{formatDate(user.dob)}</p>
                       </div>
                     </div>
                   )}
 
                   {user.educationLevel && (
-                    <div className="flex items-start gap-3">
-                      <AiOutlineBook className="mt-0.5 text-indigo-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500">Education Level</p>
-                        <p className="text-sm font-semibold text-gray-900 capitalize">{user.educationLevel}</p>
+                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                      <AiOutlineBook className="mt-0.5 text-indigo-600 shrink-0 text-sm sm:text-base" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] sm:text-xs font-semibold text-gray-500">Education Level</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 capitalize break-words">{user.educationLevel}</p>
                       </div>
                     </div>
                   )}
 
                   {user.fieldOfStudy && (
-                    <div className="flex items-start gap-3">
-                      <AiOutlineBook className="mt-0.5 text-indigo-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500">Current Field</p>
-                        <p className="text-sm font-semibold text-gray-900">{user.fieldOfStudy}</p>
+                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                      <AiOutlineBook className="mt-0.5 text-indigo-600 shrink-0 text-sm sm:text-base" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] sm:text-xs font-semibold text-gray-500">Current Field</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 break-words">{user.fieldOfStudy}</p>
                       </div>
                     </div>
                   )}
 
                   {user.desiredField && (
-                    <div className="flex items-start gap-3">
-                      <AiOutlineTag className="mt-0.5 text-indigo-600" />
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500">Desired Field</p>
-                        <p className="text-sm font-semibold text-gray-900">{user.desiredField}</p>
+                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                      <AiOutlineTag className="mt-0.5 text-indigo-600 shrink-0 text-sm sm:text-base" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] sm:text-xs font-semibold text-gray-500">Desired Field</p>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-900 break-words">{user.desiredField}</p>
                       </div>
                     </div>
                   )}
 
                   {!user.dob && !user.educationLevel && !user.fieldOfStudy && !user.desiredField && (
-                    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 sm:p-4 text-xs sm:text-sm text-gray-500">
                       No personal/academic details provided.
                     </div>
                   )}
@@ -867,21 +869,25 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
           </div>
         </div>
 
-        {/* ✅ Footer Action Buttons (Modern + Small) */}
-        <div className="shrink-0 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-end gap-2">
+        {/* ✅ Footer Action Buttons (Modern & Mobile-Responsive) */}
+        <div className="shrink-0 pt-3 border-t border-gray-200 grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end gap-2 w-full">
 
           {/* Download */}
           <button
             type="button"
             onClick={() => downloadPDF(user)}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold
+            className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold
       border border-blue-200 bg-blue-50 text-blue-700 shadow-sm
       hover:bg-blue-100 hover:border-blue-300
       focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2
-      active:scale-[0.98] transition"
+      active:scale-[0.98] transition w-full sm:w-auto ${
+        user?.ageCategory === "OVER_18" && getAgeVerificationPhotoUrl(user)
+          ? "col-span-1"
+          : "col-span-2 sm:col-span-1"
+      }`}
           >
-            <AiOutlineDownload className="text-[16px]" />
-            Download PDF
+            <AiOutlineDownload className="text-[15px] sm:text-[16px] shrink-0" />
+            <span className="truncate">Download PDF</span>
           </button>
 
           {/* Re-Verification */}
@@ -889,14 +895,14 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
             <button
               type="button"
               onClick={() => onRequestReverify?.(user._id)}
-              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold
         border border-amber-200 bg-amber-50 text-amber-800 shadow-sm
         hover:bg-amber-100 hover:border-amber-300
         focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2
-        active:scale-[0.98] transition"
+        active:scale-[0.98] transition col-span-1 w-full sm:w-auto"
             >
-              <AiOutlineCamera className="text-[16px]" />
-              Ask Re-Verification
+              <AiOutlineCamera className="text-[15px] sm:text-[16px] shrink-0" />
+              <span className="truncate">Re-Verification</span>
             </button>
           )}
 
@@ -909,15 +915,15 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
               onApprove?.(user.id);
               onClose?.();
             }}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border shadow-sm
-              focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] transition
+            className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold border shadow-sm
+              focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] transition col-span-1 w-full sm:w-auto
               ${user.status === 'Approved'
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 opacity-60 cursor-not-allowed'
                 : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 focus:ring-emerald-300'
               }`}
           >
-            <AiOutlineCheck className="text-[16px]" />
-            {user.status === 'Approved' ? 'Approved' : 'Approve'}
+            <AiOutlineCheck className="text-[15px] sm:text-[16px] shrink-0" />
+            <span className="truncate">{user.status === 'Approved' ? 'Approved' : 'Approve'}</span>
           </button>
 
           {/* Reject Button */}
@@ -929,15 +935,15 @@ const UserCard = ({ user, onClose, onApprove, onReject, onRequestReverify, class
               onReject?.(user.id);
               onClose?.();
             }}
-            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border shadow-sm
-              focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] transition
+            className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold border shadow-sm
+              focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] transition col-span-1 w-full sm:w-auto
               ${user.status === 'Rejected'
                 ? 'border-red-200 bg-red-50 text-red-700 opacity-60 cursor-not-allowed'
                 : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300 focus:ring-red-300'
               }`}
           >
-            <AiOutlineCloseCircle className="text-[16px]" />
-            {user.status === 'Rejected' ? 'Rejected' : 'Reject'}
+            <AiOutlineCloseCircle className="text-[15px] sm:text-[16px] shrink-0" />
+            <span className="truncate">{user.status === 'Rejected' ? 'Rejected' : 'Reject'}</span>
           </button>
         </div>
       </motion.div>

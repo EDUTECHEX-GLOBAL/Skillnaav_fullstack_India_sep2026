@@ -4,8 +4,8 @@ const { transporter } = require("./mailer");
 
 const notifyUser = async (email, subject, bodyHtml, attachments = []) => {
   try {
-    // Hosted logo URL for edutechex_logo-250w.png (high availability Cloudflare CDN, supported by Gmail proxy)
-    const logoUrl = "https://iili.io/nv1ZJxS.png";
+    // Hosted logo URL for edutechex_logo-250w.png on Brevo's dedicated email asset CDN
+    const logoUrl = "https://img.mailinblue.com/11399089/images/rnb/original/6ae1af262bd3da336905052f.png";
 
     // Always use the Edutechex template wrapper
     const htmlContent = `

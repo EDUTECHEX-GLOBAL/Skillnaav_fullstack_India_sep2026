@@ -954,8 +954,8 @@ const UserManagement = () => {
       {/* UserCard Component Modal */}
 
       {isUserCardOpen && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
-          <div className="relative w-full max-w-4xl my-4 sm:my-0">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="relative w-full max-w-4xl my-auto">
             <UserCard
               user={selectedUser}
               onClose={closeProfileModal}
