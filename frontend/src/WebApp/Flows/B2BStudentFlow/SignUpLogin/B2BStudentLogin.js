@@ -99,30 +99,23 @@ const B2BStudentLogin = () => {
       localStorage.setItem("loginTime", Date.now());
 
       setLoading(false);
-      const enableSubdomainRedirect = process.env.REACT_APP_ENABLE_B2B_SUBDOMAIN_REDIRECT === "true";
-      const customB2BDomain = process.env.REACT_APP_B2B_SUBDOMAIN || "";
 
-      if (enableSubdomainRedirect) {
-        const currentHost = window.location.hostname;
-        const port = window.location.port ? `:${window.location.port}` : "";
-        const protocol = window.location.protocol;
+      // B2B student dedicated production domain
+      const B2B_STUDENT_DOMAIN = "revamp.edutechexskills.com";
+      const currentHost = window.location.hostname;
+      const protocol = window.location.protocol;
+
+      // On localhost: stay on localhost (production domain won't work locally)
+      if (currentHost === "localhost" || currentHost === "127.0.0.1") {
+        navigate("/user-main-page");
+      } else if (currentHost !== B2B_STUDENT_DOMAIN) {
+        // On production: redirect to dedicated B2B domain
         const authQueryParams = `?authToken=${encodeURIComponent(data.token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}`;
-
-        if (customB2BDomain && currentHost !== customB2BDomain) {
-          window.location.href = `${protocol}//${customB2BDomain}${port}/user-main-page${authQueryParams}`;
-          return;
-        }
-        if ((currentHost === "localhost" || currentHost === "127.0.0.1") && currentHost !== "b2b.localhost") {
-          window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
-          return;
-        } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.") && !currentHost.startsWith("school.")) {
-          const b2bHost = currentHost.replace(/^www\./, "");
-          window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
-          return;
-        }
+        window.location.href = `${protocol}//${B2B_STUDENT_DOMAIN}/user-main-page${authQueryParams}`;
+        return;
+      } else {
+        navigate("/user-main-page");
       }
-
-      navigate("/user-main-page");
     } catch (err) {
       console.error("B2B Student Login error:", err.response || err.message);
       setError(err.response?.data?.message || "Login failed. Please check your credentials.");

@@ -84,13 +84,14 @@ const SchoolAdminResetPassword = lazy(() => import("./WebApp/Flows/SchoolAdminFl
 const SchoolAdminForgotPassword = lazy(() => import("./WebApp/Flows/SchoolAdminFlow/SignUpLogin/SchoolAdminForgotPassword"));
 const SchoolAdminSupportPage = lazy(() => import("./WebApp/Flows/SchoolAdminFlow/MainPage/pages/SchoolAdminSupportPage"));
 
+// B2B student dedicated domain — hardcoded to revamp.edutechexskills.com
+const B2B_STUDENT_DOMAIN = "revamp.edutechexskills.com";
+
 const isB2BHost = () => {
   if (typeof window === "undefined") return false;
   const hostname = window.location.hostname.toLowerCase();
-  const configuredB2B = (process.env.REACT_APP_B2B_SUBDOMAIN || "").toLowerCase();
-  if (configuredB2B && (hostname === configuredB2B || hostname.startsWith(`${configuredB2B}.`))) {
-    return true;
-  }
+  // Hardcoded: revamp.edutechexskills.com is the dedicated B2B student portal
+  if (hostname === B2B_STUDENT_DOMAIN) return true;
   return (
     hostname.startsWith("b2b.") ||
     hostname.startsWith("campus.") ||

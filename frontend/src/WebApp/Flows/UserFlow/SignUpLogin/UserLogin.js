@@ -25,37 +25,30 @@ const validationSchema = Yup.object({
   password: Yup.string().required("Password is required."),
 });
 
+// B2B student dedicated production domain
+const B2B_STUDENT_DOMAIN = "revamp.edutechexskills.com";
+
 const redirectToAppropriateDashboard = (isB2BStudent, navigate, token, sessionId, studentData) => {
   const currentHost = window.location.hostname;
-  const port = window.location.port ? `:${window.location.port}` : "";
   const protocol = window.location.protocol;
 
-  // Cross-subdomain redirect should only be performed if explicitly enabled via environment variable
-  const enableSubdomainRedirect = process.env.REACT_APP_ENABLE_B2B_SUBDOMAIN_REDIRECT === "true";
-  const customB2BDomain = process.env.REACT_APP_B2B_SUBDOMAIN || "";
-
-  if (enableSubdomainRedirect) {
-    const authQueryParams = token
-      ? `?authToken=${encodeURIComponent(token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}${studentData ? `&studentData=${encodeURIComponent(JSON.stringify(studentData))}` : ""}`
-      : "";
-
-    if (isB2BStudent) {
-      if (customB2BDomain && currentHost !== customB2BDomain) {
-        window.location.href = `${protocol}//${customB2BDomain}${port}/user-main-page${authQueryParams}`;
-        return;
-      }
-      if ((currentHost === "localhost" || currentHost === "127.0.0.1") && currentHost !== "b2b.localhost") {
-        window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
-        return;
-      } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.") && !currentHost.startsWith("school.")) {
-        const b2bHost = currentHost.replace(/^www\./, "");
-        window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
-        return;
-      }
+  if (isB2BStudent) {
+    // On localhost: stay on localhost (production domain won't work locally)
+    if (currentHost === "localhost" || currentHost === "127.0.0.1") {
+      navigate("/user-main-page");
+      return;
+    }
+    // On production: redirect to dedicated B2B domain if not already there
+    if (currentHost !== B2B_STUDENT_DOMAIN) {
+      const authQueryParams = token
+        ? `?authToken=${encodeURIComponent(token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}${studentData ? `&studentData=${encodeURIComponent(JSON.stringify(studentData))}` : ""}`
+        : "";
+      window.location.href = `${protocol}//${B2B_STUDENT_DOMAIN}/user-main-page${authQueryParams}`;
+      return;
     }
   }
 
-  // Smooth client-side navigation on current domain (prevents unconfigured NXDOMAIN DNS crashes)
+  // Already on correct domain — smooth client-side navigation
   navigate("/user-main-page");
 };
 
