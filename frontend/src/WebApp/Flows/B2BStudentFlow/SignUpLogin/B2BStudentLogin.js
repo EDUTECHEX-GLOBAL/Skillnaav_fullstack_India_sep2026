@@ -76,6 +76,7 @@ const B2BStudentLogin = () => {
         localStorage.setItem("schoolAdminId", data.schoolAdminId || data.schoolAdmin);
       }
 
+      let sessionId = null;
       try {
         const sessionRes = await axios.post(
           "/api/sessions/login",
@@ -88,7 +89,8 @@ const B2BStudentLogin = () => {
         );
 
         if (sessionRes?.data?.sessionId) {
-          localStorage.setItem("sessionId", sessionRes.data.sessionId);
+          sessionId = sessionRes.data.sessionId;
+          localStorage.setItem("sessionId", sessionId);
         }
       } catch (sessionErr) {
         console.warn("Session tracking error (non-fatal):", sessionErr.message);
@@ -104,7 +106,7 @@ const B2BStudentLogin = () => {
         const currentHost = window.location.hostname;
         const port = window.location.port ? `:${window.location.port}` : "";
         const protocol = window.location.protocol;
-        const authQueryParams = `?authToken=${encodeURIComponent(data.token)}${sessionRes?.data?.sessionId ? `&authSession=${encodeURIComponent(sessionRes.data.sessionId)}` : ""}`;
+        const authQueryParams = `?authToken=${encodeURIComponent(data.token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}`;
 
         if (customB2BDomain && currentHost !== customB2BDomain) {
           window.location.href = `${protocol}//${customB2BDomain}${port}/user-main-page${authQueryParams}`;
