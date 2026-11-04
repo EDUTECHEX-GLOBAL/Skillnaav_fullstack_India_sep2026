@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
+import { isB2BContext } from "../../../../utils/domain";
 
 const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const { handleSelectTab, selectedTab } = useTabContext();
@@ -110,7 +111,8 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
     } catch (err) {
       console.warn("Storage clear error:", err);
     }
-    navigate("/user");
+    const isB2B = isB2BContext();
+    navigate(isB2B ? "/user/login" : "/user");
   };
 
   const handleLogoutTrigger = async () => {
@@ -187,6 +189,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   }, []);
 
   const planStyles = {
+    "Campus Student": "bg-gradient-to-r from-emerald-500 to-teal-600 text-white",
     "Premium Plus": "bg-gradient-to-r from-orange-400 to-orange-600 text-white",
     "Premium Basic": "bg-gradient-to-r from-purple-500 to-purple-700 text-white",
     Free: "bg-gray-200 text-gray-700",
@@ -269,6 +272,17 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
                   <span className="text-sm font-medium">{userInfo.email}</span>
                 </div>
               </div>
+
+              <button
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  handleSelectTab("profile");
+                }}
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition border-b border-gray-100"
+              >
+                <FontAwesomeIcon icon={faUser} className="w-4 h-4 text-purple-600" />
+                <span>My Profile</span>
+              </button>
 
               <button
                 onClick={() => {

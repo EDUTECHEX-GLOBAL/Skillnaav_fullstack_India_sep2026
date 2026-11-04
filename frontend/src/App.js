@@ -10,6 +10,7 @@ import GlobalEdutechexFavicon from "./components/GlobalEdutechexFavicon";
 import EdutechexTabBrandingLayout from "./components/EdutechexTabBrandingLayout";
 import ScrollToTop from "./components/ScrollToTop";
 import axios from "./api/axiosInstance";
+import { isB2BHost } from "./utils/domain";
 
 // Dedicated visitor tracker for all public route views
 const VisitorTracker = () => {
@@ -57,7 +58,6 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const VerifyCertificate = lazy(() => import("./WebApp/MainPage/VerifyCertificate"));
 const UserCreateAccount = lazy(() => import("./WebApp/Flows/UserFlow/SignUpLogin/UserCreateAccount"));
 const UserLogin = lazy(() => import("./WebApp/Flows/UserFlow/SignUpLogin/UserLogin"));
-const B2BStudentLogin = lazy(() => import("./WebApp/Flows/B2BStudentFlow/SignUpLogin/B2BStudentLogin"));
 const UserFlow = lazy(() => import("./WebApp/Flows/UserFlow/UserFlow"));
 const UserMainPage = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/UserMainPage"));
 const UserSupportPage = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/support/UserSupportPage"));
@@ -84,23 +84,6 @@ const SchoolAdminResetPassword = lazy(() => import("./WebApp/Flows/SchoolAdminFl
 const SchoolAdminForgotPassword = lazy(() => import("./WebApp/Flows/SchoolAdminFlow/SignUpLogin/SchoolAdminForgotPassword"));
 const SchoolAdminSupportPage = lazy(() => import("./WebApp/Flows/SchoolAdminFlow/MainPage/pages/SchoolAdminSupportPage"));
 
-// B2B student dedicated domain — hardcoded to revamp.edutechexskills.com
-const B2B_STUDENT_DOMAIN = "revamp.edutechexskills.com";
-
-const isB2BHost = () => {
-  if (typeof window === "undefined") return false;
-  const hostname = window.location.hostname.toLowerCase();
-  // Hardcoded: revamp.edutechexskills.com is the dedicated B2B student portal
-  if (hostname === B2B_STUDENT_DOMAIN) return true;
-  return (
-    hostname.startsWith("b2b.") ||
-    hostname.startsWith("campus.") ||
-    hostname.startsWith("school.") ||
-    hostname.startsWith("institution.") ||
-    hostname.startsWith("student-b2b.")
-  );
-};
-
 function App() {
   const isB2B = isB2BHost();
 
@@ -113,14 +96,19 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {isB2B ? (
-              /* 🏫 Dedicated B2B / Campus Subdomain Routes (Direct login to homepage) */
+              /* 🏫 Dedicated B2B / Campus Subdomain Routes */
               <>
                 <Route path="/" element={<UserLogin />} />
                 <Route path="/login" element={<UserLogin />} />
+                <Route path="/b2b" element={<UserLogin />} />
+                <Route path="/b2b/login" element={<UserLogin />} />
+                <Route path="/b2b-student/login" element={<UserLogin />} />
                 <Route path="/user/login" element={<UserLogin />} />
                 <Route path="/user" element={<UserLogin />} />
                 <Route path="/user-create-account" element={<UserCreateAccount />} />
 
+                {/* Both separate B2B URL and standard URL routes */}
+                <Route path="/b2b-main-page/*" element={<UserMainPage />} />
                 <Route path="/user-main-page/*" element={<UserMainPage />} />
                 <Route path="/user-support" element={<UserSupportPage />} />
                 <Route path="/user-forgot-password" element={<UserforgotPassword />} />
@@ -153,10 +141,12 @@ function App() {
                 <Route path="/user" element={<UserFlow />} />
                 <Route path="/user-create-account" element={<UserCreateAccount />} />
                 <Route path="/user/login" element={<UserLogin />} />
-                <Route path="/b2b/login" element={<B2BStudentLogin />} />
-                <Route path="/b2b-student/login" element={<B2BStudentLogin />} />
-                <Route path="/b2b" element={<B2BStudentLogin />} />
+                <Route path="/b2b/login" element={<UserLogin />} />
+                <Route path="/b2b-student/login" element={<UserLogin />} />
+                <Route path="/b2b" element={<UserLogin />} />
 
+                {/* Separate URL for B2B Student + standard route */}
+                <Route path="/b2b-main-page/*" element={<UserMainPage />} />
                 <Route path="/user-main-page/*" element={<UserMainPage />} />
                 <Route path="/user-support" element={<UserSupportPage />} />
                 <Route path="/user-forgot-password" element={<UserforgotPassword />} />

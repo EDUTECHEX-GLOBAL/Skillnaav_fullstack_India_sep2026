@@ -13,6 +13,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import axios from "../../../../api/axiosInstance";
 import { validateEmail } from "../../../../utils/validators";
 import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
+import { isB2BHost, B2B_STUDENT_DOMAIN, B2B_LEGACY_DOMAIN } from "../../../../utils/domain";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -25,30 +26,28 @@ const validationSchema = Yup.object({
   password: Yup.string().required("Password is required."),
 });
 
-// B2B student dedicated production domain
-const B2B_STUDENT_DOMAIN = "revamp.edutechexskills.com";
-
 const redirectToAppropriateDashboard = (isB2BStudent, navigate, token, sessionId, studentData) => {
-  const currentHost = window.location.hostname;
+  const currentHost = window.location.hostname.toLowerCase();
   const protocol = window.location.protocol;
+  const onB2BDomain = isB2BHost();
 
   if (isB2BStudent) {
-    // On localhost: stay on localhost (production domain won't work locally)
-    if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-      navigate("/user-main-page");
+    if (currentHost === "localhost" || currentHost === "127.0.0.1" || onB2BDomain) {
+      navigate("/b2b-main-page");
       return;
     }
-    // On production: redirect to dedicated B2B domain if not already there
-    if (currentHost !== B2B_STUDENT_DOMAIN) {
+    if (currentHost !== B2B_STUDENT_DOMAIN && currentHost !== B2B_LEGACY_DOMAIN) {
       const authQueryParams = token
         ? `?authToken=${encodeURIComponent(token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}${studentData ? `&studentData=${encodeURIComponent(JSON.stringify(studentData))}` : ""}`
         : "";
-      window.location.href = `${protocol}//${B2B_STUDENT_DOMAIN}/user-main-page${authQueryParams}`;
+      window.location.href = `${protocol}//${B2B_STUDENT_DOMAIN}/b2b-main-page${authQueryParams}`;
       return;
     }
+    navigate("/b2b-main-page");
+    return;
   }
 
-  // Already on correct domain — smooth client-side navigation
+  // Regular individual student
   navigate("/user-main-page");
 };
 

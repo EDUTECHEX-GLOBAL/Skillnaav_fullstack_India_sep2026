@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
+import { isB2BContext } from "../../../../utils/domain";
 
 const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const [showSectors, setShowSectors] = useState(false);
@@ -28,6 +29,9 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const navigate = useNavigate();
   const { openFeedback } = useFeedback();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const storedUser = JSON.parse(localStorage.getItem("studentInfo") || localStorage.getItem("userInfo") || "{}");
+  const isB2B = isB2BContext() || !!(storedUser.isB2B || storedUser.schoolAdmin || storedUser.schoolAdminId);
 
   const topSectors = [
     { id: "advanced-ai", name: "AI & Autonomous" },
@@ -84,7 +88,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
       console.warn("LocalStorage clear failed:", err);
     }
 
-    navigate("/user");
+    navigate(isB2B ? "/user/login" : "/user");
   };
 
   const handleLogoutTrigger = async () => {

@@ -1,10 +1,23 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "../../../../../api/axiosInstance";
+import { isB2BContext } from "../../../../../utils/domain";
 
 const UserHomePageContext = createContext();
 const DEFAULT_TAB = "home";
-const USER_BASE_PATH = "/user-main-page";
+const DEFAULT_BASE_PATH = "/user-main-page";
+
+export const getBasePath = (pathname = "") => {
+  if (pathname.startsWith("/b2b-main-page")) return "/b2b-main-page";
+  if (pathname.startsWith("/user-main-page")) return "/user-main-page";
+  if (isB2BContext()) return "/b2b-main-page";
+  return DEFAULT_BASE_PATH;
+};
+
+export const getTabPath = (tab, basePath = DEFAULT_BASE_PATH) => {
+  const segment = TAB_ROUTE_SEGMENTS[tab] || tab;
+  return `${basePath}/${segment}`;
+};
 const VALID_TABS = new Set([
   "home",
   "searchbar",
@@ -66,25 +79,21 @@ const normalizePath = (path = "") => {
   return cleanedPath || "/";
 };
 
-const TAB_PATHS = Object.fromEntries(
-  Object.entries(TAB_ROUTE_SEGMENTS).map(([tab, segment]) => [
-    tab,
-    `${USER_BASE_PATH}/${segment}`,
-  ])
-);
-
 const getTabFromLocation = (pathname = "", search = "") => {
   const normalizedPath = normalizePath(pathname);
+  const basePath = getBasePath(normalizedPath);
 
-  if (normalizedPath !== USER_BASE_PATH) {
-    const matchedTab = Object.entries(TAB_PATHS).find(([, path]) => path === normalizedPath);
+  if (normalizedPath !== basePath) {
+    const matchedTab = Object.entries(TAB_ROUTE_SEGMENTS).find(
+      ([, segment]) => `${basePath}/${segment}` === normalizedPath
+    );
     if (matchedTab) return matchedTab[0];
   }
 
   const openTab = new URLSearchParams(search).get("openTab");
   if (VALID_TABS.has(openTab)) return openTab;
 
-  if (normalizedPath === USER_BASE_PATH) {
+  if (normalizedPath === basePath) {
     return DEFAULT_TAB;
   }
 
@@ -135,19 +144,21 @@ export const TabProvider = ({ children }) => {
 
     setSelectedTab(tab);
 
-    const currentPath = normalizePath(location.pathname);
-    const hasLegacyQuery = new URLSearchParams(location.search).has("openTab");
-    const nextPath = TAB_PATHS[tab] || USER_BASE_PATH;
+    const currentPath = typeof window !== "undefined" ? normalizePath(window.location.pathname) : "";
+    const hasLegacyQuery = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("openTab");
+    const basePath = getBasePath(currentPath);
+    const nextPath = getTabPath(tab, basePath);
 
     if (currentPath !== nextPath || hasLegacyQuery) {
       navigate(nextPath);
     }
-  }, [location.pathname, location.search, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     const currentPath = normalizePath(location.pathname);
+    const basePath = getBasePath(currentPath);
 
-    if (!currentPath.startsWith(USER_BASE_PATH)) return;
+    if (!currentPath.startsWith("/user-main-page") && !currentPath.startsWith("/b2b-main-page")) return;
 
     const hasLegacyQuery = new URLSearchParams(location.search).has("openTab");
     const tabFromLocation = getTabFromLocation(location.pathname, location.search);
@@ -156,13 +167,13 @@ export const TabProvider = ({ children }) => {
       setSelectedTab((currentTab) => (currentTab === tabFromLocation ? currentTab : tabFromLocation));
 
       if (hasLegacyQuery) {
-        navigate(TAB_PATHS[tabFromLocation] || USER_BASE_PATH, { replace: true });
+        navigate(getTabPath(tabFromLocation, basePath), { replace: true });
       }
       return;
     }
 
     setSelectedTab(DEFAULT_TAB);
-    navigate(USER_BASE_PATH, { replace: true });
+    navigate(basePath, { replace: true });
   }, [location.pathname, location.search, navigate]);
 
   const saveJob = async (job) => {

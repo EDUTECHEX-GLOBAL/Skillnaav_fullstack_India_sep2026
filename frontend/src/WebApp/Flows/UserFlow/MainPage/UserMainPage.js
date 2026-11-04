@@ -126,8 +126,6 @@ const UserMainPageContent = () => {
         const openTab = searchParams.get("openTab");
         if (openTab) {
           handleSelectTab(openTab);
-        } else if (isSchoolAdminStudent) {
-          handleSelectTab("home");
         }
       } catch (error) {
         console.error("Failed to fetch user info:", error);
@@ -141,7 +139,7 @@ const UserMainPageContent = () => {
       }
     };
     fetchUserInfo();
-  }, [searchParams, navigate, handleSelectTab]);
+  }, [navigate]);
 
   useEffect(() => {
     if (!userInfo || userInfo.isPremium || userInfo.isB2B || userInfo.schoolAdmin || popupDismissed) return;
