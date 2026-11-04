@@ -46,3 +46,29 @@ export const isB2BContext = () => {
   } catch (_) {}
   return false;
 };
+
+export const MAIN_DOMAIN =
+  process.env.REACT_APP_MAIN_DOMAIN || "edutechexskills.com";
+
+/**
+ * Redirects the student to the login page after logout.
+ * On local dev (localhost/127.0.0.1), uses client navigation to /user/login.
+ * On live/production (such as revamp.edutechexskills.com or edutechexskills.com),
+ * always redirects to the main domain: https://edutechexskills.com/user/login.
+ */
+export const redirectToLoginAfterLogout = (navigate) => {
+  if (typeof window === "undefined") return;
+  const currentHost = window.location.hostname.toLowerCase();
+
+  if (currentHost === "localhost" || currentHost === "127.0.0.1") {
+    if (typeof navigate === "function") {
+      navigate("/user/login");
+    } else {
+      window.location.href = "/user/login";
+    }
+    return;
+  }
+
+  const protocol = window.location.protocol || "https:";
+  window.location.href = `${protocol}//${MAIN_DOMAIN}/user/login`;
+};

@@ -13,6 +13,7 @@ import UserAgeGateConsent from "../SignUpLogin/UserProfileBuilding/UserAgeGateCo
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import PendingApprovalCard from './PendingApprovalCard';
+import { redirectToLoginAfterLogout } from "../../../../utils/domain";
 
 const UserMainPageContent = () => {
   const { handleSelectTab, selectedTab } = useTabContext();
@@ -85,7 +86,7 @@ const UserMainPageContent = () => {
           token = sessionStorage.getItem("userToken");
           if (token) localStorage.setItem("userToken", token);
           if (!token) {
-            navigate("/user/login");
+            redirectToLoginAfterLogout(navigate);
             return;
           }
         }
@@ -133,7 +134,7 @@ const UserMainPageContent = () => {
         localStorage.removeItem("studentInfo");
         localStorage.removeItem("userInfo");
         localStorage.removeItem("sessionId");
-        navigate("/user/login");
+        redirectToLoginAfterLogout(navigate);
       } finally {
         setLoading(false);
       }

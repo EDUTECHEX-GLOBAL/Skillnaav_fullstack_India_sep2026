@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
-import { isB2BContext } from "../../../../utils/domain";
+import { isB2BContext, redirectToLoginAfterLogout } from "../../../../utils/domain";
 
 const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const { handleSelectTab, selectedTab } = useTabContext();
@@ -111,8 +111,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
     } catch (err) {
       console.warn("Storage clear error:", err);
     }
-    const isB2B = isB2BContext();
-    navigate(isB2B ? "/user/login" : "/user");
+    redirectToLoginAfterLogout(navigate);
   };
 
   const handleLogoutTrigger = async () => {

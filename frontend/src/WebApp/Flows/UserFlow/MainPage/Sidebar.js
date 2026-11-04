@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
-import { isB2BContext } from "../../../../utils/domain";
+import { isB2BContext, redirectToLoginAfterLogout } from "../../../../utils/domain";
 
 const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const [showSectors, setShowSectors] = useState(false);
@@ -88,7 +88,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
       console.warn("LocalStorage clear failed:", err);
     }
 
-    navigate(isB2B ? "/user/login" : "/user");
+    redirectToLoginAfterLogout(navigate);
   };
 
   const handleLogoutTrigger = async () => {
