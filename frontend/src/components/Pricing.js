@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { staticPricingData } from "../data/websiteContentData";
 
-function Pricing() {
+function Pricing({ className = "" }) {
   const navigate = useNavigate();
   const { edutechexData } = useSelector((state) => state.root);
 
@@ -59,7 +59,7 @@ function Pricing() {
   };
 
   return (
-    <div id="pricing" className="py-12 my-12 pb-12 lg:py-16">
+    <div id="pricing" className={`pt-2 pb-0 lg:pt-4 lg:pb-0 ${className}`}>
       <h1 className="text-center font-medium text-2xl lg:text-4xl text-gray-900 mb-6">
         {priceheading}
       </h1>

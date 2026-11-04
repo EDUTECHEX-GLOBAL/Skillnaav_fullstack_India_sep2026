@@ -333,6 +333,20 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: companyNameErr });
     }
 
+    if (startDate && endDateOrDuration) {
+      const s = new Date(startDate);
+      const e = new Date(endDateOrDuration);
+      if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
+        const curDay = s.getDate();
+        const minEnd = new Date(s);
+        minEnd.setMonth(minEnd.getMonth() + 1);
+        if (minEnd.getDate() !== curDay) minEnd.setDate(0);
+        if (e < minEnd) {
+          return res.status(400).json({ message: "Internship duration must be at least 1 month." });
+        }
+      }
+    }
+
     if (partner.planType === "Freemium") {
       if (internshipType === "PAID") {
         return res.status(403).json({ message: "Freemium partners cannot post paid internships." });
@@ -347,7 +361,7 @@ router.post("/", async (req, res) => {
     const finalComp = { type: internshipType };
     if (["PAID", "STIPEND"].includes(internshipType)) {
       finalComp.amount = compensationDetails?.amount ?? 0;
-      finalComp.currency = compensationDetails?.currency ?? "INR";
+      finalComp.currency = "INR";
       finalComp.frequency = compensationDetails?.frequency ?? "MONTHLY";
     } else {
       finalComp.amount = 0; finalComp.currency = null; finalComp.frequency = null;
@@ -441,6 +455,19 @@ router.put("/:id", async (req, res) => {
       $set.companyName = typeof companyName === "string" ? companyName.trim().slice(0, 100) : companyName;
     }
     if (jobDescription !== undefined) $set.jobDescription = typeof jobDescription === "string" ? jobDescription.slice(0, 5000) : jobDescription;
+    if (startDate !== undefined && endDateOrDuration !== undefined) {
+      const s = new Date(startDate);
+      const e = new Date(endDateOrDuration);
+      if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
+        const curDay = s.getDate();
+        const minEnd = new Date(s);
+        minEnd.setMonth(minEnd.getMonth() + 1);
+        if (minEnd.getDate() !== curDay) minEnd.setDate(0);
+        if (e < minEnd) {
+          return res.status(400).json({ message: "Internship duration must be at least 1 month." });
+        }
+      }
+    }
     if (startDate !== undefined) $set.startDate = startDate;
     if (endDateOrDuration !== undefined) $set.endDateOrDuration = endDateOrDuration;
     if (duration !== undefined) $set.duration = duration;
@@ -466,7 +493,12 @@ router.put("/:id", async (req, res) => {
     if (applicationOpen !== undefined) $set.applicationOpen = applicationOpen;
     if (internshipMode !== undefined) $set.internshipMode = internshipMode;
     if (internshipType !== undefined) $set.internshipType = internshipType;
-    if (compensationDetails !== undefined) $set.compensationDetails = compensationDetails;
+    if (compensationDetails !== undefined) {
+      if (compensationDetails && (internshipType || "").toUpperCase() !== "FREE") {
+        compensationDetails.currency = "INR";
+      }
+      $set.compensationDetails = compensationDetails;
+    }
 
     // Recompose the location string from parts if provided
     if (country !== undefined) $set.country = country;

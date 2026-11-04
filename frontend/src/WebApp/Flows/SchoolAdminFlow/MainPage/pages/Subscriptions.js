@@ -145,7 +145,7 @@ const SubscriptionPlans = () => {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "Edutech School Admin",
+        name: "EDUTECHEX",
         description: `${planTitle} Subscription`,
         order_id: orderData.id,
         handler: async function (response) {

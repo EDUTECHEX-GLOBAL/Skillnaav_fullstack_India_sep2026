@@ -57,6 +57,7 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const VerifyCertificate = lazy(() => import("./WebApp/MainPage/VerifyCertificate"));
 const UserCreateAccount = lazy(() => import("./WebApp/Flows/UserFlow/SignUpLogin/UserCreateAccount"));
 const UserLogin = lazy(() => import("./WebApp/Flows/UserFlow/SignUpLogin/UserLogin"));
+const B2BStudentLogin = lazy(() => import("./WebApp/Flows/B2BStudentFlow/SignUpLogin/B2BStudentLogin"));
 const UserFlow = lazy(() => import("./WebApp/Flows/UserFlow/UserFlow"));
 const UserMainPage = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/UserMainPage"));
 const UserSupportPage = lazy(() => import("./WebApp/Flows/UserFlow/MainPage/support/UserSupportPage"));
@@ -86,9 +87,14 @@ const SchoolAdminSupportPage = lazy(() => import("./WebApp/Flows/SchoolAdminFlow
 const isB2BHost = () => {
   if (typeof window === "undefined") return false;
   const hostname = window.location.hostname.toLowerCase();
+  const configuredB2B = (process.env.REACT_APP_B2B_SUBDOMAIN || "").toLowerCase();
+  if (configuredB2B && (hostname === configuredB2B || hostname.startsWith(`${configuredB2B}.`))) {
+    return true;
+  }
   return (
     hostname.startsWith("b2b.") ||
     hostname.startsWith("campus.") ||
+    hostname.startsWith("school.") ||
     hostname.startsWith("institution.") ||
     hostname.startsWith("student-b2b.")
   );
@@ -146,9 +152,9 @@ function App() {
                 <Route path="/user" element={<UserFlow />} />
                 <Route path="/user-create-account" element={<UserCreateAccount />} />
                 <Route path="/user/login" element={<UserLogin />} />
-                <Route path="/b2b/login" element={<Navigate to="/user/login" replace />} />
-                <Route path="/b2b-student/login" element={<Navigate to="/user/login" replace />} />
-                <Route path="/b2b" element={<Navigate to="/user/login" replace />} />
+                <Route path="/b2b/login" element={<B2BStudentLogin />} />
+                <Route path="/b2b-student/login" element={<B2BStudentLogin />} />
+                <Route path="/b2b" element={<B2BStudentLogin />} />
 
                 <Route path="/user-main-page/*" element={<UserMainPage />} />
                 <Route path="/user-support" element={<UserSupportPage />} />

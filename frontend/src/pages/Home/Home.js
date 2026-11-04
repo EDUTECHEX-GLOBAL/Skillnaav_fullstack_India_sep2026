@@ -92,12 +92,12 @@ function Home() {
             <Discover />
 
             <div className="px-[20px] lg:px-20 mx-auto">
-              <Vision className="mt-16" />
-              <Features className="mt-16" />
-              <Pricing className="mt-16" />
-              <Faq className="mt-16" />
-              <Contact className="mt-16" />
-              <Footer className="mt-16" />
+              <Vision className="mt-12 lg:mt-16" />
+              <Features className="mt-6 lg:mt-8" />
+              <Pricing className="mt-4 lg:mt-6" />
+              <Faq className="mt-4 lg:mt-6" />
+              <Contact className="mt-10 lg:mt-12" />
+              <Footer className="mt-10 lg:mt-12" />
             </div>
           </Suspense>
         )}

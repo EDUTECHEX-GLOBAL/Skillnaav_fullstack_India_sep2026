@@ -30,30 +30,32 @@ const redirectToAppropriateDashboard = (isB2BStudent, navigate, token, sessionId
   const port = window.location.port ? `:${window.location.port}` : "";
   const protocol = window.location.protocol;
 
-  const authQueryParams = token
-    ? `?authToken=${encodeURIComponent(token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}${studentData ? `&studentData=${encodeURIComponent(JSON.stringify(studentData))}` : ""}`
-    : "";
+  // Cross-subdomain redirect should only be performed if explicitly enabled via environment variable
+  const enableSubdomainRedirect = process.env.REACT_APP_ENABLE_B2B_SUBDOMAIN_REDIRECT === "true";
+  const customB2BDomain = process.env.REACT_APP_B2B_SUBDOMAIN || "";
 
-  if (isB2BStudent) {
-    if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-      window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
-      return;
-    } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.")) {
-      const b2bHost = currentHost.replace(/^www\./, "");
-      window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
-      return;
-    }
-  } else {
-    if (currentHost.startsWith("b2b.localhost")) {
-      window.location.href = `${protocol}//localhost${port}/user-main-page${authQueryParams}`;
-      return;
-    } else if (currentHost.startsWith("b2b.") || currentHost.startsWith("campus.")) {
-      const mainHost = currentHost.replace(/^(b2b|campus)\./, "");
-      window.location.href = `${protocol}//${mainHost}${port}/user-main-page${authQueryParams}`;
-      return;
+  if (enableSubdomainRedirect) {
+    const authQueryParams = token
+      ? `?authToken=${encodeURIComponent(token)}${sessionId ? `&authSession=${encodeURIComponent(sessionId)}` : ""}${studentData ? `&studentData=${encodeURIComponent(JSON.stringify(studentData))}` : ""}`
+      : "";
+
+    if (isB2BStudent) {
+      if (customB2BDomain && currentHost !== customB2BDomain) {
+        window.location.href = `${protocol}//${customB2BDomain}${port}/user-main-page${authQueryParams}`;
+        return;
+      }
+      if ((currentHost === "localhost" || currentHost === "127.0.0.1") && currentHost !== "b2b.localhost") {
+        window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
+        return;
+      } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.") && !currentHost.startsWith("school.")) {
+        const b2bHost = currentHost.replace(/^www\./, "");
+        window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
+        return;
+      }
     }
   }
 
+  // Smooth client-side navigation on current domain (prevents unconfigured NXDOMAIN DNS crashes)
   navigate("/user-main-page");
 };
 

@@ -124,7 +124,7 @@ function PremiumPage() {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: orderRes.data.amount,
         currency: orderRes.data.currency,
-        name: "Edutech",
+        name: "EDUTECHEX",
         description: `${planTypeStr} Subscription`,
         order_id: orderRes.data.id,
         handler: async function (response) {

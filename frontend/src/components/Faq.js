@@ -21,9 +21,9 @@ const Faq = ({ className = "" }) => {
   return (
     <div
       id="faqs"
-      className={`flex flex-col w-full py-8 lg:py-[60px] lg:flex-row lg:gap-x-6 ${className}`}
+      className={`flex flex-col w-full pt-2 pb-6 lg:pt-4 lg:pb-8 lg:flex-row lg:gap-x-6 ${className}`}
     >
-      <div className="lg:w-1/3 lg:py-[32px] lg:pr-[56px]">
+      <div className="lg:w-1/3 lg:pt-0 lg:pb-8 lg:pr-[56px]">
         <h3 className="font-medium text-[#EB2891] text-[14px] lg:text-base">
           {faqheading}
         </h3>

@@ -15,7 +15,7 @@ const buttonImages = {
   green: GreenButton,
 };
 
-const Features = () => {
+const Features = ({ className = "" }) => {
   const { edutechexData } = useSelector((state) => state.root);
 
   const rawFeatures =
@@ -56,7 +56,7 @@ const Features = () => {
   return (
     <div
       id="features"
-      className="flex flex-col gap-y-8 py-8 lg:py-16 lg:gap-y-12"
+      className={`flex flex-col gap-y-8 pt-6 pb-0 lg:pt-8 lg:pb-0 lg:gap-y-12 ${className}`}
     >
       {featuresData.map((feature, index) => (
         <div

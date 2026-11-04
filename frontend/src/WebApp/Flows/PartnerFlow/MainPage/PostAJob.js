@@ -206,6 +206,29 @@ const CustomSelect = ({
   );
 };
 
+export const addOneMonth = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return null;
+  const curDay = d.getDate();
+  d.setMonth(d.getMonth() + 1);
+  if (d.getDate() !== curDay) {
+    d.setDate(0);
+  }
+  return d;
+};
+
+export const formatDurationParts = (years, months, days) => {
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? "s" : ""}`);
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+  if (parts.length === 0) return "1 month";
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts[0]}, ${parts[1]} and ${parts[2]}`;
+};
+
 const PostAJob = () => {
   const { saveJob, handleSelectTab } = useTabContext();
 
@@ -269,6 +292,24 @@ const PostAJob = () => {
   const [userType, setUserType] = useState("");
   const [freemiumAlert, setFreemiumAlert] = useState("");
   const cityDebounceRef = useRef(null);
+  const jobDescRef = useRef(null);
+
+  const adjustTextareaHeight = useCallback((el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    const borderOffset = el.offsetHeight - el.clientHeight;
+    el.style.height = `${el.scrollHeight + (borderOffset > 0 ? borderOffset : 2)}px`;
+  }, []);
+
+  useEffect(() => {
+    if (jobDescRef.current) {
+      adjustTextareaHeight(jobDescRef.current);
+      const frameId = requestAnimationFrame(() => {
+        if (jobDescRef.current) adjustTextareaHeight(jobDescRef.current);
+      });
+      return () => cancelAnimationFrame(frameId);
+    }
+  }, [formData.jobDescription, adjustTextareaHeight]);
 
   const [fieldErrors, setFieldErrors] = useState({
     jobTitle: "",
@@ -365,6 +406,7 @@ const PostAJob = () => {
             ...prev.compensationDetails,
             type: value,
             frequency: value === "FREE" ? "" : "ONE_TIME",
+            currency: value === "FREE" ? "" : "INR",
             ...(value === "FREE" && { amount: null, currency: "" }),
           },
         };
@@ -465,17 +507,30 @@ const PostAJob = () => {
       setFormData((prev) => ({ ...prev, duration: "" }));
       return;
     }
-    if (end < start) {
-      setFormData((prev) => ({ ...prev, duration: "Invalid duration" }));
+    const minEnd = addOneMonth(start);
+    if (end < minEnd) {
+      setFormData((prev) => ({
+        ...prev,
+        duration: "Invalid (Min 1 month required)",
+      }));
       return;
     }
-    const totalDays = Math.floor((end - start) / (1000 * 60 * 60 * 24));
-    const months = Math.floor(totalDays / 30);
-    const days = totalDays % 30;
-    const durationText =
-      months > 0
-        ? `${months} month${months > 1 ? "s" : ""}${days > 0 ? ` and ${days} day${days > 1 ? "s" : ""}` : ""}`
-        : `${totalDays} day${totalDays > 1 ? "s" : ""}`;
+    let m =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth());
+    let d = end.getDate() - start.getDate();
+    if (d < 0) {
+      m -= 1;
+      const prevMonthLastDate = new Date(
+        end.getFullYear(),
+        end.getMonth(),
+        0
+      ).getDate();
+      d += prevMonthLastDate;
+    }
+    const years = Math.floor(m / 12);
+    const remMonths = m % 12;
+    const durationText = formatDurationParts(years, remMonths, d);
     setFormData((prev) => ({ ...prev, duration: durationText }));
   }, []);
 
@@ -641,6 +696,14 @@ const PostAJob = () => {
       setTimeout(() => setErrorMessage(""), 6000);
       return;
     }
+    const start = new Date(formData.startDate + "T00:00:00");
+    const end = new Date(formData.endDateOrDuration + "T00:00:00");
+    const minEnd = addOneMonth(start);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < minEnd) {
+      setErrorMessage("Internship duration must be at least 1 month.");
+      setTimeout(() => setErrorMessage(""), 6000);
+      return;
+    }
     if (!formData.mode) {
       setErrorMessage("Please select a Mode of Internship.");
       setTimeout(() => setErrorMessage(""), 6000);
@@ -666,6 +729,13 @@ const PostAJob = () => {
 
     const payload = {
       ...formData,
+      compensationDetails:
+        formData.compensationDetails && formData.internshipType !== "FREE"
+          ? {
+              ...formData.compensationDetails,
+              currency: "INR",
+            }
+          : formData.compensationDetails,
       imgUrl: formData.imgUrl || edutechex_logo_white,
       internshipMode: (formData.mode || "ONLINE").toUpperCase(),
       location: formData.state
@@ -910,16 +980,32 @@ const PostAJob = () => {
           </label>
           {/*Add the style attribute for alignment - 04-08-2026 */}
           <textarea
+            ref={jobDescRef}
             name="jobDescription"
             value={formData.jobDescription}
-            onChange={handleChange}
+            onChange={(e) => {
+              handleChange(e);
+              adjustTextareaHeight(e.target);
+            }}
+            onInput={(e) => adjustTextareaHeight(e.target)}
             required
             maxLength={4000}
-            rows="4"
-            className={inputCls}
-            style={{ marginTop: "0px" }}
+            rows="2"
+            className={`${inputCls} overflow-hidden leading-relaxed px-4 py-3`}
+            style={{
+              marginTop: "0px",
+              lineHeight: "1.6",
+            }}
             placeholder="Describe the job responsibilities, requirements, etc. (max 4000 chars)"
           />
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-gray-400">
+              Box expands automatically as you type.
+            </p>
+            <p className="text-xs text-gray-400">
+              {formData.jobDescription?.length || 0} / 4000
+            </p>
+          </div>
         </div>
 
         {/* Start Date */}
@@ -934,27 +1020,49 @@ const PostAJob = () => {
               }
               onChange={(date) => {
                 if (!date) {
-                  handleChange({ target: { name: "startDate", value: "" } });
+                  setFormData((prev) => ({
+                    ...prev,
+                    startDate: "",
+                    duration: "",
+                  }));
                 } else {
                   const y = date.getFullYear();
                   const m = String(date.getMonth() + 1).padStart(2, "0");
                   const d = String(date.getDate()).padStart(2, "0");
-                  handleChange({
-                    target: { name: "startDate", value: `${y}-${m}-${d}` },
+                  const newStartDate = `${y}-${m}-${d}`;
+                  setFormData((prev) => {
+                    const next = { ...prev, startDate: newStartDate };
+                    if (prev.endDateOrDuration) {
+                      const minEnd = addOneMonth(new Date(newStartDate + "T00:00:00"));
+                      const curEnd = new Date(prev.endDateOrDuration + "T00:00:00");
+                      if (curEnd < minEnd) {
+                        const y2 = minEnd.getFullYear();
+                        const m2 = String(minEnd.getMonth() + 1).padStart(2, "0");
+                        const d2 = String(minEnd.getDate()).padStart(2, "0");
+                        next.endDateOrDuration = `${y2}-${m2}-${d2}`;
+                      }
+                    }
+                    return next;
                   });
                 }
               }}
               minDate={(() => {
                 const d = new Date();
-                d.setMonth(d.getMonth() + 1);
+                d.setDate(1);
+                d.setHours(0, 0, 0, 0);
                 return d;
               })()}
               dateFormat="yyyy-MM-dd"
               placeholderText="Select start date (YYYY-MM-DD)"
+              popperPlacement="bottom-start"
+              popperClassName="!z-[9999]"
               className="w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-poppins text-sm cursor-pointer"
               wrapperClassName="w-full"
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Internship can start from any date this month or later.
+          </p>
         </div>
 
         {/* End Date */}
@@ -971,9 +1079,11 @@ const PostAJob = () => {
               }
               onChange={(date) => {
                 if (!date) {
-                  handleChange({
-                    target: { name: "endDateOrDuration", value: "" },
-                  });
+                  setFormData((prev) => ({
+                    ...prev,
+                    endDateOrDuration: "",
+                    duration: "",
+                  }));
                 } else {
                   const y = date.getFullYear();
                   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -987,15 +1097,20 @@ const PostAJob = () => {
                 const base = formData.startDate
                   ? new Date(formData.startDate + "T00:00:00")
                   : new Date();
-                base.setMonth(base.getMonth() + 1);
-                return base;
+                base.setHours(0, 0, 0, 0);
+                return addOneMonth(base);
               })()}
               dateFormat="yyyy-MM-dd"
               placeholderText="Select end date (YYYY-MM-DD)"
+              popperPlacement="bottom-start"
+              popperClassName="!z-[9999]"
               className="w-full h-12 box-border p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-poppins text-sm cursor-pointer"
               wrapperClassName="w-full"
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Minimum duration is 1 month. Maximum unlimited.
+          </p>
         </div>
 
         {/* Calculated Duration */}
@@ -1010,9 +1125,18 @@ const PostAJob = () => {
             value={formData.duration}
             readOnly
             placeholder="Duration will be calculated"
-            className={inputCls}
+            className={`${inputCls} ${
+              formData.duration && formData.duration.startsWith("Invalid")
+                ? "border-red-500 text-red-600 bg-red-50"
+                : ""
+            }`}
             style={{ marginTop: "0px" }}
           />
+          {formData.duration && formData.duration.startsWith("Invalid") && (
+            <p className="text-xs text-red-500 mt-1">
+              End date must be at least 1 month after start date.
+            </p>
+          )}
         </div>
 
         {/* Mode */}
@@ -1342,10 +1466,10 @@ const PostAJob = () => {
               </label>
               <CustomSelect
                 name="compensationDetails.currency"
-                value={formData.compensationDetails.currency}
+                value={formData.compensationDetails.currency || "INR"}
                 onChange={handleChange}
                 options={[{ value: "INR", label: "INR" }]}
-                placeholder="Select Currency"
+                placeholder="INR"
               />
             </div>
 

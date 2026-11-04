@@ -155,7 +155,7 @@ export default function PartnerPremiumPage() {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: orderRes.amount,
         currency: orderRes.currency,
-        name: "Edutech Partner",
+        name: "EDUTECHEX",
         description: `${plan.title} Subscription`,
         order_id: orderRes.id,
         handler: async function (response) {

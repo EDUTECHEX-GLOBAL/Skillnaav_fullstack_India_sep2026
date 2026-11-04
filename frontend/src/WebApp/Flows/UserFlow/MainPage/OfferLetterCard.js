@@ -1361,7 +1361,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
                     key: process.env.REACT_APP_RAZORPAY_KEY_ID,
                     amount: orderData.amount,
                     currency: orderData.currency,
-                    name: "Edutech",
+                    name: "EDUTECHEX",
                     description: `Payment for ${job?.jobTitle || 'Internship'}`,
                     order_id: orderData.orderId,
                     handler: async function (response) {

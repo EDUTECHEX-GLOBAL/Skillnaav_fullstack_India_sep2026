@@ -61,6 +61,29 @@ import {
 } from "../../../../utils/validators";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { size } from "@floating-ui/react";
+import { addOneMonth, formatDurationParts } from "./PostAJob";
+
+// Ensures the calendar popup ("down box") strictly matches the width of the input ("top box")
+const datePickerSameWidthModifier = size({
+  apply({ rects, elements }) {
+    elements.floating.style.setProperty(
+      "width",
+      `${rects.reference.width}px`,
+      "important"
+    );
+    elements.floating.style.setProperty(
+      "min-width",
+      `${rects.reference.width}px`,
+      "important"
+    );
+    elements.floating.style.setProperty(
+      "max-width",
+      `${rects.reference.width}px`,
+      "important"
+    );
+  },
+});
 
 Modal.setAppElement("#root");
 
@@ -80,14 +103,17 @@ const SECTOR_LABELS = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmtDate = (d) =>
-  d
-    ? new Date(d).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "—";
+const fmtDate = (d) => {
+  if (!d) return "—";
+  const s = String(d).trim();
+  const dateObj = new Date(s.includes("T") ? s : s.slice(0, 10) + "T00:00:00");
+  if (isNaN(dateObj.getTime())) return d;
+  return dateObj.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 // ─── StatusPill ───────────────────────────────────────────────────────────────
 const StatusPill = ({
@@ -207,7 +233,7 @@ const CompLabel = ({ i }) => {
     return <span className="text-gray-500">Unpaid / Free</span>;
   const c = i.compensationDetails;
   const text = c?.amount
-    ? `${c.amount} ${c.currency} / ${(c.frequency || "").toLowerCase()}`
+    ? `${c.amount} INR / ${(c.frequency || "").toLowerCase()}`
     : "Amount not specified";
   return (
     <span
@@ -393,10 +419,16 @@ const CustomSelect = ({
 
 // ─── DateInput ────────────────────────────────────────────────────────────────
 const DateInput = ({ label, value, onChange, min }) => {
-  const parsedDate = value
-    ? new Date(String(value).slice(0, 10) + "T00:00:00")
-    : null;
-  const parsedMin = min ? new Date(min + "T00:00:00") : undefined;
+  const parsedDate = (() => {
+    if (!value) return null;
+    const d = new Date(String(value).slice(0, 10) + "T00:00:00");
+    return isNaN(d.getTime()) ? null : d;
+  })();
+  const parsedMin = (() => {
+    if (!min) return undefined;
+    const d = new Date(String(min).slice(0, 10) + "T00:00:00");
+    return isNaN(d.getTime()) ? undefined : d;
+  })();
 
   return (
     <div>
@@ -422,6 +454,9 @@ const DateInput = ({ label, value, onChange, min }) => {
           minDate={parsedMin}
           dateFormat="yyyy-MM-dd"
           placeholderText="YYYY-MM-DD"
+          popperPlacement="bottom-start"
+          popperModifiers={[datePickerSameWidthModifier]}
+          popperClassName="!z-[9999]"
           className="w-full h-10 box-border px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white text-gray-700 cursor-pointer"
           wrapperClassName="w-full"
         />
@@ -673,8 +708,8 @@ const ViewModalBody = ({ internship: i, onEdit, onClose }) => (
         <DetailRow icon={faCalendarDay} label="Start Date">
           {fmtDate(i.startDate)}
         </DetailRow>
-        <DetailRow icon={faCalendarCheck} label="End / Duration">
-          {i.endDateOrDuration}
+        <DetailRow icon={faCalendarCheck} label="End Date">
+          {fmtDate(i.endDateOrDuration)}
         </DetailRow>
         <DetailRow icon={faCalendarPlus} label="Posted">
           {fmtDate(i.createdAt)}
@@ -843,6 +878,24 @@ const EditModalBody = ({
   onClose,
 }) => {
   const logoInputRef = useRef(null);
+  const descRef = useRef(null);
+
+  const adjustDescHeight = useCallback((el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    const borderOffset = el.offsetHeight - el.clientHeight;
+    el.style.height = `${el.scrollHeight + (borderOffset > 0 ? borderOffset : 2)}px`;
+  }, []);
+
+  useEffect(() => {
+    if (descRef.current) {
+      adjustDescHeight(descRef.current);
+      const frameId = requestAnimationFrame(() => {
+        if (descRef.current) adjustDescHeight(descRef.current);
+      });
+      return () => cancelAnimationFrame(frameId);
+    }
+  }, [si.jobDescription, adjustDescHeight]);
 
   useEffect(() => {
     const startVal = si.startDate;
@@ -878,6 +931,16 @@ const EditModalBody = ({
     }
   }, [si.startDate, si.endDateOrDuration, si.duration, updateField]);
 
+  useEffect(() => {
+    if (
+      si.internshipType !== "FREE" &&
+      si.compensationDetails &&
+      si.compensationDetails.currency !== "INR"
+    ) {
+      updateField("compensationDetails.currency", "INR");
+    }
+  }, [si.internshipType, si.compensationDetails, updateField]);
+
   const handleTypeChange = (value) => {
     updateField("internshipType", value);
     updateField("compensationDetails.type", value);
@@ -886,8 +949,7 @@ const EditModalBody = ({
       updateField("compensationDetails.currency", "");
       updateField("compensationDetails.frequency", "");
     } else {
-      if (!si.compensationDetails?.currency)
-        updateField("compensationDetails.currency", "INR");
+      updateField("compensationDetails.currency", "INR");
       if (!si.compensationDetails?.frequency)
         updateField("compensationDetails.frequency", "MONTHLY");
     }
@@ -901,26 +963,43 @@ const EditModalBody = ({
 
     if (
       startVal &&
-      endVal &&
-      /^\d{4}-\d{2}-\d{2}/.test(String(startVal)) &&
-      /^\d{4}-\d{2}-\d{2}/.test(String(endVal))
+      /^\d{4}-\d{2}-\d{2}/.test(String(startVal))
     ) {
-      const s = new Date(startVal);
-      const e = new Date(endVal);
-      if (!isNaN(s) && !isNaN(e) && s <= e) {
-        let m =
-          (e.getFullYear() - s.getFullYear()) * 12 +
-          (e.getMonth() - s.getMonth());
-        let d = e.getDate() - s.getDate();
-        if (d < 0) {
-          m -= 1;
-          const prev = new Date(e.getFullYear(), e.getMonth(), 0);
-          d += prev.getDate();
+      const s = new Date(String(startVal).slice(0, 10) + "T00:00:00");
+      if (!isNaN(s.getTime())) {
+        const minEnd = addOneMonth(s);
+        const y2 = minEnd.getFullYear();
+        const m2 = String(minEnd.getMonth() + 1).padStart(2, "0");
+        const d2 = String(minEnd.getDate()).padStart(2, "0");
+        const autoEndStr = `${y2}-${m2}-${d2}`;
+
+        if (endVal && /^\d{4}-\d{2}-\d{2}/.test(String(endVal))) {
+          const e = new Date(String(endVal).slice(0, 10) + "T00:00:00");
+          if (!isNaN(e.getTime())) {
+            if (e < minEnd) {
+              if (field === "startDate") {
+                // Auto-adjust end date to maintain at least 1 month duration
+                updateField("endDateOrDuration", autoEndStr);
+                updateField("duration", "1 month");
+                return;
+              }
+              updateField("duration", "Invalid (Min 1 month required)");
+              return;
+            }
+            let m =
+              (e.getFullYear() - s.getFullYear()) * 12 +
+              (e.getMonth() - s.getMonth());
+            let d = e.getDate() - s.getDate();
+            if (d < 0) {
+              m -= 1;
+              const prev = new Date(e.getFullYear(), e.getMonth(), 0);
+              d += prev.getDate();
+            }
+            const years = Math.floor(m / 12);
+            const remMonths = m % 12;
+            updateField("duration", formatDurationParts(years, remMonths, d));
+          }
         }
-        const parts = [];
-        if (m > 0) parts.push(`${m} month${m > 1 ? "s" : ""}`);
-        if (d > 0) parts.push(`${d} day${d > 1 ? "s" : ""}`);
-        updateField("duration", parts.length > 0 ? parts.join(" ") : "0 days");
       }
     }
   };
@@ -1065,11 +1144,6 @@ const EditModalBody = ({
             label="Start Date"
             value={si.startDate ? String(si.startDate).slice(0, 10) : ""}
             onChange={(val) => handleDateChange("startDate", val)}
-            min={(() => {
-              const d = new Date();
-              d.setMonth(d.getMonth() + 1);
-              return d.toISOString().split("T")[0];
-            })()}
           />
           <DateInput
             label="End Date"
@@ -1081,9 +1155,14 @@ const EditModalBody = ({
             }
             onChange={(val) => handleDateChange("endDateOrDuration", val)}
             min={(() => {
-              const base = si.startDate ? new Date(si.startDate) : new Date();
-              base.setMonth(base.getMonth() + 1);
-              return base.toISOString().split("T")[0];
+              if (!si.startDate) return undefined;
+              const base = new Date(String(si.startDate).slice(0, 10) + "T00:00:00");
+              if (isNaN(base.getTime())) return undefined;
+              const minEnd = addOneMonth(base);
+              const y = minEnd.getFullYear();
+              const m = String(minEnd.getMonth() + 1).padStart(2, "0");
+              const d = String(minEnd.getDate()).padStart(2, "0");
+              return `${y}-${m}-${d}`;
             })()}
           />
           <div>
@@ -1098,7 +1177,11 @@ const EditModalBody = ({
               readOnly
               value={si.duration || ""}
               placeholder="Auto-calculated"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed focus:outline-none"
+              className={`w-full border rounded-lg px-3 py-2 text-sm cursor-not-allowed focus:outline-none ${
+                si.duration && si.duration.startsWith("Invalid")
+                  ? "border-red-400 bg-red-50 text-red-600 font-medium"
+                  : "border-gray-200 bg-gray-50 text-gray-500"
+              }`}
               style={{ fontFamily: "'Poppins', sans-serif" }}
             />
           </div>
@@ -1204,14 +1287,11 @@ const EditModalBody = ({
                   Currency
                 </label>
                 <CustomSelect
-                  value={si.compensationDetails?.currency || "INR"}
+                  value="INR"
                   onChange={(e) =>
                     updateField("compensationDetails.currency", e.target.value)
                   }
-                  options={["INR", "USD", "CAD", "EUR", "GBP"].map((c) => ({
-                    value: c,
-                    label: c,
-                  }))}
+                  options={[{ value: "INR", label: "INR" }]}
                   className="w-full"
                   buttonClassName="border border-gray-200 rounded-lg px-3 py-2 text-sm h-10"
                 />
@@ -1242,13 +1322,32 @@ const EditModalBody = ({
         )}
 
         <FormSectionLabel icon={faFileLines}>Description</FormSectionLabel>
-        <textarea
-          rows={4}
-          value={si.jobDescription || ""}
-          onChange={(e) => updateField("jobDescription", e.target.value)}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        />
+        <div>
+          <textarea
+            ref={descRef}
+            rows={2}
+            value={si.jobDescription || ""}
+            onChange={(e) => {
+              updateField("jobDescription", e.target.value);
+              adjustDescHeight(e.target);
+            }}
+            onInput={(e) => adjustDescHeight(e.target)}
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 overflow-hidden transition-none leading-relaxed"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              lineHeight: "1.6",
+            }}
+            placeholder="Enter detailed job description, responsibilities, and requirements..."
+          />
+          <div className="flex justify-between items-center mt-1 px-1">
+            <p className="text-xs text-gray-400">
+              Box expands automatically to fit your text.
+            </p>
+            <p className="text-xs text-gray-400">
+              {(si.jobDescription || "").length} / 5000 characters
+            </p>
+          </div>
+        </div>
 
         <FormSectionLabel icon={faListCheck}>Qualifications</FormSectionLabel>
         <QualTagInput
@@ -1576,6 +1675,16 @@ const YourJobPosts = () => {
       }
     }
 
+    if (selectedInternship.startDate && selectedInternship.endDateOrDuration) {
+      const s = new Date(String(selectedInternship.startDate).slice(0, 10) + "T00:00:00");
+      const e = new Date(String(selectedInternship.endDateOrDuration).slice(0, 10) + "T00:00:00");
+      const minEnd = addOneMonth(s);
+      if (isNaN(s.getTime()) || isNaN(e.getTime()) || e < minEnd) {
+        alert("Internship duration must be at least 1 month.");
+        return;
+      }
+    }
+
     // Send only the editable fields — never let the frontend decide adminApproved/adminStatus.
     // The backend PUT route always resets to "pending" on partner edits.
     const {
@@ -1613,7 +1722,13 @@ const YourJobPosts = () => {
       classification,
       internshipMode,
       internshipType,
-      compensationDetails,
+      compensationDetails:
+        compensationDetails && internshipType !== "FREE"
+          ? {
+              ...compensationDetails,
+              currency: "INR",
+            }
+          : compensationDetails,
       qualifications,
       contactInfo,
       imgUrl,
@@ -1964,7 +2079,20 @@ const YourJobPosts = () => {
             (modalMode === "view" ? (
               <ViewModalBody
                 internship={selectedInternship}
-                onEdit={() => setModalMode("edit")}
+                onEdit={() => {
+                  setSelectedInternship((prev) =>
+                    prev && prev.internshipType !== "FREE"
+                      ? {
+                          ...prev,
+                          compensationDetails: {
+                            ...prev.compensationDetails,
+                            currency: "INR",
+                          },
+                        }
+                      : prev
+                  );
+                  setModalMode("edit");
+                }}
                 onClose={closeModal}
               />
             ) : (

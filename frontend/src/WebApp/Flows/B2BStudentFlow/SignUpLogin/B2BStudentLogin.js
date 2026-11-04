@@ -97,19 +97,30 @@ const B2BStudentLogin = () => {
       localStorage.setItem("loginTime", Date.now());
 
       setLoading(false);
-      const currentHost = window.location.hostname;
-      const port = window.location.port ? `:${window.location.port}` : "";
-      const protocol = window.location.protocol;
-      const authQueryParams = `?authToken=${encodeURIComponent(data.token)}${sessionRes?.data?.sessionId ? `&authSession=${encodeURIComponent(sessionRes.data.sessionId)}` : ""}`;
+      const enableSubdomainRedirect = process.env.REACT_APP_ENABLE_B2B_SUBDOMAIN_REDIRECT === "true";
+      const customB2BDomain = process.env.REACT_APP_B2B_SUBDOMAIN || "";
 
-      if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-        window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
-      } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.")) {
-        const b2bHost = currentHost.replace(/^www\./, "");
-        window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
-      } else {
-        navigate("/user-main-page");
+      if (enableSubdomainRedirect) {
+        const currentHost = window.location.hostname;
+        const port = window.location.port ? `:${window.location.port}` : "";
+        const protocol = window.location.protocol;
+        const authQueryParams = `?authToken=${encodeURIComponent(data.token)}${sessionRes?.data?.sessionId ? `&authSession=${encodeURIComponent(sessionRes.data.sessionId)}` : ""}`;
+
+        if (customB2BDomain && currentHost !== customB2BDomain) {
+          window.location.href = `${protocol}//${customB2BDomain}${port}/user-main-page${authQueryParams}`;
+          return;
+        }
+        if ((currentHost === "localhost" || currentHost === "127.0.0.1") && currentHost !== "b2b.localhost") {
+          window.location.href = `${protocol}//b2b.localhost${port}/user-main-page${authQueryParams}`;
+          return;
+        } else if (!currentHost.startsWith("b2b.") && !currentHost.startsWith("campus.") && !currentHost.startsWith("school.")) {
+          const b2bHost = currentHost.replace(/^www\./, "");
+          window.location.href = `${protocol}//b2b.${b2bHost}${port}/user-main-page${authQueryParams}`;
+          return;
+        }
       }
+
+      navigate("/user-main-page");
     } catch (err) {
       console.error("B2B Student Login error:", err.response || err.message);
       setError(err.response?.data?.message || "Login failed. Please check your credentials.");
