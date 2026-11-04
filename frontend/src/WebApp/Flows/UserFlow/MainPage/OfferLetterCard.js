@@ -1272,7 +1272,7 @@ const OfferLetterCard = ({ offer, onStatusChange }) => {
       : job.internshipType === "FREE"
         ? "Unpaid / Free"
         : job.internshipType === "PAID"
-          ? `Student Pays: ₹{job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}`.trim()
+          ? `Student Pays: ₹${job.compensationDetails?.amount || "—"}${job.compensationDetails?.currency && job.compensationDetails?.currency !== "INR" && job.compensationDetails?.currency !== "₹" ? ` ${job.compensationDetails.currency}` : ""}`.trim()
           : "N/A";
   const benefits = Array.isArray(job.compensationDetails?.benefits)
     ? job.compensationDetails.benefits.filter(Boolean)

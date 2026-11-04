@@ -700,7 +700,7 @@ const PartnerManagement = () => {
                     {internship.internshipType === "STIPEND"
                       ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}/mo`
                       : internship.internshipType === "PAID"
-                        ? `Student Pays: ₹{internship.compensationDetails?.amount}`
+                        ? `Student Pays: ₹${internship.compensationDetails?.amount || ""}`.trim()
                         : "Free"}
                   </span>
                 </div>

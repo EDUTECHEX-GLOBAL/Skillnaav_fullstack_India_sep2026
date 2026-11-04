@@ -23,10 +23,33 @@ const responseMap = {
 // GET all active questions
 const getQuestions = async (req, res) => {
   try {
-    const questions = await PersonalityQuestion.find({ isActive: true });
-    return questions.length
-      ? res.status(200).json(questions)
-      : res.status(404).json({ message: 'No active questions found' });
+    let questions = await PersonalityQuestion.find({
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
+    });
+
+    if (!questions || questions.length === 0) {
+      const defaultQuestions = [
+        { question: "Fix a broken faucet or electrical appliance", responseScale: [1, 2, 3, 4, 5], riasecTrait: "R", isActive: true },
+        { question: "Assemble furniture or mechanical parts", responseScale: [1, 2, 3, 4, 5], riasecTrait: "R", isActive: true },
+        { question: "Do scientific research on technology or nature", responseScale: [1, 2, 3, 4, 5], riasecTrait: "I", isActive: true },
+        { question: "Analyze data to solve complex problems", responseScale: [1, 2, 3, 4, 5], riasecTrait: "I", isActive: true },
+        { question: "Design graphics, posters, or website visuals", responseScale: [1, 2, 3, 4, 5], riasecTrait: "A", isActive: true },
+        { question: "Write creative articles, stories, or scripts", responseScale: [1, 2, 3, 4, 5], riasecTrait: "A", isActive: true },
+        { question: "Teach, train, or mentor other students", responseScale: [1, 2, 3, 4, 5], riasecTrait: "S", isActive: true },
+        { question: "Help people resolve personal or career challenges", responseScale: [1, 2, 3, 4, 5], riasecTrait: "S", isActive: true },
+        { question: "Lead a team project or start a business venture", responseScale: [1, 2, 3, 4, 5], riasecTrait: "E", isActive: true },
+        { question: "Pitch new ideas or persuade clients", responseScale: [1, 2, 3, 4, 5], riasecTrait: "E", isActive: true },
+        { question: "Organize files, budgets, or detailed schedules", responseScale: [1, 2, 3, 4, 5], riasecTrait: "C", isActive: true },
+        { question: "Verify accuracy of records and documentation", responseScale: [1, 2, 3, 4, 5], riasecTrait: "C", isActive: true },
+      ];
+      try {
+        questions = await PersonalityQuestion.insertMany(defaultQuestions);
+      } catch (_) {
+        questions = defaultQuestions;
+      }
+    }
+
+    return res.status(200).json(questions);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Error fetching questions' });

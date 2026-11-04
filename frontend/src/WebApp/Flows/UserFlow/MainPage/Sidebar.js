@@ -163,9 +163,9 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
           ${
             isMobile
               ? isOpen
-                ? "fixed top-[72px] left-0 h-[calc(100vh-72px)] z-[100] w-64 bg-white shadow-xl transform translate-x-0"
+                ? "fixed top-[72px] bottom-0 left-0 z-[100] w-64 max-w-[85vw] bg-white shadow-xl flex flex-col"
                 : "hidden"
-              : `sticky top-[72px] z-10 h-[calc(100vh-72px)] bg-white shadow-lg ${
+              : `sticky top-[72px] z-10 h-[calc(100vh-72px)] bg-white shadow-lg flex flex-col ${
                   isDesktopOpen ? "w-64" : "w-16"
                 }`
           }
@@ -173,10 +173,13 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
         `}
       >
         {/* Inner content */}
-        <div className="w-full h-full flex flex-col">
+        <div className="w-full h-full flex flex-col min-h-0">
           {/* Scrollable nav area */}
           <div
-            className={`flex-1 min-h-0 overflow-y-auto ${isDesktopOpen || isMobile ? "px-4 pt-4" : "px-1.5 pt-10"} pb-6 hide-scrollbar`}
+            style={{ WebkitOverflowScrolling: "touch" }}
+            className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y ${
+              isDesktopOpen || isMobile ? "px-4 pt-4" : "px-1.5 pt-10"
+            } ${isMobile ? "pb-28" : "pb-8"} hide-scrollbar`}
           >
             <nav className="space-y-2">
               {menuItems.map(({ id, icon, label }) => (
@@ -298,27 +301,27 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
                 {(isDesktopOpen || isMobile) && <span>Logout</span>}
               </button>
             </div>
-          </div>
 
-          {/* Fixed bottom Upgrade Box — hidden when collapsed */}
-          {(isDesktopOpen || isMobile) && (
-            <div className="shrink-0 p-4 pt-0">
-              <div className="bg-purple-100 rounded-lg p-4">
-                <h3 className="text-purple-700 text-sm font-semibold">
-                  UPGRADE TO PREMIUM
-                </h3>
-                <p className="text-xs text-gray-600 mt-1">
-                  Apply to more jobs and unlock premium benefits!
-                </p>
-                <button
-                  onClick={() => handleTabClick("premium")}
-                  className="mt-4 w-full bg-purple-700 text-white py-2 px-4 rounded-lg hover:bg-purple-800 transition"
-                >
-                  Upgrade Now
-                </button>
+            {/* Upgrade Box inside scroll area so it is 100% scrollable on mobile */}
+            {(isDesktopOpen || isMobile) && (
+              <div className="mt-6 pb-6">
+                <div className="bg-purple-100 rounded-xl p-4 shadow-sm border border-purple-200">
+                  <h3 className="text-purple-700 text-sm font-semibold">
+                    UPGRADE TO PREMIUM
+                  </h3>
+                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                    Apply to more jobs and unlock premium benefits!
+                  </p>
+                  <button
+                    onClick={() => handleTabClick("premium")}
+                    className="mt-3.5 w-full bg-purple-700 text-white text-sm font-semibold py-2.5 px-4 rounded-lg hover:bg-purple-800 active:scale-95 transition shadow-sm cursor-pointer"
+                  >
+                    Upgrade Now
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

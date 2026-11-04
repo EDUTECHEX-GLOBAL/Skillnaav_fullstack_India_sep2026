@@ -17,6 +17,7 @@ const validationSchema = Yup.object({
 });
 
 const PartnerLogin = () => {
+  const rememberedPartnerEmail = localStorage.getItem("rememberedPartnerEmail") || "";
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,11 @@ const PartnerLogin = () => {
     setError("");
     setLoading(true);
     try {
+      if (values.rememberMe) {
+        localStorage.setItem("rememberedPartnerEmail", values.email);
+      } else {
+        localStorage.removeItem("rememberedPartnerEmail");
+      }
       const config = {
         headers: {
           "Content-type": "application/json",
@@ -134,7 +140,11 @@ const PartnerLogin = () => {
             <Loading />
           ) : (
             <Formik
-              initialValues={{ email: "", password: "" }}
+              initialValues={{
+                email: rememberedPartnerEmail,
+                password: "",
+                rememberMe: Boolean(rememberedPartnerEmail),
+              }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -200,11 +210,11 @@ const PartnerLogin = () => {
                       type="checkbox"
                       name="rememberMe"
                       id="rememberMe"
-                      className="form-checkbox h-4 w-4 text-teal-500 transition duration-150 ease-in-out"
+                      className="h-4 w-4 text-teal-500 rounded border-gray-300 focus:ring-teal-500 transition duration-150 ease-in-out cursor-pointer"
                     />
                     <label
                       htmlFor="rememberMe"
-                      className="block text-sm mt-4 ml-2 text-gray-700"
+                      className="ml-2 text-sm text-gray-700 cursor-pointer select-none leading-none"
                     >
                       Remember me
                     </label>

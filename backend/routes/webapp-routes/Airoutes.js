@@ -23,17 +23,33 @@ const {
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
   fileFilter: (req, file, cb) => {
-    const allowed = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
-    allowed.includes(file.mimetype)
-      ? cb(null, true)
-      : cb(new Error('Only PDF and DOCX files are allowed'));
+    const name = (file.originalname || '').toLowerCase();
+    const mime = (file.mimetype || '').toLowerCase();
+
+    const isPdf = name.endsWith('.pdf') || mime.includes('pdf');
+    const isDocx = name.endsWith('.docx') || name.endsWith('.doc') ||
+                   mime.includes('word') || mime.includes('officedocument') ||
+                   mime === 'application/octet-stream';
+
+    if (isPdf || isDocx) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF and DOCX files are allowed'));
+    }
   },
 });
+
+// Middleware wrapper for handling multer errors gracefully
+const handleUpload = (field) => (req, res, next) => {
+  upload.single(field)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, message: err.message || 'File upload error' });
+    }
+    next();
+  });
+};
 
 // ── Shortlisting ──────────────────────────────────────────────────────────────
 // Called by Partner dashboard → Partner token → authenticate ✅
@@ -47,7 +63,7 @@ router.get('/partner/shortlisted/by-admin',      protectSchool, getShortlistedBy
 router.get('/partner/shortlisted/:internshipId', authenticate,  getShortlisted);
 
 // ── Skill Analysis ────────────────────────────────────────────────────────────
-router.post('/analyze-skills', authenticate, upload.single('file'), analyzeSkills);
+router.post('/analyze-skills', authenticate, handleUpload('file'), analyzeSkills);
 
 // ── Resume + CV ───────────────────────────────────────────────────────────────
 router.post('/extract-resume', authenticate, extractResume);

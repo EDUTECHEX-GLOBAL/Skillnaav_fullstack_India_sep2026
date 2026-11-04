@@ -299,7 +299,7 @@ const formatCompensation = (internship) => {
     return `${compensation?.amount} ${compensation?.currency} / ${compensation?.frequency?.toLowerCase()}`;
   if (internshipType === "FREE") return "Unpaid / Free";
   if (internshipType === "PAID")
-    return `Student Pays: ₹{compensation?.amount} ${compensation?.currency}`;
+    return `Student Pays: ₹${compensation?.amount || ""}${compensation?.currency && compensation?.currency !== "INR" && compensation?.currency !== "₹" ? ` ${compensation.currency}` : ""}`.trim();
   return "N/A";
 };
 

@@ -12,7 +12,7 @@ import {
   FiMapPin
 } from 'react-icons/fi';
 import axios from "../../../../api/axiosInstance";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx/xlsx.js";
 import CreateMeetingLink from './CreateMeetingLink';
 import ScheduleFormPaid from './ScheduleFormPaid';
 import DatePicker from "react-datepicker";

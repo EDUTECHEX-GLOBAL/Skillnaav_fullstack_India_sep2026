@@ -17,6 +17,7 @@ const validationSchema = Yup.object({
 });
 
 const AdminLogin = () => {
+  const rememberedAdminEmail = localStorage.getItem("rememberedAdminEmail") || "";
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,11 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
+      if (values.rememberMe) {
+        localStorage.setItem("rememberedAdminEmail", values.email);
+      } else {
+        localStorage.removeItem("rememberedAdminEmail");
+      }
       // API configuration
       const config = {
         headers: {
@@ -90,7 +96,11 @@ const AdminLogin = () => {
             <Loading />
           ) : (
             <Formik
-              initialValues={{ email: "", password: "" }}
+              initialValues={{
+                email: rememberedAdminEmail,
+                password: "",
+                rememberMe: Boolean(rememberedAdminEmail),
+              }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -144,6 +154,22 @@ const AdminLogin = () => {
                   </div>
 
                   {/* Submit Button */}
+                  {/* Remember Me */}
+                  <div className="flex items-center mb-6">
+                    <Field
+                      type="checkbox"
+                      name="rememberMe"
+                      id="rememberMe"
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition duration-150 ease-in-out cursor-pointer"
+                    />
+                    <label
+                      htmlFor="rememberMe"
+                      className="ml-2 text-sm text-gray-700 cursor-pointer select-none leading-none"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={isSubmitting}

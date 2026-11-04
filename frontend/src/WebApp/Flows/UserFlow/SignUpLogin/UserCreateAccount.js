@@ -815,15 +815,15 @@ const UnifiedUserRegistration = () => {
     // Step 2: User Profile Form
     if (currentStep === 2) {
       return (
-        <form onSubmit={handleStep2Submit} className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
+        <form onSubmit={handleStep2Submit} className="w-full max-w-xl p-4 sm:p-8 space-y-5 sm:space-y-6 bg-white shadow-md rounded-lg">
           <div className="space-y-4">
             {/* <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
               <h2 className="text-lg font-bold text-gray-700">BASIC INFORMATION</h2>
             </div> */}
 
             {/* EDUCATIONAL INFORMATION */}
-            <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-              <h2 className="text-lg font-bold text-gray-700">EDUCATION</h2>
+            <div className="w-full min-h-[44px] py-2.5 px-3 sm:px-4 bg-[#F9F0FF] border-b border-[#E6C4FB] rounded-md flex items-center">
+              <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-700 tracking-wide uppercase">EDUCATION</h2>
             </div>
 
             {/* Education Level */}
@@ -950,8 +950,8 @@ const UnifiedUserRegistration = () => {
 
             {/* LOCATION */}
             <div className="space-y-4">
-              <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-                <h2 className="text-lg font-bold text-gray-700">LOCATION</h2>
+              <div className="w-full min-h-[44px] py-2.5 px-3 sm:px-4 bg-[#F9F0FF] border-b border-[#E6C4FB] rounded-md flex items-center">
+                <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-700 tracking-wide uppercase">LOCATION</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
                 {/* Country */}
@@ -1075,10 +1075,10 @@ const UnifiedUserRegistration = () => {
     // Step 3: User Profile Picture/Professional
     if (currentStep === 3) {
       return (
-       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg overflow-visible">
+       <div className="w-full max-w-xl p-4 sm:p-8 space-y-5 sm:space-y-6 bg-white shadow-md rounded-lg overflow-visible">
           <div className="space-y-4">
-            <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-              <h2 className="text-lg font-bold text-gray-700">PROFESSIONAL INFORMATION</h2>
+            <div className="w-full min-h-[44px] py-2.5 px-3 sm:px-4 bg-purple-100 border-b border-purple-300 rounded-md flex items-center">
+              <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-700 tracking-wide uppercase">PROFESSIONAL INFORMATION</h2>
             </div>
             {/* Desired Field */}
             <div>
@@ -1093,8 +1093,8 @@ const UnifiedUserRegistration = () => {
               </select>
             </div>
 
-            <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-              <h2 className="text-lg font-bold text-gray-700">UPLOAD PROFILE INFORMATION</h2>
+            <div className="w-full min-h-[44px] py-2.5 px-3 sm:px-4 bg-purple-100 border-b border-purple-300 rounded-md flex items-center">
+              <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-700 tracking-wide uppercase">UPLOAD PROFILE INFORMATION</h2>
             </div>
 
             <div className="space-y-4">

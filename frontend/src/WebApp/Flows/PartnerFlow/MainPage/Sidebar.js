@@ -246,18 +246,23 @@ const Sidebar = ({ isOpen, onClose, isDesktopOpen = true }) => {
       <div
         className={`
           fixed md:relative z-50 md:z-auto
-          top-[57px] sm:top-[81px] left-0 md:top-0
+          top-[57px] sm:top-[81px] bottom-0 left-0 md:top-0 md:bottom-auto
           bg-white shadow-lg font-poppins
           transition-all duration-300 ease-in-out
           flex flex-col overflow-hidden
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
           ${!isDesktopOpen ? "w-14" : "w-64"}
-          h-[calc(100vh-57px)] sm:h-[calc(100vh-81px)] md:h-full
+          h-[calc(100dvh-57px)] sm:h-[calc(100dvh-81px)] md:h-full
         `}
       >
-        <div className="w-full flex flex-col h-full">
-          <div className={`flex-1 overflow-y-auto hide-scrollbar pt-4 pb-4 ${isDesktopOpen ? "px-3" : "px-1.5"}`}>
+        <div className="w-full flex flex-col h-full min-h-0">
+          <div
+            style={{ WebkitOverflowScrolling: "touch" }}
+            className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y hide-scrollbar pt-4 ${
+              isDesktopOpen ? "px-3 pb-28 md:pb-6" : "px-1.5 pb-6"
+            }`}
+          >
             <ul className="space-y-2">
               {menuItems.map((item) => (
                 <li key={item.id}>
@@ -271,24 +276,24 @@ const Sidebar = ({ isOpen, onClose, isDesktopOpen = true }) => {
                 </li>
               ))}
             </ul>
-          </div>
 
-          {isDesktopOpen && (
-            <div className="p-4 bg-teal-100 rounded-lg m-3.5 border-none shadow-none">
-              <h3 className="text-teal-700 text-xs font-bold uppercase tracking-wider">
-                UPGRADE TO PREMIUM
-              </h3>
-              <p className="text-xs font-semibold text-teal-600 mt-1.5 leading-snug">
-                Your team has used 80% of your available space. Need more?
-              </p>
-              <button
-                onClick={() => handleTabClick("upgrade")}
-                className="mt-3.5 w-full bg-teal-700 hover:bg-teal-800 active:scale-[0.98] text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition shadow-sm"
-              >
-                Upgrade Plan
-              </button>
-            </div>
-          )}
+            {isDesktopOpen && (
+              <div className="mt-5 p-4 bg-teal-100 rounded-lg border-none shadow-none">
+                <h3 className="text-teal-700 text-xs font-bold uppercase tracking-wider">
+                  UPGRADE TO PREMIUM
+                </h3>
+                <p className="text-xs font-semibold text-teal-600 mt-1.5 leading-snug">
+                  Your team has used 80% of your available space. Need more?
+                </p>
+                <button
+                  onClick={() => handleTabClick("upgrade")}
+                  className="mt-3.5 w-full bg-teal-700 hover:bg-teal-800 active:scale-[0.98] text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition shadow-sm cursor-pointer"
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

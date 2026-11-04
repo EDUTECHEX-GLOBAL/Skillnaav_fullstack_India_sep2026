@@ -234,7 +234,7 @@ const UserMainPageContent = () => {
             {/* Blur + block when not approved */}
             {!isApproved && (
               <div
-                className="absolute inset-0 z-40 flex items-center justify-center"
+                className="absolute inset-0 z-40 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
                 style={{ backdropFilter: 'blur(6px)', backgroundColor: 'rgba(255,255,255,0.55)' }}
               >
                 <PendingApprovalCard userInfo={userInfo} />

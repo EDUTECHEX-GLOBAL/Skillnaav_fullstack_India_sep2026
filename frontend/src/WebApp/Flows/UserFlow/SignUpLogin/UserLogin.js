@@ -52,6 +52,7 @@ const redirectToAppropriateDashboard = (isB2BStudent, navigate, token, sessionId
 };
 
 const UserLogin = () => {
+  const rememberedUserEmail = localStorage.getItem("rememberedUserEmail") || "";
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -64,6 +65,11 @@ const UserLogin = () => {
     setError("");
     setLoading(true);
     try {
+      if (values.rememberMe) {
+        localStorage.setItem("rememberedUserEmail", values.email);
+      } else {
+        localStorage.removeItem("rememberedUserEmail");
+      }
       const config = {
         headers: {
           "Content-type": "application/json",
@@ -164,7 +170,11 @@ const UserLogin = () => {
             <Loading />
           ) : (
             <Formik
-              initialValues={{ email: "", password: "" }}
+              initialValues={{
+                email: rememberedUserEmail,
+                password: "",
+                rememberMe: Boolean(rememberedUserEmail),
+              }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -219,6 +229,22 @@ const UserLogin = () => {
                     >
                       Forgot password?
                     </button>
+                  </div>
+
+                  {/* Remember Me */}
+                  <div className="flex items-center mb-6">
+                    <Field
+                      type="checkbox"
+                      name="rememberMe"
+                      id="rememberMe"
+                      className="h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 transition duration-150 ease-in-out cursor-pointer"
+                    />
+                    <label
+                      htmlFor="rememberMe"
+                      className="ml-2 text-sm text-gray-700 cursor-pointer select-none leading-none"
+                    >
+                      Remember me
+                    </label>
                   </div>
 
                   <button

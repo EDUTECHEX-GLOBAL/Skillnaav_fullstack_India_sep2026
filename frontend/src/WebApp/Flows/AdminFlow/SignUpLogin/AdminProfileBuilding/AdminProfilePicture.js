@@ -66,7 +66,7 @@ const AdminProfilePicture = ({ onSubmit }) => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 font-poppins">
-      <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
+      <div className="w-full max-w-xl p-4 sm:p-8 space-y-5 sm:space-y-6 bg-white shadow-md rounded-lg">
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
             <h2 className="text-lg font-bold text-gray-700">

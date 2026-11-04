@@ -622,7 +622,7 @@ const ApplyCards = ({ job, onBack }) => {
                   : job.internshipType === "FREE"
                   ? "Unpaid / Free"
                   : job.internshipType === "PAID"
-                  ? `Student Pays: ₹{job.compensationDetails?.amount || "—"} ${job.compensationDetails?.currency || ""}`.trim()
+                  ? `Student Pays: ₹${job.compensationDetails?.amount || "—"}${job.compensationDetails?.currency && job.compensationDetails?.currency !== "INR" && job.compensationDetails?.currency !== "₹" ? ` ${job.compensationDetails.currency}` : ""}`.trim()
                   : "N/A"}
               </p>
             </div>

@@ -9,7 +9,12 @@ import { useGoogleButtonWidth } from "../../../../hooks/useGoogleButtonWidth";
 import { validateEmail } from "../../../../utils/validators";
 
 const SchoolAdminLogin = () => {
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const rememberedSchoolAdminEmail = localStorage.getItem("rememberedSchoolAdminEmail") || "";
+  const [credentials, setCredentials] = useState({
+    email: rememberedSchoolAdminEmail,
+    password: "",
+  });
+  const [rememberMe, setRememberMe] = useState(Boolean(rememberedSchoolAdminEmail));
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -39,6 +44,11 @@ const SchoolAdminLogin = () => {
 
     try {
       setLoading(true);
+      if (rememberMe) {
+        localStorage.setItem("rememberedSchoolAdminEmail", credentials.email);
+      } else {
+        localStorage.removeItem("rememberedSchoolAdminEmail");
+      }
 
       const { data } = await axios.post("/api/school-admin/login", credentials);
 
@@ -126,6 +136,23 @@ const SchoolAdminLogin = () => {
             >
               Forgot password?
             </button>
+          </div>
+
+          {/* Remember Me */}
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition duration-150 ease-in-out cursor-pointer"
+            />
+            <label
+              htmlFor="rememberMe"
+              className="ml-2 text-sm text-gray-700 cursor-pointer select-none leading-none"
+            >
+              Remember me
+            </label>
           </div>
 
           <button

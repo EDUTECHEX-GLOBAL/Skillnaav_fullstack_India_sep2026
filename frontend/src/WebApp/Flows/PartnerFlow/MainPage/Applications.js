@@ -1405,7 +1405,7 @@ const InternshipList = () => {
                 : internship.internshipType === "FREE"
                   ? "Unpaid / Free"
                   : internship.internshipType === "PAID"
-                    ? `Student Pays: ₹{internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
+                    ? `Student Pays: ₹${internship.compensationDetails?.amount || ""}${internship.compensationDetails?.currency && internship.compensationDetails?.currency !== "INR" && internship.compensationDetails?.currency !== "₹" ? ` ${internship.compensationDetails.currency}` : ""}`.trim()
                     : "N/A";
 
             const isPaidInternship =

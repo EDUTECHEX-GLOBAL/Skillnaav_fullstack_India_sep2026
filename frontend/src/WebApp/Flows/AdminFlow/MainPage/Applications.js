@@ -112,7 +112,7 @@ const Applications = () => {
                     : internship.internshipType === "FREE"
                     ? "Unpaid / Free"
                     : internship.internshipType === "PAID"
-                    ? `Student Pays: ₹{internship.compensationDetails?.amount || 'N/A'} ${internship.compensationDetails?.currency || ''}`
+                    ? `Student Pays: ₹${internship.compensationDetails?.amount || 'N/A'}${internship.compensationDetails?.currency && internship.compensationDetails?.currency !== 'INR' && internship.compensationDetails?.currency !== '₹' ? ` ${internship.compensationDetails.currency}` : ''}`.trim()
                     : "N/A"}
                 </p>
                 <p className="flex items-center font-medium">

@@ -7,7 +7,7 @@ import {
   FaCheck,
   FaSyncAlt,
 } from "react-icons/fa";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx/xlsx.js";
 import axios from "../../api/axiosInstance";
 import { initialContacts } from "./mockAdminData";
 import Pagination from "./Pagination";

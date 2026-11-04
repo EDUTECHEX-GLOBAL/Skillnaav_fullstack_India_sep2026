@@ -205,8 +205,13 @@ const SchoolAdminSidebar = ({
           w-64
         `}
       >
-        <div className="w-full h-full flex flex-col">
-          <div className={`flex-1 overflow-y-auto ${isDesktopOpen ? "px-3 pt-4" : "px-1.5 pt-10"} pb-6 hide-scrollbar`}>
+        <div className="w-full h-full flex flex-col min-h-0">
+          <div
+            style={{ WebkitOverflowScrolling: "touch" }}
+            className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y ${
+              isDesktopOpen ? "px-3 pt-4 pb-28 md:pb-6" : "px-1.5 pt-10 pb-6"
+            } hide-scrollbar`}
+          >
             <ul className="space-y-1">
               {menuItems.map((item) => (
                 <li key={item.id}>
@@ -227,22 +232,22 @@ const SchoolAdminSidebar = ({
                 </button>
               </li>
             </ul>
-          </div>
 
-          {isDesktopOpen && (
-            <div className="p-4 bg-teal-50 rounded-lg m-3">
-              <h3 className="text-teal-700 text-sm font-semibold">UPGRADE PLAN</h3>
-              <p className="text-xs text-teal-600 mt-1">
-                Unlock more student seats and premium features.
-              </p>
-              <button
-                onClick={() => handleTabClick("subscriptions")}
-                className="mt-3 w-full bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition text-sm"
-              >
-                Upgrade Now
-              </button>
-            </div>
-          )}
+            {isDesktopOpen && (
+              <div className="mt-5 p-4 bg-teal-50 rounded-lg">
+                <h3 className="text-teal-700 text-sm font-semibold">UPGRADE PLAN</h3>
+                <p className="text-xs text-teal-600 mt-1">
+                  Unlock more student seats and premium features.
+                </p>
+                <button
+                  onClick={() => handleTabClick("subscriptions")}
+                  className="mt-3 w-full bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition text-sm cursor-pointer"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

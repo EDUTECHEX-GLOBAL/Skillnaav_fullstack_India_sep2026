@@ -1386,7 +1386,7 @@ const ProfileForm = () => {
           </div>
 
           {isLevel3Open && createLevelThree && (
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <LevelThree
                 profileData={user}
                 setCreateLevelThree={setCreateLevelThree}
