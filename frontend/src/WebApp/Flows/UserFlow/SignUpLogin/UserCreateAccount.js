@@ -36,6 +36,139 @@ const clearRegistrationSession = () => {
   sessionStorage.removeItem(SESSION_KEY_FORMDATA);
 };
 
+const FIELD_OPTIONS = [
+  { value: "", label: "Select Your Field" },
+  { value: "Space", label: "Space Internships" },
+  { value: "Aeronautical", label: "Aeronautical Internships" },
+  { value: "Tech", label: "Tech Internships" },
+  { value: "Research", label: "Research Internships" },
+  { value: "Education", label: "Education Internships" },
+];
+
+const CustomSelect = ({
+  name,
+  value,
+  onChange,
+  options = [],
+  placeholder = "Select...",
+  disabled = false,
+  required = false,
+  className = "",
+  id,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (selectRef.current && !selectRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const normalizedOptions = options.map((opt) =>
+    typeof opt === "object" && opt !== null
+      ? opt
+      : { value: opt, label: opt }
+  );
+
+  const selectedOpt = normalizedOptions.find(
+    (opt) => String(opt.value) === String(value ?? "")
+  );
+  const displayLabel = selectedOpt && selectedOpt.label ? selectedOpt.label : placeholder;
+
+  const handleSelect = (val) => {
+    if (typeof onChange === "function") {
+      onChange({
+        target: {
+          name,
+          value: val,
+        },
+      });
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative w-full min-w-0" ref={selectRef}>
+      <input
+        type="hidden"
+        name={name}
+        id={id}
+        value={value ?? ""}
+        required={required}
+      />
+      <button
+        type="button"
+        id={id ? `${id}-btn` : undefined}
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`mt-1 w-full min-w-0 max-w-full px-3 py-2 text-left bg-white border rounded-md shadow-sm flex items-center justify-between gap-2 transition-all cursor-pointer box-border ${
+          disabled
+            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+            : isOpen
+            ? "border-purple-500 ring-2 ring-purple-200"
+            : "border-gray-300 hover:border-gray-400"
+        } ${className}`}
+      >
+        <span
+          className={`truncate text-sm block min-w-0 flex-1 ${
+            !selectedOpt || !selectedOpt.value ? "text-gray-500" : "text-gray-900"
+          }`}
+          title={displayLabel}
+        >
+          {displayLabel}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {isOpen && !disabled && (
+        <div className="absolute left-0 right-0 top-full mt-1 w-full max-w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-56 overflow-y-auto overflow-x-hidden py-1 box-border">
+          {normalizedOptions.map((opt, idx) => {
+            const isSelected = String(opt.value) === String(value ?? "");
+            return (
+              <button
+                key={opt.value ?? idx}
+                type="button"
+                title={opt.label}
+                onClick={() => handleSelect(opt.value)}
+                className={`w-full min-w-0 max-w-full text-left px-3 py-2 text-sm transition-colors cursor-pointer truncate block box-border ${
+                  isSelected
+                    ? "bg-purple-100 text-purple-900 font-medium"
+                    : "text-gray-700 hover:bg-purple-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ---------------------------------------------------------------------------
 
 const UnifiedUserRegistration = () => {
@@ -872,20 +1005,17 @@ const UnifiedUserRegistration = () => {
                   Current Grade *
                 </label>
 
-                <select
+                <CustomSelect
                   name="grade"
                   value={formData.grade}
                   onChange={handleChange}
+                  options={[8, 9, 10, 11, 12].map((g) => ({
+                    value: `Grade ${g}`,
+                    label: `Grade ${g}`,
+                  }))}
+                  placeholder="Select Grade"
                   required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select Grade</option>
-                  {[8, 9, 10, 11, 12].map((g) => (
-                    <option key={g} value={`Grade ${g}`}>
-                      Grade {g}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             )}
 
@@ -916,7 +1046,7 @@ const UnifiedUserRegistration = () => {
                 {/* University suggestions ONLY for non-highschool */}
                 {formData.educationLevel !== "highschool" &&
                   filteredInstitutionSuggestions.length > 0 && (
-                    <ul className="absolute z-[9999] w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    <ul className="absolute z-[9999] left-0 right-0 w-full max-w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto overflow-x-hidden box-border">
                       {filteredInstitutionSuggestions.map((u, index) => (
                         <li
                           key={index}
@@ -927,7 +1057,8 @@ const UnifiedUserRegistration = () => {
                             }));
                             setFilteredInstitutionSuggestions([]);
                           }}
-                          className="cursor-pointer px-4 py-2 hover:bg-purple-100"
+                          className="cursor-pointer px-4 py-2 hover:bg-purple-100 truncate block text-sm"
+                          title={u.name}
                         >
                           {u.name}
                           {u.state && (
@@ -957,20 +1088,27 @@ const UnifiedUserRegistration = () => {
                 {/* Country */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Country *</label>
-                  <select name="country" value={formData.country} onChange={(e) => handleCountryChange(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
-                    <option value="">Select Country</option>
-                    {COUNTRY_OPTIONS.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    name="country"
+                    value={formData.country}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    options={COUNTRY_OPTIONS}
+                    placeholder="Select Country"
+                    required
+                  />
                 </div>
                 {/* State / Province */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">{stateLabel} *</label>
-                  <select name="state" value={formData.state} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100" disabled={!formData.country} required>
-                    <option value="">Select</option>
-                    {stateList.map((s) => (<option key={s} value={s}>{s}</option>))}
-                  </select>
+                  <CustomSelect
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    options={stateList}
+                    placeholder="Select"
+                    disabled={!formData.country}
+                    required
+                  />
                 </div>
                 {/* City with suggestions */}
                 <div className="relative">
@@ -996,12 +1134,13 @@ const UnifiedUserRegistration = () => {
                     </p>
                   )}
                   {citySuggestions.length > 0 && (
-                    <ul className="absolute z-[9999] left-0 top-full w-full bg-white border border-gray-300 rounded-md shadow-xl mt-1 max-h-48 overflow-y-auto">
+                    <ul className="absolute z-[9999] left-0 right-0 w-full max-w-full bg-white border border-gray-300 rounded-md shadow-xl mt-1 max-h-48 overflow-y-auto overflow-x-hidden box-border">
                       {citySuggestions.map((c) => (
                         <li
                           key={`${c.city}-${c.state}`}
                           onClick={() => handleCitySelect(c)}
-                          className="cursor-pointer px-4 py-2 hover:bg-purple-100"
+                          className="cursor-pointer px-4 py-2 hover:bg-purple-100 truncate block text-sm"
+                          title={`${c.city}, ${c.state}`}
                         >
                           {c.city}, {c.state}
                         </li>
@@ -1043,14 +1182,15 @@ const UnifiedUserRegistration = () => {
             {/* Field of Study Select */}
             <div>
               <label htmlFor="fieldOfStudy" className="block text-sm font-medium text-gray-700">Field of Study *</label>
-              <select name="fieldOfStudy" value={formData.fieldOfStudy} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500" required>
-                <option value="">Select Your Field</option>
-                <option value="Space">Space Internships</option>
-                <option value="Aeronautical">Aeronautical Internships</option>
-                <option value="Tech">Tech Internships</option>
-                <option value="Research">Research Internships</option>
-                <option value="Education">Education Internships</option>
-              </select>
+              <CustomSelect
+                id="fieldOfStudy"
+                name="fieldOfStudy"
+                value={formData.fieldOfStudy}
+                onChange={handleChange}
+                options={FIELD_OPTIONS}
+                placeholder="Select Your Field"
+                required
+              />
             </div>
           </div>
           <div className="flex justify-between mt-6 space-x-4">
@@ -1083,14 +1223,15 @@ const UnifiedUserRegistration = () => {
             {/* Desired Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Desired field of Internship/Job *</label>
-              <select name="desiredField" value={formData.desiredField} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                <option value="">Select Your Field</option>
-                <option value="Space">Space Internships</option>
-                <option value="Aeronautical">Aeronautical Internships</option>
-                <option value="Tech">Tech Internships</option>
-                <option value="Research">Research Internships</option>
-                <option value="Education">Education Internships</option>
-              </select>
+              <CustomSelect
+                id="desiredField"
+                name="desiredField"
+                value={formData.desiredField}
+                onChange={handleChange}
+                options={FIELD_OPTIONS}
+                placeholder="Select Your Field"
+                required
+              />
             </div>
 
             <div className="w-full min-h-[44px] py-2.5 px-3 sm:px-4 bg-purple-100 border-b border-purple-300 rounded-md flex items-center">

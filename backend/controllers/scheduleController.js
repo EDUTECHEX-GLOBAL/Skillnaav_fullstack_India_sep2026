@@ -350,11 +350,17 @@ const getInternshipSchedule = async (req, res) => {
   try {
     const { internshipId, partnerId } = req.query;
 
-    if (!internshipId || !partnerId) {
-      return res.status(400).json({ error: 'Missing internshipId or partnerId' });
+    if (!internshipId) {
+      return res.status(400).json({ error: 'Missing internshipId' });
     }
 
-    const schedule = await InternshipSchedule.findOne({ internshipId, partnerId });
+    let schedule = null;
+    if (internshipId && partnerId) {
+      schedule = await InternshipSchedule.findOne({ internshipId, partnerId });
+    }
+    if (!schedule && internshipId) {
+      schedule = await InternshipSchedule.findOne({ internshipId });
+    }
 
     if (!schedule) {
       return res.status(404).json({ error: 'Schedule not found' });
@@ -526,6 +532,54 @@ async function bedrockGenerateText({ prompt, maxTokens = 1200, retries = 2 }) {
     throw err;
   }
 }
+
+function getSmartSummaryForDay({
+  dayNumber,
+  totalDays,
+  phasePrefix = "Setup:",
+  milestoneLabel = "",
+  jobTitle = "",
+  companyName = "",
+  classification = ""
+}) {
+  const title = jobTitle ? jobTitle : "Internship Project";
+  const comp = companyName ? ` at ${companyName}` : "";
+
+  let desc = "";
+  if (phasePrefix.startsWith("Setup")) {
+    if (dayNumber === 1) {
+      desc = `Welcome & Orientation${comp}. Introduction to ${title} objectives, guidelines, and environment setup.`;
+    } else if (dayNumber === 2) {
+      desc = `Tools configuration, team workflow walkthrough, and architecture briefing for ${title}.`;
+    } else {
+      desc = `Foundations of ${title}: review core standards, methodologies, and execute guided onboarding tasks.`;
+    }
+  } else if (phasePrefix.startsWith("Practice")) {
+    const practiceTopics = [
+      `Hands-on practical execution of ${title} core tasks and workflows.`,
+      `Applied problem-solving and technical tasks for ${title}.`,
+      `Module implementation, component testing, and progress alignment for ${title}.`,
+      `Practical exercises, technical refinements, and collaborative review for ${title}.`,
+      `Structured implementation sprint and quality verification for ${title}.`
+    ];
+    desc = practiceTopics[(dayNumber - 1) % practiceTopics.length];
+  } else {
+    // Outcome
+    const outcomeTopics = [
+      `Integration testing, deliverable optimization, and review for ${title}.`,
+      `Project finalization, performance validation, and documentation for ${title}.`,
+      `Final project presentation, knowledge transfer, and internship wrap-up for ${title}.`
+    ];
+    desc = outcomeTopics[(dayNumber - 1) % outcomeTopics.length];
+  }
+
+  if (milestoneLabel) {
+    desc = `${milestoneLabel}: ${desc}`;
+  }
+
+  return `${phasePrefix} ${desc}`;
+}
+
 const generateAiSectionSummaries = async (req, res) => {
   try {
     const { internshipId, totalDays, days, batchTimeSlot } = req.body;
@@ -611,8 +665,9 @@ const generateAiSectionSummaries = async (req, res) => {
     const summaryMap = {}; // date -> sectionSummary
     const chunks = chunkArray(normalizedDays, CHUNK_SIZE);
 
-    // ✅ PARALLEL execution
-    await runWithConcurrency(chunks, CONCURRENCY, async (chunk) => {
+    // ✅ PARALLEL execution with safe fallback
+    try {
+      await runWithConcurrency(chunks, CONCURRENCY, async (chunk) => {
       const prompt = `
 You generate "Section Summary" text for an internship schedule.
 
@@ -668,6 +723,9 @@ ${JSON.stringify(chunk, null, 2)}
         summaryMap[dt] = clampSummary(x.sectionSummary || "", 200);
       });
     });
+    } catch (aiErr) {
+      console.warn("AI generation error, smoothly falling back to smart sector/classification generator:", aiErr?.message || aiErr);
+    }
 
     // ✅ GUARANTEE: return summary for every requested day
     const used = new Set();
@@ -687,7 +745,15 @@ ${JSON.stringify(chunk, null, 2)}
 
       // fallback only if missing
       if (!text || !text.trim()) {
-        text = getFallbackSummaryByClassification(
+        text = getSmartSummaryForDay({
+          dayNumber: d.dayNumber,
+          totalDays: N,
+          phasePrefix,
+          milestoneLabel,
+          jobTitle: compactContext.jobTitle,
+          companyName: compactContext.companyName,
+          classification: compactContext.classification
+        }) || getFallbackSummaryByClassification(
           phasePrefix,
           compactContext.classification
         );

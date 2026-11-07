@@ -9,10 +9,12 @@ import {
   FiChevronRight,
   FiChevronDown,
   FiX,
-  FiMapPin
+  FiMapPin,
+  FiDownload
 } from 'react-icons/fi';
 import axios from "../../../../api/axiosInstance";
 import * as XLSX from "xlsx/xlsx.js";
+import jsPDF from "jspdf";
 import CreateMeetingLink from './CreateMeetingLink';
 import DatePicker from "react-datepicker";
 import {
@@ -487,7 +489,52 @@ const CustomDatePicker = ({
   );
 };
 
+
+const generateClientSmartSummary = ({ dayNumber, totalDays = 30, phasePrefix = 'Setup:', jobTitle = '', companyName = '', classification = 'Basic' }) => {
+  const title = jobTitle || 'Internship Project';
+  const comp = companyName ? ` at ${companyName}` : '';
+  
+  let phase = phasePrefix || 'Setup:';
+  if (!phase.endsWith(':')) phase += ':';
+
+  if (phase.startsWith('Setup')) {
+    if (dayNumber === 1) {
+      return `${phase} Welcome to ${companyName || title}. Meet the team, tour workspace, and review orientation guidelines.`;
+    } else if (dayNumber === 2) {
+      return `${phase} Environment configuration, development toolchain setup, and safety protocols briefing for ${title}.`;
+    } else {
+      return `${phase} Foundations of ${title}: review architecture standards, core workflows, and complete guided onboarding tasks.`;
+    }
+  } else if (phase.startsWith('Practice')) {
+    const topics = [
+      `${phase} Hands-on task execution, applied component design, and workflow implementation for ${title}.`,
+      `${phase} Technical problem-solving, feature development sprint, and code/design verification for ${title}.`,
+      `${phase} Collaborative module reviews, optimization experiments, and practical refinements for ${title}.`,
+      `${phase} Intermediate sprint execution, defect tracking, and milestone feature testing for ${title}.`,
+      `${phase} Advanced component assembly, system integration, and quality assurance checks for ${title}.`
+    ];
+    return topics[(dayNumber - 1) % topics.length];
+  } else {
+    // Outcome
+    const outcomeTopics = [
+      `${phase} Deliverable finalization, integration testing, and performance validation for ${title}.`,
+      `${phase} Comprehensive documentation, technical review, and final presentation preparation for ${title}.`,
+      `${phase} Final deliverable submission, peer review, and milestone completion wrap-up for ${title}${comp}.`
+    ];
+    return outcomeTopics[(dayNumber - 1) % outcomeTopics.length];
+  }
+};
+
 const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' }) => {
+  useEffect(() => {
+    axios.get('/api/instructors', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => {
+      const items = res.data?.items || [];
+      setAvailableInstructors(items.map(i => ({ id: i._id, name: `${i.firstName || ''} ${i.lastName || ''}`.trim() })).filter(x => x.name));
+    }).catch(() => {});
+  }, []);
+
   // Form fields
   const [form, setForm] = useState({
     startDate: '',
@@ -516,6 +563,8 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
   });
 
   const [error, setError] = useState(null);
+  const [internshipData, setInternshipData] = useState(null);
+  const [availableInstructors, setAvailableInstructors] = useState([]);
   const [batchTimetables, setBatchTimetables] = useState({});
   const [activeBatchTab, setActiveBatchTab] = useState('');
   const [previewed, setPreviewed] = useState(false);
@@ -629,16 +678,31 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       .then(({ data }) => {
+        setInternshipData(data);
         const resolvedType = normalizeInternshipMode(data.internshipMode); // ✅ read from DB
 
         setLockedInternshipType(resolvedType);
         setLockedClassification(data.classification || '');
 
+        const locName = data.defaultLocation?.name || data.companyName || '';
+        const locAddr = data.defaultLocation?.address || [data.city, data.state, data.country].filter(Boolean).join(', ') || data.location || '';
+        const locMap = data.defaultLocation?.mapLink || '';
+
         setForm(f => ({
           ...f,
           startDate: new Date(data.startDate).toISOString().split('T')[0],
           endDate: new Date(data.endDateOrDuration).toISOString().split('T')[0],
-          defaultType: resolvedType // ✅ reflect selected mode in schedule form
+          defaultType: resolvedType,
+          onlineEventLink: f.onlineEventLink || data.defaultEventLink || '',
+          hybridEventLink: f.hybridEventLink || data.defaultEventLink || '',
+          offlineLocation: (f.offlineLocation?.name || f.offlineLocation?.address)
+            ? f.offlineLocation
+            : { name: locName, address: locAddr, mapLink: locMap },
+          hybridLocation: (f.hybridLocation?.name || f.hybridLocation?.address)
+            ? f.hybridLocation
+            : { name: locName, address: locAddr, mapLink: locMap },
+          defaultLocation: { name: locName, address: locAddr, mapLink: locMap },
+          defaultEventLink: data.defaultEventLink || ''
         }));
       })
       .catch(err => {
@@ -725,21 +789,28 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
           };
         });
 
-        const formatTimetable = (tt) => (tt || []).map(entry => ({
-          date: entry.date.slice(0, 10),
-          day: entry.day,
-          selected: true,
-          startTime: entry.startTime,
-          endTime: entry.endTime,
-          eventLink: entry.eventLink || '',
-          type: entry.type || 'online',
-          location: entry.location || { name: '', address: '', mapLink: '' },
-          sectionSummary: entry.sectionSummary || '',
-          instructor: entry.instructor || '',
-          assignment: entry.assignment || null,
-          events: entry.events || [],
-          mockInterview: entry.mockInterview || { enabled: false, questions: [] }
-        }));
+        const formatTimetable = (tt) => (tt || []).map(entry => {
+          const locName = entry.location?.name || data.defaultLocation?.name || internshipData?.defaultLocation?.name || internshipData?.companyName || '';
+          const locAddr = entry.location?.address || data.defaultLocation?.address || (internshipData?.city ? [internshipData.city, internshipData.state, internshipData.country].filter(Boolean).join(', ') : '') || internshipData?.location || '';
+          const locMap = entry.location?.mapLink || data.defaultLocation?.mapLink || '';
+          const defaultInstructor = availableInstructors[0]?.name || internshipData?.contactInfo?.name || (internshipData?.companyName ? `${internshipData.companyName} Lead Instructor` : 'Lead Instructor');
+
+          return {
+            date: entry.date.slice(0, 10),
+            day: entry.day,
+            selected: true,
+            startTime: entry.startTime,
+            endTime: entry.endTime,
+            eventLink: entry.eventLink || data.defaultEventLink || internshipData?.defaultEventLink || '',
+            type: (lockedInternshipType && lockedInternshipType !== 'hybrid') ? lockedInternshipType : (entry.type || 'online'),
+            location: (locName || locAddr) ? { name: locName, address: locAddr, mapLink: locMap } : { name: '', address: '', mapLink: '' },
+            sectionSummary: entry.sectionSummary || '',
+            instructor: entry.instructor || defaultInstructor || '',
+            assignment: entry.assignment || null,
+            events: entry.events || [],
+            mockInterview: entry.mockInterview || { enabled: false, questions: [] }
+          };
+        });
 
         if (data.batches && data.batches.length > 0) {
           const loadedBatches = {};
@@ -924,21 +995,25 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
 
     // ✅ PRE-FETCH AI SUMMARIES ONCE FOR ALL BATCHES
     let sharedAiSummaryMap = {};
-    if (form.scheduleMode === 'automated') {
-      const repDays = [];
-      let dayCounter = 1;
-      for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
-        const dayName = d.toLocaleString('en-us', { weekday: 'long' });
-        if (selectedDays.includes(dayName)) {
-          repDays.push({
-            date: d.toISOString().split('T')[0],
-            dayNumber: dayCounter,
-            type: defaultType
-          });
-          dayCounter++;
-        }
+    const repDays = [];
+    let repDayCounter = 1;
+    for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
+      const dayName = d.toLocaleString('en-us', { weekday: 'long' });
+      if (selectedDays.includes(dayName)) {
+        repDays.push({
+          date: d.toISOString().split('T')[0],
+          dayNumber: repDayCounter,
+          type: defaultType
+        });
+        repDayCounter++;
       }
+    }
 
+    const totalDaysCount = repDays.length;
+    const earlyEnd = Math.max(1, Math.round(totalDaysCount * 0.33));
+    const middleEnd = Math.max(1, Math.round(totalDaysCount * 0.75));
+
+    if (form.scheduleMode === 'automated') {
       const targetDays = isPersisted ? repDays.filter(d => isFutureDate(d.date)) : repDays;
 
       if (targetDays.length > 0) {
@@ -948,8 +1023,8 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
             '/api/schedule/ai-section-summaries',
             {
               internshipId,
-              totalDays: repDays.length,
-              batchTimeSlot: null, // Don't bind to a specific batch to get identical results
+              totalDays: totalDaysCount,
+              batchTimeSlot: null,
               days: targetDays
             },
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
@@ -958,20 +1033,46 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
             if (s?.date) sharedAiSummaryMap[s.date] = s.sectionSummary || '';
           });
         } catch (err) {
-          console.error('AI Section Summary generation failed:', err);
-          setError(err.response?.data?.error || 'AI generation failed. You can still edit manually.');
+          console.error('AI Section Summary generation endpoint note:', err);
         } finally {
           setAiGenerating(false);
         }
       }
     }
 
+    // Default instructor & location fallbacks
+    const defaultInstructorName = availableInstructors[0]?.name
+      || internshipData?.contactInfo?.name
+      || (internshipData?.companyName ? `${internshipData.companyName} Lead Instructor` : 'Lead Instructor');
+
+    const defaultLocName = location.name
+      || form.offlineLocation?.name
+      || internshipData?.defaultLocation?.name
+      || internshipData?.companyName
+      || '';
+
+    const defaultLocAddr = location.address
+      || form.offlineLocation?.address
+      || internshipData?.defaultLocation?.address
+      || (internshipData?.city ? [internshipData.city, internshipData.state, internshipData.country].filter(Boolean).join(', ') : '')
+      || internshipData?.location
+      || '';
+
+    const defaultLocMap = location.mapLink
+      || form.offlineLocation?.mapLink
+      || internshipData?.defaultLocation?.mapLink
+      || '';
+
+    const defaultEventUrl = eventLink
+      || form.onlineEventLink
+      || internshipData?.defaultEventLink
+      || '';
+
     for (let sIdx = 0; sIdx < activeSlots.length; sIdx++) {
       const slot = activeSlots[sIdx];
       const slotName = `${slot.startTime} - ${slot.endTime}`;
       if (sIdx === 0) firstSlot = slotName;
 
-      // If the schedule is already saved, keep a quick lookup to preserve past days for this batch
       const existingByDate = (isPersisted && batchTimetables[slotName])
         ? Object.fromEntries(batchTimetables[slotName].map(d => [d.date, d]))
         : {};
@@ -986,16 +1087,6 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
           const key = `Day - ${dayCounter}`;
           const isoDateKey = d.toISOString().split('T')[0];
 
-          // ⛔ After first save: do NOT let Excel overwrite past dates
-          if (isPersisted) {
-            const existing = existingByDate[isoDateKey];
-            if (existing && isPastDate(isoDateKey)) {
-              days.push({ ...existing });
-              dayCounter++;
-              continue; // skip any Excel/default overrides for this past day
-            }
-          }
-
           const excelEntry = excelData[key] || excelData[isoDateKey] || {};
           const useExcelData = Object.keys(excelEntry).length > 0;
           const entryType = excelEntry.type || defaultType;
@@ -1005,26 +1096,73 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
               ? (entryType === 'online' || entryType === 'offline' ? entryType : 'online')
               : defaultType;
 
+          const phasePrefix = dayCounter <= earlyEnd ? 'Setup:' : (dayCounter <= middleEnd ? 'Practice:' : 'Outcome:');
+          const clientFallbackSummary = generateClientSmartSummary({
+            dayNumber: dayCounter,
+            totalDays: totalDaysCount,
+            phasePrefix,
+            jobTitle: internshipData?.jobTitle || internshipData?.internshipName || 'Internship Project',
+            companyName: internshipData?.companyName || 'Edutechex Partner',
+            classification: lockedClassification || internshipData?.classification || 'Basic'
+          });
+
+          const autoSummary = (form.scheduleMode === 'automated')
+            ? (sharedAiSummaryMap[isoDateKey] || clientFallbackSummary)
+            : '';
+
+          // ⛔ After first save: preserve past days, but ensure empty fields are filled if automated
+          if (isPersisted) {
+            const existing = existingByDate[isoDateKey];
+            if (existing && isPastDate(isoDateKey)) {
+              days.push({
+                ...existing,
+                sectionSummary: (existing.sectionSummary && existing.sectionSummary.trim())
+                  ? existing.sectionSummary
+                  : (form.scheduleMode === 'automated' ? autoSummary : ''),
+                instructor: (existing.instructor && existing.instructor.trim())
+                  ? existing.instructor
+                  : defaultInstructorName,
+                location: (existing.location && (existing.location.name || existing.location.address))
+                  ? existing.location
+                  : (resolvedType === 'offline' ? { name: defaultLocName, address: defaultLocAddr, mapLink: defaultLocMap } : { name: '', address: '', mapLink: '' })
+              });
+              dayCounter++;
+              continue;
+            }
+          }
+
+          const daySectionSummary = useExcelData
+            ? (excelEntry.summary || '')
+            : autoSummary;
+
+          const dayInstructor = useExcelData
+            ? (excelEntry.instructor || '')
+            : defaultInstructorName;
+
+          const dayLocation = resolvedType === 'offline'
+            ? {
+              name: useExcelData ? (excelEntry.locationName || defaultLocName) : defaultLocName,
+              address: useExcelData ? (excelEntry.address || defaultLocAddr) : defaultLocAddr,
+              mapLink: useExcelData ? (excelEntry.mapLink || defaultLocMap) : defaultLocMap
+            }
+            : { name: '', address: '', mapLink: '' };
+
+          const dayEventLink = resolvedType === 'online'
+            ? (useExcelData ? (excelEntry.link || defaultEventUrl) : defaultEventUrl)
+            : '';
+
           days.push({
-            date: d.toISOString().split('T')[0],
+            date: isoDateKey,
             day: dayName,
             selected: true,
-            startTime: slot.startTime, // ✅ Use batch's start time
-            endTime: slot.endTime,     // ✅ Use batch's end time
-            sectionSummary: useExcelData ? excelEntry.summary || '' : '',
-            instructor: useExcelData ? excelEntry.instructor || '' : '',
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            sectionSummary: daySectionSummary,
+            instructor: dayInstructor,
             assignment: null,
             type: resolvedType,
-            eventLink: resolvedType === 'online'
-              ? (useExcelData ? excelEntry.link || eventLink : eventLink)
-              : '',
-            location: resolvedType === 'offline'
-              ? {
-                name: useExcelData ? (excelEntry.locationName || location.name) : location.name,
-                address: useExcelData ? (excelEntry.address || location.address) : location.address,
-                mapLink: useExcelData ? (excelEntry.mapLink || location.mapLink) : location.mapLink
-              }
-              : { name: '', address: '', mapLink: '' },
+            eventLink: dayEventLink,
+            location: dayLocation,
             events: [],
             mockInterview: {
               enabled: false,
@@ -1036,13 +1174,26 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
         }
       }
 
-      // Apply the pre-fetched shared AI summaries
-      const finalDays = days.map(d => {
-        const aiText = sharedAiSummaryMap[d.date];
-        if (!aiText) return d;
-        // If already has summary (Excel/user), keep it
-        if (d.sectionSummary && d.sectionSummary.trim() !== '') return d;
-        return { ...d, sectionSummary: aiText };
+      // Ensure shared AI summaries are applied to every day
+      const finalDays = days.map((d, dIdx) => {
+        let summaryText = d.sectionSummary;
+        if (form.scheduleMode === 'automated' && (!summaryText || !summaryText.trim())) {
+          const dayNum = dIdx + 1;
+          const phase = dayNum <= earlyEnd ? 'Setup:' : (dayNum <= middleEnd ? 'Practice:' : 'Outcome:');
+          summaryText = sharedAiSummaryMap[d.date] || generateClientSmartSummary({
+            dayNumber: dayNum,
+            totalDays: totalDaysCount,
+            phasePrefix: phase,
+            jobTitle: internshipData?.jobTitle || internshipData?.internshipName || 'Internship Project',
+            companyName: internshipData?.companyName || 'Edutechex Partner',
+            classification: lockedClassification || internshipData?.classification || 'Basic'
+          });
+        }
+        return {
+          ...d,
+          sectionSummary: summaryText || '',
+          instructor: (d.instructor && d.instructor.trim()) ? d.instructor : defaultInstructorName
+        };
       });
       newBatchTimetables[slotName] = finalDays;
     }
@@ -1228,6 +1379,171 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
     });
     setForm(f => ({ ...f, newDate: '' }));
     setError(null);
+  };
+
+  const downloadAllSummariesXLSX = () => {
+    const currentTimetable = batchTimetables[activeBatchTab] || [];
+    const scheduledDays = currentTimetable.filter(d => d.selected);
+    if (scheduledDays.length === 0) {
+      alert('No scheduled days in this batch to download.');
+      return;
+    }
+
+    const rows = scheduledDays.map((d, index) => ({
+      "Day #": index + 1,
+      "Batch": activeBatchTab,
+      "Date": d.date,
+      "Mode": d.type || form.defaultType || 'N/A',
+      "Slot Timing": (d.startTime && d.endTime) ? `${d.startTime} - ${d.endTime}` : activeBatchTab,
+      "Instructor": d.instructor || 'N/A',
+      "Section Summary": d.sectionSummary || '',
+      "Meeting Link": d.eventLink || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 22 },
+      { wch: 60 },
+      { wch: 35 }
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Batch Summaries");
+    const safeTitle = (internshipData?.internshipName || internshipData?.jobTitle || 'Schedule').replace(/[^a-zA-Z0-9-_]/g, '_');
+    XLSX.writeFile(wb, `${safeTitle}_${activeBatchTab}_Summaries.xlsx`);
+  };
+
+  
+  const sanitizePdfText = (text) => {
+    if (!text) return '';
+    return String(text)
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014]/g, '-')
+      .replace(/[^\x00-\x7F]/g, ' ')
+      .trim();
+  };
+
+  const downloadAllSummariesPDF = () => {
+    const currentTimetable = batchTimetables[activeBatchTab] || [];
+    const scheduledDays = currentTimetable.filter(d => d.selected);
+    if (scheduledDays.length === 0) {
+      alert('No scheduled days in this batch to download.');
+      return;
+    }
+
+    const title = sanitizePdfText(internshipData?.internshipName || internshipData?.jobTitle || 'Internship Schedule');
+    const company = sanitizePdfText(internshipData?.companyName || 'Edutechex Partner');
+    const batchName = sanitizePdfText(activeBatchTab || 'Standard Batch');
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 14;
+    const contentWidth = pageWidth - (margin * 2);
+    let y = margin;
+
+    const checkPageBreak = (neededHeight) => {
+      if (y + neededHeight > pageHeight - margin - 10) {
+        doc.addPage();
+        y = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // Header Banner
+    doc.setFillColor(79, 70, 229);
+    doc.rect(margin, y, contentWidth, 22, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('INTERNSHIP SECTION SUMMARIES', margin + 6, y + 9);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`${company} | ${title} | Batch: ${batchName}`, margin + 6, y + 16);
+    y += 28;
+
+    // Metadata details
+    doc.setTextColor(55, 65, 81);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`Total Scheduled Days: ${scheduledDays.length}`, margin, y);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin - 50, y);
+    y += 6;
+
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 6;
+
+    // Loop through each day
+    scheduledDays.forEach((d, index) => {
+      const dayNum = index + 1;
+      const dateStr = d.date || 'N/A';
+      const dayName = d.day || '';
+      const mode = (d.type || form.defaultType || 'online').toUpperCase();
+      const timing = (d.startTime && d.endTime) ? `${d.startTime} - ${d.endTime}` : batchName;
+      const instructor = sanitizePdfText(d.instructor || 'N/A');
+      const summary = sanitizePdfText(d.sectionSummary || 'No section summary recorded.');
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const splitSummary = doc.splitTextToSize(summary, contentWidth - 8);
+      const summaryHeight = splitSummary.length * 4.5;
+      const cardHeight = 22 + summaryHeight + 6;
+
+      checkPageBreak(cardHeight + 4);
+
+      // Card Container
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(209, 213, 219);
+      doc.roundedRect(margin, y, contentWidth, cardHeight, 2, 2, 'FD');
+
+      // Card Header
+      doc.setFillColor(238, 242, 255);
+      doc.rect(margin, y, contentWidth, 7, 'F');
+      doc.setTextColor(67, 56, 202);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`Day ${dayNum}  |  ${dateStr} (${dayName})  |  ${mode}  |  ${timing}`, margin + 4, y + 5);
+
+      // Instructor row
+      doc.setTextColor(75, 85, 99);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`Instructor: ${instructor}`, margin + 4, y + 12);
+
+      // Summary label & content
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Section Summary:', margin + 4, y + 17);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(55, 65, 81);
+      doc.text(splitSummary, margin + 4, y + 22);
+
+      y += cardHeight + 4;
+    });
+
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.text(`Page ${p} of ${totalPages} - ${company}`, margin, pageHeight - 8);
+      doc.text('Powered by Edutechex', pageWidth - margin - 35, pageHeight - 8);
+    }
+
+    const safeTitle = (internshipData?.internshipName || internshipData?.jobTitle || 'Schedule').replace(/[^a-zA-Z0-9-_]/g, '_');
+    doc.save(`${safeTitle}_${activeBatchTab}_Summaries.pdf`);
   };
 
   const saveSchedule = async e => {
@@ -1973,8 +2289,28 @@ const ScheduleFormPaid = ({ internshipId, onClose, initialInternshipMode = '' })
             <div className="space-y-8">
               {/* Schedule Preview */}
               <div className="bg-gray-50 p-2 sm:p-5 rounded-xl border border-gray-200">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                   <h3 className="text-lg font-semibold text-gray-800">Schedule Preview</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={downloadAllSummariesXLSX}
+                      className="inline-flex items-center text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer active:scale-95"
+                      title="Download batch dates and section summaries as Excel (.xlsx)"
+                    >
+                      <FiDownload className="mr-1.5 text-emerald-600" />
+                      Download Summaries (Excel)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadAllSummariesPDF}
+                      className="inline-flex items-center text-xs font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-300 px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer active:scale-95"
+                      title="Download batch dates and section summaries as PDF with clean alignment"
+                    >
+                      <FiDownload className="mr-1.5 text-rose-600" />
+                      Download Summaries (PDF)
+                    </button>
+                  </div>
                 </div>
                 
                 {/* Batch Tabs */}

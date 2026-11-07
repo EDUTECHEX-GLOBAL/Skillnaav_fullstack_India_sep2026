@@ -9,10 +9,12 @@ import {
   FiChevronRight,
   FiChevronDown,
   FiX,
-  FiMapPin
+  FiMapPin,
+  FiDownload
 } from 'react-icons/fi';
 import axios from "../../../../api/axiosInstance";
 import * as XLSX from "xlsx/xlsx.js";
+import jsPDF from "jspdf";
 import CreateMeetingLink from './CreateMeetingLink';
 import ScheduleFormPaid from './ScheduleFormPaid';
 import DatePicker from "react-datepicker";
@@ -42,12 +44,15 @@ const normalizeInternshipMode = (mode = '') => {
 };
 
 const detectPricingBucket = (internship = {}) => {
-  // ✅ hard booleans (if you have them)
+  if (!internship) return 'free';
   if (internship.isPaidInternship === true || internship.isPaid === true) return 'paid';
 
-  // ✅ try common string fields
+  const compType = String(internship?.compensationDetails?.type || '').trim().toLowerCase();
+  if (compType.includes('paid')) return 'paid';
+  if (compType.includes('stipend')) return 'stipend';
+
   const raw =
-    internship.internshipType ||          // often: Free / Stipend / Paid
+    internship.internshipType ||
     internship.pricingType ||
     internship.paymentType ||
     internship.compensationType ||
@@ -56,13 +61,14 @@ const detectPricingBucket = (internship = {}) => {
     '';
 
   const v = String(raw).toLowerCase();
-
   if (v.includes('paid')) return 'paid';
   if (v.includes('stipend')) return 'stipend';
   if (v.includes('free') || v.includes('unpaid')) return 'free';
 
-  // ✅ numeric fallback (only if your internship doc has amount fields)
-  const paidAmount = Number(internship.amount ?? internship.price ?? internship.fee ?? 0);
+  const compAmount = Number(internship?.compensationDetails?.amount ?? 0);
+  if (!Number.isNaN(compAmount) && compAmount > 0) return 'paid';
+
+  const paidAmount = Number(internship.amount ?? internship.price ?? internship.fee ?? internship.studentPays ?? 0);
   const stipendAmount = Number(internship.stipendAmount ?? internship.stipend ?? 0);
 
   if (!Number.isNaN(paidAmount) && paidAmount > 0) return 'paid';
@@ -486,6 +492,42 @@ const CustomDatePicker = ({
   );
 };
 
+
+const generateClientSmartSummary = ({ dayNumber, totalDays = 30, phasePrefix = 'Setup:', jobTitle = '', companyName = '', classification = 'Basic' }) => {
+  const title = jobTitle || 'Internship Project';
+  const comp = companyName ? ` at ${companyName}` : '';
+  
+  let phase = phasePrefix || 'Setup:';
+  if (!phase.endsWith(':')) phase += ':';
+
+  if (phase.startsWith('Setup')) {
+    if (dayNumber === 1) {
+      return `${phase} Welcome to ${companyName || title}. Meet the team, tour workspace, and review orientation guidelines.`;
+    } else if (dayNumber === 2) {
+      return `${phase} Environment configuration, development toolchain setup, and safety protocols briefing for ${title}.`;
+    } else {
+      return `${phase} Foundations of ${title}: review architecture standards, core workflows, and complete guided onboarding tasks.`;
+    }
+  } else if (phase.startsWith('Practice')) {
+    const topics = [
+      `${phase} Hands-on task execution, applied component design, and workflow implementation for ${title}.`,
+      `${phase} Technical problem-solving, feature development sprint, and code/design verification for ${title}.`,
+      `${phase} Collaborative module reviews, optimization experiments, and practical refinements for ${title}.`,
+      `${phase} Intermediate sprint execution, defect tracking, and milestone feature testing for ${title}.`,
+      `${phase} Advanced component assembly, system integration, and quality assurance checks for ${title}.`
+    ];
+    return topics[(dayNumber - 1) % topics.length];
+  } else {
+    // Outcome
+    const outcomeTopics = [
+      `${phase} Deliverable finalization, integration testing, and performance validation for ${title}.`,
+      `${phase} Comprehensive documentation, technical review, and final presentation preparation for ${title}.`,
+      `${phase} Final deliverable submission, peer review, and milestone completion wrap-up for ${title}${comp}.`
+    ];
+    return outcomeTopics[(dayNumber - 1) % outcomeTopics.length];
+  }
+};
+
 const ScheduleForm = ({
   internshipId,
   onClose,
@@ -518,6 +560,18 @@ const ScheduleForm = ({
 
   const [error, setError] = useState(null);
   const [timetable, setTimetable] = useState([]);
+  const [internshipData, setInternshipData] = useState(null);
+  const [availableInstructors, setAvailableInstructors] = useState([]);
+
+  useEffect(() => {
+    axios.get('/api/instructors', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => {
+      const items = res.data?.items || [];
+      setAvailableInstructors(items.map(i => ({ id: i._id, name: `${i.firstName || ''} ${i.lastName || ''}`.trim() })).filter(x => x.name));
+    }).catch(() => {});
+  }, []);
+
   const [previewed, setPreviewed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [excelData, setExcelData] = useState({});
@@ -560,17 +614,34 @@ const ScheduleForm = ({
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       .then(({ data }) => {
+        setInternshipData(data);
         const resolvedType = normalizeInternshipMode(data.internshipMode); // ✅ read from DB
 
-        setPricingBucket(detectPricingBucket(data));
+        const detected = detectPricingBucket(data);
+        const finalBucket = initialPricingBucket === 'paid' ? 'paid' : detected;
+        setPricingBucket(finalBucket);
         setLockedInternshipType(resolvedType);
         setLockedClassification(data.classification || '');
+
+        const locName = data.defaultLocation?.name || data.companyName || '';
+        const locAddr = data.defaultLocation?.address || (data.city ? [data.city, data.state, data.country].filter(Boolean).join(', ') : '') || data.location || '';
+        const locMap = data.defaultLocation?.mapLink || '';
 
         setForm(f => ({
           ...f,
           startDate: new Date(data.startDate).toISOString().split('T')[0],
           endDate: new Date(data.endDateOrDuration).toISOString().split('T')[0],
-          defaultType: resolvedType // ✅ reflect selected mode in schedule form
+          defaultType: resolvedType,
+          onlineEventLink: f.onlineEventLink || data.defaultEventLink || '',
+          hybridEventLink: f.hybridEventLink || data.defaultEventLink || '',
+          offlineLocation: (f.offlineLocation?.name || f.offlineLocation?.address)
+            ? f.offlineLocation
+            : { name: locName, address: locAddr, mapLink: locMap },
+          hybridLocation: (f.hybridLocation?.name || f.hybridLocation?.address)
+            ? f.hybridLocation
+            : { name: locName, address: locAddr, mapLink: locMap },
+          defaultLocation: { name: locName, address: locAddr, mapLink: locMap },
+          defaultEventLink: data.defaultEventLink || ''
         }));
       })
       .catch(err => {
@@ -672,8 +743,12 @@ const ScheduleForm = ({
             startTime: entry.startTime,
             endTime: entry.endTime,
             eventLink: entry.eventLink || '',
-            type: entry.type || 'online',
-            location: entry.location || { name: '', address: '', mapLink: '' },
+            type: (lockedInternshipType && lockedInternshipType !== 'hybrid') ? lockedInternshipType : (entry.type || 'online'),
+            location: (entry.location && (entry.location.name || entry.location.address))
+              ? entry.location
+              : (data.defaultLocation && (data.defaultLocation.name || data.defaultLocation.address))
+                ? data.defaultLocation
+                : { name: '', address: '', mapLink: '' },
             sectionSummary: entry.sectionSummary || '',
             instructor: entry.instructor || '',
             assignment: entry.assignment || null,
@@ -777,19 +852,42 @@ const ScheduleForm = ({
       });
 
       // Merge: keep Excel/manual summary if already present, otherwise fill with AI
-      return days.map(d => {
-        const aiText = summaryMap[d.date];
-        if (!aiText) return d;
+      const earlyEnd = Math.max(1, Math.round(days.length * 0.33));
+      const middleEnd = Math.max(1, Math.round(days.length * 0.75));
 
-        // If already has summary (Excel/user), keep it
+      return days.map((d, dIdx) => {
         if (d.sectionSummary && d.sectionSummary.trim() !== '') return d;
-
+        const dayNum = dIdx + 1;
+        const phase = dayNum <= earlyEnd ? 'Setup:' : (dayNum <= middleEnd ? 'Practice:' : 'Outcome:');
+        const aiText = summaryMap[d.date] || generateClientSmartSummary({
+          dayNumber: dayNum,
+          totalDays: days.length,
+          phasePrefix: phase,
+          jobTitle: internshipData?.jobTitle || internshipData?.internshipName || 'Internship Project',
+          companyName: internshipData?.companyName || 'Edutechex Partner',
+          classification: lockedClassification || internshipData?.classification || 'Basic'
+        });
         return { ...d, sectionSummary: aiText };
       });
     } catch (err) {
-      console.error('AI Section Summary generation failed:', err);
-      setError(err.response?.data?.error || 'AI generation failed. You can still edit manually.');
-      return days; // fallback safely
+      console.error('AI Section Summary generation fallback:', err);
+      const earlyEnd = Math.max(1, Math.round(days.length * 0.33));
+      const middleEnd = Math.max(1, Math.round(days.length * 0.75));
+
+      return days.map((d, dIdx) => {
+        if (d.sectionSummary && d.sectionSummary.trim() !== '') return d;
+        const dayNum = dIdx + 1;
+        const phase = dayNum <= earlyEnd ? 'Setup:' : (dayNum <= middleEnd ? 'Practice:' : 'Outcome:');
+        const fallback = generateClientSmartSummary({
+          dayNumber: dayNum,
+          totalDays: days.length,
+          phasePrefix: phase,
+          jobTitle: internshipData?.jobTitle || internshipData?.internshipName || 'Internship Project',
+          companyName: internshipData?.companyName || 'Edutechex Partner',
+          classification: lockedClassification || internshipData?.classification || 'Basic'
+        });
+        return { ...d, sectionSummary: fallback };
+      });
     } finally {
       setAiGenerating(false);
     }
@@ -848,6 +946,32 @@ const ScheduleForm = ({
       ? Object.fromEntries(timetable.map(d => [d.date, d]))
       : {};
 
+            const defaultInstructorName = availableInstructors[0]?.name
+          || internshipData?.contactInfo?.name
+          || (internshipData?.companyName ? `${internshipData.companyName} Lead Instructor` : 'Lead Instructor');
+
+        const defaultLocName = location.name
+          || form.offlineLocation?.name
+          || internshipData?.defaultLocation?.name
+          || internshipData?.companyName
+          || '';
+
+        const defaultLocAddr = location.address
+          || form.offlineLocation?.address
+          || internshipData?.defaultLocation?.address
+          || (internshipData?.city ? [internshipData.city, internshipData.state, internshipData.country].filter(Boolean).join(', ') : '')
+          || internshipData?.location
+          || '';
+
+        const defaultLocMap = location.mapLink
+          || form.offlineLocation?.mapLink
+          || internshipData?.defaultLocation?.mapLink
+          || '';
+
+        const defaultEventUrl = eventLink
+          || form.onlineEventLink
+          || internshipData?.defaultEventLink
+          || '';
     const days = [];
     let dayCounter = 1;
 
@@ -884,17 +1008,17 @@ const ScheduleForm = ({
           startTime: defaultStartTime,
           endTime: defaultEndTime,
           sectionSummary: useExcelData ? excelEntry.summary || '' : '',
-          instructor: useExcelData ? excelEntry.instructor || '' : '',
+          instructor: useExcelData ? (excelEntry.instructor || '') : defaultInstructorName,
           assignment: null,
           type: resolvedType,
           eventLink: resolvedType === 'online'
-            ? (useExcelData ? excelEntry.link || eventLink : eventLink)
+            ? (useExcelData ? (excelEntry.link || defaultEventUrl) : defaultEventUrl)
             : '',
           location: resolvedType === 'offline'
             ? {
-              name: useExcelData ? (excelEntry.locationName || location.name) : location.name,
-              address: useExcelData ? (excelEntry.address || location.address) : location.address,
-              mapLink: useExcelData ? (excelEntry.mapLink || location.mapLink) : location.mapLink
+              name: useExcelData ? (excelEntry.locationName || defaultLocName) : defaultLocName,
+              address: useExcelData ? (excelEntry.address || defaultLocAddr) : defaultLocAddr,
+              mapLink: useExcelData ? (excelEntry.mapLink || defaultLocMap) : defaultLocMap
             }
             : { name: '', address: '', mapLink: '' },
           events: []
@@ -1036,6 +1160,168 @@ const ScheduleForm = ({
     setTimetable(prev => [...prev, newDayEntry]);
     setForm(f => ({ ...f, newDate: '' }));
     setError(null);
+  };
+
+  const downloadAllSummariesXLSX = () => {
+    const scheduledDays = timetable.filter(d => d.selected);
+    if (scheduledDays.length === 0) {
+      alert('No scheduled days to download.');
+      return;
+    }
+
+    const rows = scheduledDays.map((d, index) => ({
+      "Day #": index + 1,
+      "Date": d.date,
+      "Topic / Event": d.eventName || 'N/A',
+      "Mode": d.type || form.defaultType || 'N/A',
+      "Timing": (d.workHoursStart && d.workHoursEnd) ? `${d.workHoursStart} - ${d.workHoursEnd}` : 'N/A',
+      "Instructor": d.instructor || 'N/A',
+      "Section Summary": d.sectionSummary || '',
+      "Meeting Link": d.eventLink || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },
+      { wch: 14 },
+      { wch: 28 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 22 },
+      { wch: 60 },
+      { wch: 35 }
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Section Summaries");
+    const safeTitle = (internshipData?.internshipName || internshipData?.jobTitle || 'Schedule').replace(/[^a-zA-Z0-9-_]/g, '_');
+    XLSX.writeFile(wb, `${safeTitle}_Schedule_Summaries.xlsx`);
+  };
+
+  
+  const sanitizePdfText = (text) => {
+    if (!text) return '';
+    return String(text)
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014]/g, '-')
+      .replace(/[^\x00-\x7F]/g, ' ')
+      .trim();
+  };
+
+  const downloadAllSummariesPDF = () => {
+    const scheduledDays = timetable.filter(d => d.selected);
+    if (scheduledDays.length === 0) {
+      alert('No scheduled days to download.');
+      return;
+    }
+
+    const title = sanitizePdfText(internshipData?.internshipName || internshipData?.jobTitle || 'Internship Schedule');
+    const company = sanitizePdfText(internshipData?.companyName || 'Edutechex Partner');
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 14;
+    const contentWidth = pageWidth - (margin * 2);
+    let y = margin;
+
+    const checkPageBreak = (neededHeight) => {
+      if (y + neededHeight > pageHeight - margin - 10) {
+        doc.addPage();
+        y = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // Header Banner
+    doc.setFillColor(79, 70, 229);
+    doc.rect(margin, y, contentWidth, 22, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('INTERNSHIP SECTION SUMMARIES', margin + 6, y + 9);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`${company} | ${title}`, margin + 6, y + 16);
+    y += 28;
+
+    // Metadata details
+    doc.setTextColor(55, 65, 81);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`Total Scheduled Days: ${scheduledDays.length}`, margin, y);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin - 50, y);
+    y += 6;
+
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 6;
+
+    // Loop through each day
+    scheduledDays.forEach((d, index) => {
+      const dayNum = index + 1;
+      const dateStr = d.date || 'N/A';
+      const dayName = d.day || '';
+      const mode = (d.type || form.defaultType || 'online').toUpperCase();
+      const timing = (d.startTime && d.endTime) ? `${d.startTime} - ${d.endTime}` : (form.workHoursStart && form.workHoursEnd ? `${form.workHoursStart} - ${form.workHoursEnd}` : 'Standard Timing');
+      const instructor = sanitizePdfText(d.instructor || 'N/A');
+      const summary = sanitizePdfText(d.sectionSummary || 'No section summary recorded.');
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const splitSummary = doc.splitTextToSize(summary, contentWidth - 8);
+      const summaryHeight = splitSummary.length * 4.5;
+      const cardHeight = 22 + summaryHeight + 6;
+
+      checkPageBreak(cardHeight + 4);
+
+      // Card Container
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(209, 213, 219);
+      doc.roundedRect(margin, y, contentWidth, cardHeight, 2, 2, 'FD');
+
+      // Card Header
+      doc.setFillColor(238, 242, 255);
+      doc.rect(margin, y, contentWidth, 7, 'F');
+      doc.setTextColor(67, 56, 202);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`Day ${dayNum}  |  ${dateStr} (${dayName})  |  ${mode}  |  ${timing}`, margin + 4, y + 5);
+
+      // Instructor row
+      doc.setTextColor(75, 85, 99);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`Instructor: ${instructor}`, margin + 4, y + 12);
+
+      // Summary label & content
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(31, 41, 55);
+      doc.text('Section Summary:', margin + 4, y + 17);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(55, 65, 81);
+      doc.text(splitSummary, margin + 4, y + 22);
+
+      y += cardHeight + 4;
+    });
+
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.text(`Page ${p} of ${totalPages} - ${company}`, margin, pageHeight - 8);
+      doc.text('Powered by Edutechex', pageWidth - margin - 35, pageHeight - 8);
+    }
+
+    const safeTitle = (internshipData?.internshipName || internshipData?.jobTitle || 'Schedule').replace(/[^a-zA-Z0-9-_]/g, '_');
+    doc.save(`${safeTitle}_All_Summaries.pdf`);
   };
 
   const saveSchedule = async e => {
@@ -1590,7 +1876,29 @@ const ScheduleForm = ({
             <div className="space-y-8">
               {/* Schedule Preview */}
               <div className="bg-gray-50 p-2 sm:p-5 rounded-xl border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Schedule Preview</h3>
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                  <h3 className="text-lg font-semibold text-gray-800">Schedule Preview</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={downloadAllSummariesXLSX}
+                      className="inline-flex items-center text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer active:scale-95"
+                      title="Download schedule dates and section summaries as Excel"
+                    >
+                      <FiDownload className="mr-1.5 text-emerald-600" />
+                      Download Summaries (Excel)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadAllSummariesPDF}
+                      className="inline-flex items-center text-xs font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-300 px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer active:scale-95"
+                      title="Download schedule dates and section summaries as PDF with clean alignment"
+                    >
+                      <FiDownload className="mr-1.5 text-rose-600" />
+                      Download Summaries (PDF)
+                    </button>
+                  </div>
+                </div>
                 <div
                   ref={previewScrollRef}
                   className="space-y-3 max-h-96 overflow-y-auto pr-1 sm:pr-2"

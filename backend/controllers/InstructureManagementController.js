@@ -15,7 +15,7 @@ const crypto = require("crypto");
 
 // ADD: S3 client
 const s3 = new S3Client({
-    region: process.env.AWS_REGION,
+    region: process.env.AWS_REGION || "us-west-1",
     credentials: (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) ? {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -24,11 +24,10 @@ const s3 = new S3Client({
 
 // Map each field to a bucket from your .env
 const bucketFor = (field) => {
-    if (field === "resume") return process.env.AWS_RESUME_BUCKET;
-    if (field === "photo") return process.env.AWS_PROFILE_PIC_BUCKET;
-    if (field === "certificates") return process.env.AWS_IMAGE_BUCKET || process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_RESUME_BUCKET;
-    // default fallback
-    return process.env.AWS_IMAGE_BUCKET || process.env.AWS_RESUME_BUCKET;
+    if (field === "resume") return process.env.AWS_RESUME_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres";
+    if (field === "photo") return process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres";
+    if (field === "certificates") return process.env.AWS_IMAGE_BUCKET || process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_RESUME_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres";
+    return process.env.AWS_IMAGE_BUCKET || process.env.AWS_S3_BUCKET || process.env.AWS_RESUME_BUCKET || "skillnaavres";
 };
 
 // Map field to the folder (key prefix) you want in S3
@@ -41,7 +40,7 @@ const randomSuffix = () => `${Date.now()}-${Math.floor(Math.random() * 1_000_000
 // Encode each path segment but preserve folder slashes
 const encodeS3KeyForUrl = (k) => k.split("/").map(encodeURIComponent).join("/");
 const httpsUrl = (bucket, key) =>
-    `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${encodeS3KeyForUrl(key)}`;
+    `https://${bucket}.s3.${process.env.AWS_REGION || "us-west-1"}.amazonaws.com/${encodeS3KeyForUrl(key)}`;
 
 // REPLACE this function
 const fileToMeta = async (file) => {

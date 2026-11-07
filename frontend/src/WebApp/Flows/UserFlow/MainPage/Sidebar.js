@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
-import { isB2BContext, redirectToLoginAfterLogout } from "../../../../utils/domain";
+import { redirectToLoginAfterLogout } from "../../../../utils/domain";
 
 const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const [showSectors, setShowSectors] = useState(false);
@@ -30,10 +30,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
   const { openFeedback } = useFeedback();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const storedUser = JSON.parse(localStorage.getItem("studentInfo") || localStorage.getItem("userInfo") || "{}");
-  const isB2B = isB2BContext() || !!(storedUser.isB2B || storedUser.schoolAdmin || storedUser.schoolAdminId);
-
-  const topSectors = [
+    const topSectors = [
     { id: "advanced-ai", name: "AI & Autonomous" },
     { id: "quantum-computing", name: "Quantum Computing" },
     { id: "climate-tech", name: "Climate Tech" },
@@ -174,12 +171,12 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
       >
         {/* Inner content */}
         <div className="w-full h-full flex flex-col min-h-0">
-          {/* Scrollable nav area */}
+          {/* Scrollable nav area - ONLY THIS AREA SCROLLS */}
           <div
             style={{ WebkitOverflowScrolling: "touch" }}
             className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y ${
-              isDesktopOpen || isMobile ? "px-4 pt-4" : "px-1.5 pt-10"
-            } ${isMobile ? "pb-28" : "pb-8"} hide-scrollbar`}
+              isDesktopOpen || isMobile ? "px-4 pt-4" : "px-1.5 pt-6"
+            } pb-3 hide-scrollbar`}
           >
             <nav className="space-y-2">
               {menuItems.map(({ id, icon, label }) => (
@@ -301,27 +298,27 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
                 {(isDesktopOpen || isMobile) && <span>Logout</span>}
               </button>
             </div>
-
-            {/* Upgrade Box inside scroll area so it is 100% scrollable on mobile */}
-            {(isDesktopOpen || isMobile) && (
-              <div className="mt-6 pb-6">
-                <div className="bg-purple-100 rounded-xl p-4 shadow-sm border border-purple-200">
-                  <h3 className="text-purple-700 text-sm font-semibold">
-                    UPGRADE TO PREMIUM
-                  </h3>
-                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                    Apply to more jobs and unlock premium benefits!
-                  </p>
-                  <button
-                    onClick={() => handleTabClick("premium")}
-                    className="mt-3.5 w-full bg-purple-700 text-white text-sm font-semibold py-2.5 px-4 rounded-lg hover:bg-purple-800 active:scale-95 transition shadow-sm cursor-pointer"
-                  >
-                    Upgrade Now
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Pinned bottom: Image 2 Upgrade to Premium card (never scrolls, never overlaps) */}
+          {(isDesktopOpen || isMobile) && (
+            <div className="p-3.5 shrink-0 border-t border-purple-100 bg-white">
+              <div className="bg-[#FAF2FE] rounded-2xl p-4 border border-[#EEDBFA] shadow-sm">
+                <h3 className="text-[#7520A9] text-xs font-bold uppercase tracking-wider">
+                  UPGRADE TO PREMIUM
+                </h3>
+                <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                  Apply to more jobs and unlock premium benefits!
+                </p>
+                <button
+                  onClick={() => handleTabClick("premium")}
+                  className="mt-3.5 w-full bg-[#7520A9] hover:bg-purple-800 active:scale-95 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition shadow-sm cursor-pointer text-center"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -446,9 +446,7 @@ const uploadStudentsFromCSV = async (req, res) => {
             csvBuffer = Buffer.from(csvData, "utf-8");
 
             const fileName = `student-credentials/${Date.now()}-${Math.floor(Math.random() * 10000)}.csv`;
-            const bucketName = process.env.AWS_CSV_BUCKET;
-            if (!bucketName)
-              throw new Error("AWS_CSV_BUCKET is not set in environment");
+            const bucketName = process.env.AWS_CSV_BUCKET || process.env.AWS_S3_BUCKET || process.env.AWS_RESUME_BUCKET || "skillnaavres";
 
             fileUrl = await uploadFile({
               Bucket: bucketName,

@@ -11,42 +11,46 @@
   <!-- DNS prefetch for CDN resources -->
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
 
+  <link rel="icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
   <link rel="icon" type="image/png" href="%PUBLIC_URL%/edutechex-favicon.png" />
-  <link rel="shortcut icon" type="image/png" href="%PUBLIC_URL%/edutechex-favicon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/edutechex-favicon.png" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#000000" />
+  <meta name="application-name" content="Edutechex" />
+  <meta name="apple-mobile-web-app-title" content="Edutechex" />
 
-  <!-- ✅ FIXED: consistent brand name "Edutechex" everywhere -->
+  <!-- Brand description -->
   <meta name="description"
     content="Edutechex — Navigate Your Skills. Discover internships, assign instructors, and manage schedules." />
 
   <!-- Canonical -->
-  <link rel="canonical" href="https://www.edutechex.com/" />
+  <link rel="canonical" href="https://edutechexskills.com/" />
 
   <!-- Page title -->
   <title>EDUTECHEX - Navigate Your Skills</title>
 
-  <!-- Open Graph (WhatsApp / LinkedIn / Facebook) -->
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Edutechex" />
   <meta property="og:title" content="EDUTECHEX - Navigate Your Skills" />
   <meta property="og:description"
     content="Discover internships, assign instructors, and manage schedules — all in one place." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.edutechex.com/" />
-  <meta property="og:image" content="https://www.edutechex.com/edutechex-og.png" />
-  <meta property="og:image:secure_url" content="https://www.edutechex.com/edutechex-og.png" />
+  <meta property="og:url" content="https://edutechexskills.com/" />
+  <meta property="og:image" content="https://edutechexskills.com/edutechex-og.png" />
+  <meta property="og:image:secure_url" content="https://edutechexskills.com/edutechex-og.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="EDUTECHEX logo" />
-  <meta property="og:site_name" content="EDUTECHEX" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="EDUTECHEX — Navigate Your Skills" />
   <meta name="twitter:description"
     content="Discover internships, assign instructors, and manage schedules — all in one place." />
-  <meta name="twitter:image" content="https://www.edutechex.com/edutechex-og.png" />
+  <meta name="twitter:image" content="https://edutechexskills.com/edutechex-og.png" />
 
   <!-- ✅ JSON-LD: Organization schema — tells Google "Edutechex" is the brand name -->
   <script type="application/ld+json">
@@ -54,11 +58,11 @@
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "Edutechex",
-  "alternateName": "Edutechex",
-  "url": "https://www.edutechex.com",
+  "alternateName": "EDUTECHEX",
+  "url": "https://edutechexskills.com",
   "logo": {
     "@type": "ImageObject",
-    "url": "https://www.edutechex.com/edutechex-og.png",
+    "url": "https://edutechexskills.com/edutechex-og.png",
     "width": 1200,
     "height": 630
   },
@@ -66,19 +70,19 @@
 }
 </script>
 
-  <!-- ✅ JSON-LD: WebSite schema — helps Google associate "edutechex" keyword with your site -->
+  <!-- ✅ JSON-LD: WebSite schema — Google uses this to determine the Site Name in Search Results -->
  <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Edutechex",
-  "alternateName": "Edutechex",
-  "url": "https://www.edutechex.com",
+  "alternateName": ["EDUTECHEX", "Edutechex Skills", "Skill Naav"],
+  "url": "https://edutechexskills.com",
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://www.edutechex.com/?q={search_term_string}"
+      "urlTemplate": "https://edutechexskills.com/?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }
@@ -153,7 +157,26 @@
 
 <body>
   <noscript>You need to enable JavaScript to run this app.</noscript>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Initial pre-React loading screen while page is refreshing/downloading bundles -->
+    <div id="initial-page-loader" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#ffffff;z-index:99999;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+      <div style="position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;inset:0;border-radius:50%;border:4px solid #dbeafe;border-top-color:#2563eb;animation:edutechexSpin 1s linear infinite;"></div>
+        <img src="%PUBLIC_URL%/favicon.ico" alt="Edutechex" style="width:44px;height:44px;object-fit:contain;border-radius:10px;animation:edutechexPulse 1.5s ease-in-out infinite;" />
+      </div>
+      <p style="margin-top:16px;font-size:12px;font-weight:600;color:#9ca3af;letter-spacing:0.15em;text-transform:uppercase;">Loading...</p>
+    </div>
+    <style>
+      @keyframes edutechexSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes edutechexPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.08); opacity: 0.85; }
+      }
+    </style>
+  </div>
 </body>
 
 </html>

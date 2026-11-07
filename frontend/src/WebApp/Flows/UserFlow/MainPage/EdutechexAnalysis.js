@@ -186,35 +186,38 @@ const SkillAnalysis = ({ job, onClose }) => {
         quizzes,
       } = response.data;
 
+      const userSkillsList = Array.isArray(user_skills) ? user_skills : [];
+      const skillGapsList = Array.isArray(skill_gaps) ? skill_gaps : [];
+      const coursesList = Array.isArray(recommendations?.courses) ? recommendations.courses : [];
+      const quizzesList = Array.isArray(quizzes) ? quizzes : [];
+
       setMessages((prev) => [
         ...prev,
         {
           sender: "ai",
-          text: `📊 **Readiness Score:**\n\n🟢 **${readiness_score}%**`,
+          text: `📊 **Readiness Score:**\n\n🟢 **${readiness_score ?? 0}%**`,
         },
         {
           sender: "ai",
           text: `✅ **Extracted Skills:**\n\n${
-            user_skills.length > 0
-              ? user_skills.map((skill) => `• ${skill}`).join("\n")
+            userSkillsList.length > 0
+              ? userSkillsList.map((skill) => `• ${skill}`).join("\n")
               : "❌ **No skills detected.**"
           }`,
         },
         {
           sender: "ai",
           text: `⚠️ **Skill Gaps:**\n\n${
-            skill_gaps.length > 0
-              ? skill_gaps.map((skill) => `🚨 **${skill}**`).join("\n")
+            skillGapsList.length > 0
+              ? skillGapsList.map((skill) => `🚨 **${skill}**`).join("\n")
               : "✅ **None**"
           }`,
         },
         {
           sender: "ai",
           text: `📚 **Recommended Courses:**\n\n${
-            recommendations.courses &&
-            Array.isArray(recommendations.courses) &&
-            recommendations.courses.length > 0
-              ? recommendations.courses
+            coursesList.length > 0
+              ? coursesList
                   .map((course) => {
                     if (typeof course === "object" && course !== null) {
                       return `📚 **${course.title || "Course Title Not Available"}**\n**Platform:** ${course.platform || "N/A"}\n**Description:** ${course.description || "No description available"}\n**Duration:** ${course.duration || "N/A"}`;
@@ -223,17 +226,17 @@ const SkillAnalysis = ({ job, onClose }) => {
                     }
                   })
                   .join("\n\n")
-              : recommendations.message || "❌ No courses available"
+              : recommendations?.message || "❌ No courses available"
           }`,
         },
         {
           sender: "ai",
           text: `📝 **Practice Quiz:**\n\n${
-            Array.isArray(quizzes) && quizzes.length > 0
-              ? quizzes
+            quizzesList.length > 0
+              ? quizzesList
                   .map(
                     (quiz) =>
-                      `📝 **${quiz.question}**\n${quiz.options
+                      `📝 **${quiz.question}**\n${(Array.isArray(quiz.options) ? quiz.options : [])
                         .map((option) => option)
                         .join("\n")}\n**Answer:** ${quiz.answer}`,
                   )
@@ -249,7 +252,7 @@ const SkillAnalysis = ({ job, onClose }) => {
       const msg =
         error?.response?.status === 401
           ? "❌ Session expired. Please log in again."
-          : `❌ Error analyzing skills: ${error.message || "Try again later."}`;
+          : `❌ Error analyzing skills: ${error?.response?.data?.message || error?.response?.data?.detail || error.message || "Try again later."}`;
 
       setMessages((prev) => [...prev, { sender: "ai", text: msg }]);
     } finally {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   BarChart,
   Bar,
@@ -24,6 +24,7 @@ import {
   FiTrendingUp,
   FiTrendingDown,
   FiRefreshCw,
+  FiChevronDown,
 } from "react-icons/fi";
 import { BsFileEarmarkCheck, BsClipboardData } from "react-icons/bs";
 import { motion } from "framer-motion";
@@ -537,6 +538,26 @@ export default function Dashboard() {
   });
 
   const [timeRange, setTimeRange] = useState("allTime");
+  const [timeRangeDropdownOpen, setTimeRangeDropdownOpen] = useState(false);
+  const timeRangeRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (timeRangeRef.current && !timeRangeRef.current.contains(e.target)) {
+        setTimeRangeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const TIME_RANGE_OPTIONS = [
+    { value: "last7", label: "Last 7 Days" },
+    { value: "last30", label: "Last 30 Days" },
+    { value: "thisYear", label: "This Year" },
+    { value: "allTime", label: "All Time" },
+    { value: "custom", label: "Custom Date Range" },
+  ];
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -763,17 +784,16 @@ export default function Dashboard() {
       {/* 🔒 Blur overlay */}
       <UploadOverlay modal={uploadModal} onClose={handleModalClose} />
       {/* Header & Range Selector */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
-        {/*Remove flex-wrap for mobile view compatibility - 05-08-2026 */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => {
               setIsRefreshing(true);
               setRefreshTrigger((prev) => prev + 1);
             }}
             disabled={isRefreshing}
-            className={`flex items-center gap-2 px-4 py-2 border border-indigo-200 text-indigo-600 rounded-lg transition-colors font-medium bg-white shadow-sm ${isRefreshing ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-50"}`}
+            className={`flex items-center gap-2 px-4 py-2 border border-indigo-200 text-indigo-600 rounded-lg transition-colors font-medium bg-white shadow-sm shrink-0 ${isRefreshing ? "opacity-70 cursor-not-allowed" : "hover:bg-indigo-50"}`}
           >
             <FiRefreshCw
               size={18}
@@ -782,7 +802,7 @@ export default function Dashboard() {
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
           {timeRange === "custom" && (
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-gray-200 rounded-lg shadow-sm">
+            <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-gray-200 rounded-lg shadow-sm flex-wrap sm:flex-nowrap">
               <input
                 type="date"
                 value={customStart}
@@ -798,17 +818,48 @@ export default function Dashboard() {
               />
             </div>
           )}
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 cursor-pointer font-medium"
-          >
-            <option value="last7">Last 7 Days</option>
-            <option value="last30">Last 30 Days</option>
-            <option value="thisYear">This Year</option>
-            <option value="allTime">All Time</option>
-            <option value="custom">Custom Date Range</option>
-          </select>
+          <div ref={timeRangeRef} className="relative w-full sm:w-[195px] min-w-[195px]">
+            <button
+              type="button"
+              onClick={() => setTimeRangeDropdownOpen((prev) => !prev)}
+              className={`w-full px-4 py-2 bg-white rounded-lg shadow-sm focus:outline-none text-gray-700 cursor-pointer font-medium flex items-center justify-between text-sm transition ${
+                timeRangeDropdownOpen
+                  ? "border border-indigo-500 ring-2 ring-indigo-300"
+                  : "border border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <span className="truncate">
+                {TIME_RANGE_OPTIONS.find((opt) => opt.value === timeRange)?.label || "All Time"}
+              </span>
+              <FiChevronDown
+                className={`text-gray-500 transition-transform flex-shrink-0 ml-2 ${
+                  timeRangeDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {timeRangeDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden py-1">
+                {TIME_RANGE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setTimeRange(opt.value);
+                      setTimeRangeDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm truncate transition hover:bg-indigo-50 ${
+                      timeRange === opt.value
+                        ? "font-semibold text-indigo-700 bg-indigo-50/70"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {/*For loading effect - 06-08-2026 */}

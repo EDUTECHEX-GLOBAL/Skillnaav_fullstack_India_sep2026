@@ -492,11 +492,36 @@ const InternshipList = () => {
   };
 
   const getPricingBucketFromInternship = (internship) => {
-    const raw = String(internship?.internshipType || "")
-      .trim()
-      .toUpperCase();
+    if (!internship) return "free";
+    if (internship.isPaidInternship === true || internship.isPaid === true) return "paid";
+
+    const compType = String(internship?.compensationDetails?.type || "").trim().toUpperCase();
+    if (compType === "PAID") return "paid";
+    if (compType === "STIPEND") return "stipend";
+
+    const raw = String(
+      internship?.internshipType ||
+      internship?.pricingType ||
+      internship?.paymentType ||
+      internship?.compensationType ||
+      ""
+    ).trim().toUpperCase();
+
     if (raw === "PAID") return "paid";
     if (raw === "STIPEND") return "stipend";
+
+    const compAmount = Number(internship?.compensationDetails?.amount ?? 0);
+    if (!Number.isNaN(compAmount) && compAmount > 0) return "paid";
+
+    const paidAmount = Number(
+      internship?.amount ??
+      internship?.price ??
+      internship?.fee ??
+      internship?.studentPays ??
+      0
+    );
+    if (!Number.isNaN(paidAmount) && paidAmount > 0) return "paid";
+
     return "free";
   };
 
@@ -1843,26 +1868,17 @@ const InternshipList = () => {
       </Modal>
 
       {/* ── Schedule Form Modal ── */}
-      <Modal
-        isOpen={scheduleFormOpen}
-        onClose={() => {
-          setScheduleFormOpen(false);
-          setSelectedInternshipForSchedule(null);
-        }}
-        title="Create Internship Schedule"
-      >
-        {selectedInternshipForSchedule?._id && (
-          <ScheduleForm
-            internshipId={selectedInternshipForSchedule._id}
-            initialInternshipMode={selectedInternshipForSchedule.internshipMode}
-            initialPricingBucket={selectedInternshipForSchedule.pricingBucket}
-            onClose={() => {
-              setScheduleFormOpen(false);
-              setSelectedInternshipForSchedule(null);
-            }}
-          />
-        )}
-      </Modal>
+      {scheduleFormOpen && selectedInternshipForSchedule?._id && (
+        <ScheduleForm
+          internshipId={selectedInternshipForSchedule._id}
+          initialInternshipMode={selectedInternshipForSchedule.internshipMode}
+          initialPricingBucket={selectedInternshipForSchedule.pricingBucket}
+          onClose={() => {
+            setScheduleFormOpen(false);
+            setSelectedInternshipForSchedule(null);
+          }}
+        />
+      )}
 
       {/* ── Time Slots Modal ── */}
       <Modal

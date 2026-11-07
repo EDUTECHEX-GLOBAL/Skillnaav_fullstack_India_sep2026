@@ -1,27 +1,33 @@
 import React from "react";
-import logo from "../assets/Edutech-logo.png"; // update path to your actual logo
 
 const PageLoader = () => {
+  const iconSrc = `${process.env.PUBLIC_URL || ""}/favicon.ico`;
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-      <div className="animate-spin rounded-full p-1"
-        style={{ animation: "spin 1s linear infinite" }}>
+      <div className="relative flex items-center justify-center w-20 h-20">
+        {/* Soft rotating ring */}
+        <div
+          className="absolute inset-0 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"
+          style={{ animationDuration: "1s" }}
+        />
+
+        {/* Brand favicon icon */}
         <img
-          src={logo}
+          src={iconSrc}
           alt="Loading..."
-          className="w-16 h-16 object-contain"
-          style={{ animation: "pulse-spin 1.2s ease-in-out infinite" }}
+          className="w-11 h-11 object-contain rounded-lg shadow-sm"
+          style={{ animation: "pulse-scale 1.5s ease-in-out infinite" }}
         />
       </div>
-      <p className="mt-4 text-sm text-gray-400 tracking-widest uppercase">
+      <p className="mt-4 text-xs font-semibold text-gray-400 tracking-widest uppercase">
         Loading...
       </p>
 
       <style>{`
-        @keyframes pulse-spin {
-          0%   { transform: rotate(0deg) scale(1);    opacity: 1; }
-          50%  { transform: rotate(180deg) scale(1.1); opacity: 0.7; }
-          100% { transform: rotate(360deg) scale(1);  opacity: 1; }
+        @keyframes pulse-scale {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.08); opacity: 0.85; }
         }
       `}</style>
     </div>

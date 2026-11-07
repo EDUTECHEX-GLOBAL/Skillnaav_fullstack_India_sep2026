@@ -212,17 +212,23 @@ const SubscriptionPlans = () => {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`bg-gradient-to-b ${plan.cardBg} border-2 ${plan.borderColor} rounded-3xl p-8 flex flex-col justify-between transition-all hover:shadow-xl hover:scale-105`}
+              className={`bg-gradient-to-b ${plan.cardBg} border-2 ${plan.borderColor} rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all hover:shadow-xl hover:scale-[1.02]`}
             >
               {/* Plan Title */}
               <div className="mb-6">
-                <h3 className={`text-2xl font-bold ${plan.titleColor} mb-6`}>
+                <h3 className={`text-xl sm:text-2xl font-bold ${plan.titleColor} mb-4 sm:mb-6`}>
                   {plan.title}
                 </h3>
 
                 {/* Price */}
-                <div className="mb-4">
-                  <p className={`text-5xl font-bold ${plan.priceColor}`}>
+                <div className="mb-4 min-h-[3.5rem] flex items-center">
+                  <p
+                    className={`font-bold tracking-tight ${plan.priceColor} ${
+                      plan.price.length > 5
+                        ? "text-3xl sm:text-4xl"
+                        : "text-4xl sm:text-5xl"
+                    }`}
+                  >
                     {plan.price}
                   </p>
                 </div>
@@ -230,7 +236,7 @@ const SubscriptionPlans = () => {
                 {/* Credits Badge */}
                 <div className="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200 border-opacity-30">
                   <svg
-                    className={`w-5 h-5 ${plan.creditIconColor}`}
+                    className={`w-5 h-5 flex-shrink-0 ${plan.creditIconColor}`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

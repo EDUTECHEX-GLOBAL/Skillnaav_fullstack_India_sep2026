@@ -701,51 +701,52 @@ const SavedJobsPage = () => {
                 key={entry._id}
                 className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-2xl p-5 relative border border-gray-100 flex flex-col"
               >
-                {/* Top Right Actions: Save & Type badge */}
-                <div className="absolute top-4 right-4 flex items-center gap-3">
-                  <button
-                    onClick={() => toggleSaveJob(job)}
-                    className={`transition text-[22px] mt-0.5 ${isJobSaved(job._id) ? "text-pink-500" : "text-gray-200 hover:text-pink-400"}`}
-                    aria-label={isJobSaved(job._id) ? "Unsave job" : "Save job"}
-                  >
-                    <FaHeart />
-                  </button>
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      job.internshipType === "STIPEND"
-                        ? "bg-blue-100 text-blue-700"
-                        : job.internshipType === "PAID"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {job.internshipType || "FREE"}
-                  </span>
-                </div>
+                {/* Header with Title and Actions */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <img
+                      src={
+                        job.imgUrl ||
+                        "https://dummyimage.com/40x40/cccccc/000000&text=No+Image"
+                      }
+                      alt="logo"
+                      className="w-10 h-10 object-contain rounded-full border border-gray-100 shrink-0 mt-0.5"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-semibold text-gray-800 truncate" title={job.jobTitle}>
+                        {job.jobTitle}
+                      </h3>
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5 truncate">
+                        <span className="truncate">{job.companyName}</span>
+                        <span className="text-gray-300 shrink-0">·</span>
+                        <span className="shrink-0">{formatPostedDate(job.createdAt)}</span>
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 sm:whitespace-nowrap truncate">
+                        ID: {job._id}
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Header */}
-                <div className="flex items-start gap-3">
-                  <img
-                    src={
-                      job.imgUrl ||
-                      "https://dummyimage.com/40x40/cccccc/000000&text=No+Image"
-                    }
-                    alt="logo"
-                    className="w-10 h-10 object-contain rounded-full border border-gray-100 shrink-0"
-                  />
-                  <div className="min-w-0 pr-2 sm:pr-28">
-                    <h3 className="text-base font-semibold text-gray-800 truncate">
-                      {job.jobTitle}
-                    </h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
-                      {job.companyName}
-                      <span className="text-gray-300">·</span>
-                      <span>{formatPostedDate(job.createdAt)}</span>
-                    </p>
-                    {/*Add "sm:whitespace-nowrap" & add "truncate" for tablet alignment - 10-08-2026 */}
-                    <p className="text-[11px] text-gray-400 mt-0.5 sm:whitespace-nowrap truncate">
-                      ID: {job._id}
-                    </p>
+                  {/* Top Right Actions: Save & Type badge */}
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-1">
+                    <button
+                      onClick={() => toggleSaveJob(job)}
+                      className={`transition text-[20px] sm:text-[22px] flex items-center justify-center ${isJobSaved(job._id) ? "text-pink-500" : "text-gray-200 hover:text-pink-400"}`}
+                      aria-label={isJobSaved(job._id) ? "Unsave job" : "Save job"}
+                    >
+                      <FaHeart />
+                    </button>
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                        job.internshipType === "STIPEND"
+                          ? "bg-blue-100 text-blue-700"
+                          : job.internshipType === "PAID"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {job.internshipType || "FREE"}
+                    </span>
                   </div>
                 </div>
 

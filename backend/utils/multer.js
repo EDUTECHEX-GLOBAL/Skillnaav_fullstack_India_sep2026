@@ -7,7 +7,7 @@ require("dotenv").config();
 
 // ✅ Configure S3 client
 const s3 = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.AWS_REGION || "us-west-1",
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -24,7 +24,15 @@ const createUploader = (bucket, folder, allowedTypes, sizeLimit) => {
   return multer({
     storage: multerS3({
       s3,
-      bucket,
+      bucket: (req, file, cb) => {
+        const target =
+          (typeof bucket === "function" ? bucket(req, file) : bucket) ||
+          process.env.AWS_S3_BUCKET ||
+          process.env.AWS_RESUME_BUCKET ||
+          process.env.AWS_IMAGE_BUCKET ||
+          "skillnaavres";
+        cb(null, target);
+      },
       metadata: (req, file, cb) => cb(null, { fieldName: file.fieldname }),
       key: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
@@ -78,11 +86,15 @@ const profilePicUpload = createUploader(
 
 // ✅ Retry-enabled file upload (for buffers/files)
 const uploadFile = async (params, retries = 3) => {
+  const targetParams = {
+    ...params,
+    Bucket: params.Bucket || process.env.AWS_S3_BUCKET || process.env.AWS_RESUME_BUCKET || "skillnaavres",
+  };
   for (let i = 0; i < retries; i++) {
     try {
-      const command = new PutObjectCommand(params);
+      const command = new PutObjectCommand(targetParams);
       await s3.send(command);
-      return `https://${params.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
+      return `https://${targetParams.Bucket}.s3.${process.env.AWS_REGION || "us-west-1"}.amazonaws.com/${targetParams.Key}`;
     } catch (err) {
       if (i === retries - 1) throw err;
       await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
@@ -94,7 +106,7 @@ const uploadFile = async (params, retries = 3) => {
 const uploadOfferLetter = async (localFilePath, fileName) => {
   const fileContent = fs.readFileSync(localFilePath);
   return uploadFile({
-    Bucket: process.env.AWS_RESUME_BUCKET,
+    Bucket: process.env.AWS_RESUME_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres",
     Key: `offer-letters/${fileName}`,
     Body: fileContent,
     ContentType: "application/pdf",
@@ -104,7 +116,7 @@ const uploadOfferLetter = async (localFilePath, fileName) => {
 // ✅ Upload offer letter from buffer
 const uploadOfferLetterBuffer = async (buffer, fileName) => {
   return uploadFile({
-    Bucket: process.env.AWS_RESUME_BUCKET,
+    Bucket: process.env.AWS_RESUME_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres",
     Key: `offer-letters/${fileName}`,
     Body: buffer,
     ContentType: "application/pdf",

@@ -7,15 +7,22 @@ const buildAssetPath = (fileName) =>
   `${process.env.PUBLIC_URL}/${fileName}?v=${FAVICON_VERSION}`;
 
 export const EDUTECHEX_FAVICON_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_FAVICON_ICO_PATH = buildAssetPath("favicon.ico");
 export const EDUTECHEX_FAVICON_16_PATH = buildAssetPath("edutechex-favicon.png");
 export const EDUTECHEX_FAVICON_32_PATH = buildAssetPath("edutechex-favicon.png");
 export const EDUTECHEX_FAVICON_192_PATH = buildAssetPath("edutechex-favicon.png");
 export const EDUTECHEX_FAVICON_512_PATH = buildAssetPath("edutechex-favicon.png");
 export const EDUTECHEX_APPLE_TOUCH_ICON_PATH = buildAssetPath("edutechex-favicon.png");
-export const EDUTECHEX_SHORTCUT_ICON_PATH = buildAssetPath("edutechex-favicon.png");
+export const EDUTECHEX_SHORTCUT_ICON_PATH = buildAssetPath("favicon.ico");
 const MANAGED_FAVICON_ATTR = "data-edutechex-favicon";
 
 const FAVICON_LINKS = [
+  {
+    key: "icon-ico",
+    rel: "icon",
+    type: "image/x-icon",
+    href: EDUTECHEX_FAVICON_ICO_PATH,
+  },
   {
     key: "icon-16",
     rel: "icon",

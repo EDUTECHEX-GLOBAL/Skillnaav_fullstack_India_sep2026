@@ -6,6 +6,7 @@ import {
     faMapMarkerAlt,
     faLink,
     faClock,
+    faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import { format, parseISO, isToday, isValid } from "date-fns";
 
@@ -27,6 +28,43 @@ export default function InternshipScheduleViewer({
 
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedSummary, setSelectedSummary] = useState(null);
+    const downloadViewerSummary = (summary) => {
+        if (!summary) return;
+        const text = (summary.sectionSummary || '').trim();
+        if (!text || text === '—') {
+            alert('No Section Summary available to download.');
+            return;
+        }
+
+        const dateStr = summary.date || 'Scheduled-Date';
+        const doc = 
+`================================================================================
+                    INTERNSHIP DAILY SECTION SUMMARY
+================================================================================
+Date        : ${dateStr}
+Instructor  : ${summary.instructor || 'N/A'}
+
+--------------------------------------------------------------------------------
+SECTION SUMMARY:
+--------------------------------------------------------------------------------
+${text}
+
+================================================================================
+Generated on: ${new Date().toLocaleString()}
+Edutechex Partner Portal
+================================================================================
+`;
+        const blob = new Blob([doc], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Section_Summary_${dateStr}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     const [activeBatchTab, setActiveBatchTab] = useState('');
 
     const scrollContainerRef = useRef(null);
@@ -506,6 +544,16 @@ export default function InternshipScheduleViewer({
                                     <strong className="text-gray-700">Instructor Name:</strong>{" "}
                                     {selectedSummary.instructor || "—"}
                                 </p>
+                            </div>
+                            <div className="mt-6 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => downloadViewerSummary(selectedSummary)}
+                                    className="inline-flex items-center text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3.5 py-2 rounded-lg transition-all shadow-sm cursor-pointer active:scale-95"
+                                >
+                                    <FontAwesomeIcon icon={faDownload} className="mr-1.5" />
+                                    Download Summary
+                                </button>
                             </div>
                         </div>
                     </div>

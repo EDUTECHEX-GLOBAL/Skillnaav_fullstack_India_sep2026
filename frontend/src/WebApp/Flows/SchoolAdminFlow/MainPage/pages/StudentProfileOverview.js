@@ -258,20 +258,20 @@ const StudentProfileOverview = () => {
   const completedCount = students.filter((s) => s.completion >= 80).length;
 
   return (
-    <div className="p-8 bg-white rounded-xl shadow-md font-poppins">
+    <div className="p-4 sm:p-8 bg-white rounded-xl shadow-md font-poppins">
       {/* ── Header ── */}
-      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-blue-600">
+          <h2 className="text-xl sm:text-2xl font-semibold text-blue-600">
             Profile Completion
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Monitor and support students with incomplete profiles.
           </p>
         </div>
 
         {/* Quick stats */}
-        <div className="flex gap-3 flex-wrap">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full sm:w-auto">
           {[
             {
               label: "Avg Completion",
@@ -291,18 +291,18 @@ const StudentProfileOverview = () => {
           ].map((s) => (
             <div
               key={s.label}
-              className={`border rounded-lg px-4 py-2 text-center ${s.color}`}
+              className={`border rounded-lg px-2.5 sm:px-4 py-2 text-center flex-1 sm:flex-none ${s.color}`}
             >
-              <div className="text-xl font-bold">{s.value}</div>
-              <div className="text-xs mt-0.5">{s.label}</div>
+              <div className="text-lg sm:text-xl font-bold">{s.value}</div>
+              <div className="text-[11px] sm:text-xs mt-0.5 whitespace-nowrap">{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── Search + filter bar ── */}
-      <div className="flex gap-3 mb-5 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="relative flex-1">
           {/*Add "!mt-0" for alignment - 05-08-2026 */}
           <input
             type="text"
@@ -317,12 +317,12 @@ const StudentProfileOverview = () => {
           />
         </div>
 
-        <div className="flex gap-1 border border-gray-200 rounded-lg overflow-hidden text-sm">
+        <div className="flex border border-gray-200 rounded-lg overflow-hidden text-sm self-start sm:self-auto w-full sm:w-auto">
           {["all", "stalled", "on-track"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 font-medium transition-colors capitalize ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 font-medium transition-colors capitalize text-center text-xs sm:text-sm ${
                 filter === f
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-600 hover:bg-gray-50"

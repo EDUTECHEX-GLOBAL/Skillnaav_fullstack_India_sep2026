@@ -7,7 +7,7 @@ const { S3Client, PutBucketCorsCommand } = require("@aws-sdk/client-s3");
 require("dotenv").config();
 
 const s3 = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.AWS_REGION || "us-west-1",
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -15,7 +15,7 @@ const s3 = new S3Client({
 });
 
 const applyS3Cors = async () => {
-  const bucket = process.env.AWS_IMAGE_BUCKET;
+  const bucket = process.env.AWS_IMAGE_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres";
   if (!bucket) {
     console.warn("⚠️  AWS_IMAGE_BUCKET not set — skipping S3 CORS setup");
     return;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "../../../../../api/axiosInstance";
 import { FaPlus, FaSave, FaTimes } from "react-icons/fa";
 
@@ -10,6 +10,79 @@ const defaultSubjects = [
   "Social Studies",
   "Computer Science",
 ];
+
+const GradeDropdown = ({ value, onChange, options = [] }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const display = value || "-- Select Grade --";
+
+  return (
+    <div className="relative w-full min-w-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full min-w-0 max-w-full border border-gray-300 rounded-xl px-4 py-3 bg-white text-left text-gray-800 font-medium flex items-center justify-between gap-2 shadow-sm transition box-border cursor-pointer ${
+          isOpen ? "ring-2 ring-blue-400 border-blue-400" : "hover:border-gray-400"
+        }`}
+      >
+        <span className={`truncate text-base ${!value ? "text-gray-400 font-normal" : "text-gray-800"}`} title={display}>
+          {display}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1 w-full max-w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-56 overflow-y-auto overflow-x-hidden py-1 box-border">
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setIsOpen(false);
+            }}
+            className="w-full min-w-0 max-w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer text-gray-500 hover:bg-blue-50 block box-border"
+          >
+            -- Select Grade --
+          </button>
+          {options.map((grade) => (
+            <button
+              key={grade}
+              type="button"
+              onClick={() => {
+                onChange(grade);
+                setIsOpen(false);
+              }}
+              className={`w-full min-w-0 max-w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer truncate block box-border ${
+                value === grade ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {grade}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CurriculumSetup = () => {
   const [selectedGrade, setSelectedGrade] = useState("");
@@ -109,16 +182,11 @@ const CurriculumSetup = () => {
       {/* Grade Selection */}
       <div className="mb-8 bg-gradient-to-r from-blue-50 to-white p-6 rounded-xl shadow-md border border-blue-100">
         <label className="block text-gray-700 font-semibold mb-3 text-lg">Select Grade</label>
-        <select
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition text-gray-800 font-medium"
+        <GradeDropdown
           value={selectedGrade}
-          onChange={(e) => setSelectedGrade(e.target.value)}
-        >
-          <option value="">-- Select Grade --</option>
-          {grades.map((grade) => (
-            <option key={grade} value={grade}>{grade}</option>
-          ))}
-        </select>
+          onChange={(val) => setSelectedGrade(val)}
+          options={grades}
+        />
       </div>
 
       {/* Subjects Section */}

@@ -44,7 +44,7 @@ const schoolRegistrationEnabled = requirePlatformFeature(
 );
 
 const verificationDocUpload = createUploader(
-  process.env.AWS_RESUME_BUCKET || "edutechex-dev-bucket",
+  process.env.AWS_RESUME_BUCKET || process.env.AWS_S3_BUCKET || "skillnaavres",
   "resumes",
   /pdf|jpe?g|png|docx?/,
   5 * 1024 * 1024,

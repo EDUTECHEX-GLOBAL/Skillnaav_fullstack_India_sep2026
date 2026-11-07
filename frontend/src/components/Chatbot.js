@@ -10,7 +10,7 @@ import { Maximize2, Minimize2, X, ChevronUp, Mic, MicOff, MoreHorizontal, Messag
 
 export default function Chatbot({ isTextChatOpen = false }) {
   // Widget States: 'fab' (just button), 'collapsed' (preview card), 'expanded' (large card), 'fullscreen'
-  const [widgetState, setWidgetState] = useState('collapsed');
+  const [widgetState, setWidgetState] = useState('fab');
   
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);

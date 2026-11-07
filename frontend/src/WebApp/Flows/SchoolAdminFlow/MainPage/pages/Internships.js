@@ -8,6 +8,7 @@ import {
   FaHeart,
   FaSearch,
   FaTimes,
+  FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
@@ -542,6 +543,18 @@ const Internships = () => {
     internshipMode: null,
     classification: null,
   });
+  const [openDropdownKey, setOpenDropdownKey] = useState(null);
+  const filterDropdownsRef = useRef(null);
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      if (filterDropdownsRef.current && !filterDropdownsRef.current.contains(e.target)) {
+        setOpenDropdownKey(null);
+      }
+    };
+    document.addEventListener("mousedown", handleGlobalClick);
+    return () => document.removeEventListener("mousedown", handleGlobalClick);
+  }, []);
   const hasActiveFilters = Object.values(activeFilters).some(Boolean);
   const clearAllFilters = () =>
     setActiveFilters({
@@ -812,32 +825,74 @@ const Internships = () => {
         </div>
 
         {/* Filter dropdowns */}
-        <div className="max-w-5xl mx-auto pt-3 pb-1">
-          <div className="flex flex-wrap gap-3">
-            {FILTER_GROUPS.map((group) => (
-              <div key={group.key} className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500 font-medium">
-                  {group.label}
-                </label>
-                <select
-                  value={activeFilters[group.key] ?? ""}
-                  onChange={(e) =>
-                    setActiveFilters((prev) => ({
-                      ...prev,
-                      [group.key]: e.target.value || null,
-                    }))
-                  }
-                  className="px-3 py-2 rounded-lg text-sm border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 cursor-pointer min-w-[130px] transition"
-                >
-                  <option value="">All {group.label}s</option>
-                  {group.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+        <div ref={filterDropdownsRef} className="max-w-5xl mx-auto pt-3 pb-1">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            {FILTER_GROUPS.map((group) => {
+              const isOpen = openDropdownKey === group.key;
+              const currentVal = activeFilters[group.key] ?? "";
+              const selectedOption = group.options.find((opt) => opt.value === currentVal);
+              const displayLabel = selectedOption ? selectedOption.label : `All ${group.label}s`;
+
+              return (
+                <div key={group.key} className="relative flex flex-col gap-1 w-full sm:w-auto sm:min-w-[160px]">
+                  <label className="text-xs text-gray-500 font-medium">
+                    {group.label}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setOpenDropdownKey(isOpen ? null : group.key)}
+                    className={`w-full px-3 py-2 rounded-lg text-sm bg-white text-gray-700 flex items-center justify-between gap-2 focus:outline-none cursor-pointer transition text-left ${
+                      isOpen
+                        ? "border border-purple-500 ring-2 ring-purple-300"
+                        : "border border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <span className="truncate">{displayLabel}</span>
+                    <FaChevronDown className={`text-xs text-gray-400 transition-transform flex-shrink-0 ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden py-1 max-h-60 overflow-y-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveFilters((prev) => ({
+                            ...prev,
+                            [group.key]: null,
+                          }));
+                          setOpenDropdownKey(null);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm truncate transition hover:bg-purple-50 ${
+                          !currentVal ? "font-semibold text-purple-700 bg-purple-50/60" : "text-gray-700"
+                        }`}
+                      >
+                        All {group.label}s
+                      </button>
+                      {group.options.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setActiveFilters((prev) => ({
+                              ...prev,
+                              [group.key]: opt.value,
+                            }));
+                            setOpenDropdownKey(null);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm truncate transition hover:bg-purple-50 ${
+                            currentVal === opt.value
+                              ? "font-semibold text-purple-700 bg-purple-50/60"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {hasActiveFilters && (
               <div className="flex flex-col justify-end">
                 <button
@@ -900,54 +955,54 @@ const Internships = () => {
                 key={item._id}
                 className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-2xl p-5 relative border border-gray-100 flex flex-col"
               >
-                {/* Top Right Actions: Save & Type badge */}
-                <div className="absolute top-4 right-4 flex items-center gap-3">
-                  <button
-                    onClick={() => toggleSaveJob(item)}
-                    className={`transition text-[22px] mt-0.5 ${isJobSaved(item._id) ? "text-pink-500" : "text-gray-200 hover:text-pink-400"}`}
-                    aria-label={
-                      isJobSaved(item._id) ? "Unsave job" : "Save job"
-                    }
-                  >
-                    <FaHeart />
-                  </button>
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      item.internshipType === "STIPEND"
-                        ? "bg-blue-100 text-blue-700"
-                        : item.internshipType === "PAID"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {item.internshipType || "FREE"}
-                  </span>
-                </div>
+                {/* Header with Title and Actions */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <img
+                      src={
+                        item.imgUrl ||
+                        "https://dummyimage.com/40x40/cccccc/000000&text=No+Image"
+                      }
+                      alt="logo"
+                      className="w-10 h-10 object-contain rounded-full border border-gray-100 shrink-0 mt-0.5"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-semibold text-gray-800 truncate" title={item.jobTitle}>
+                        {item.jobTitle}
+                      </h3>
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5 truncate">
+                        <span className="truncate">{item.companyName}</span>
+                        <span className="text-gray-300 shrink-0">·</span>
+                        <span className="shrink-0">{formatPostedDate(item.createdAt)}</span>
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                        ID: {item._id}
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Header */}
-                <div className="flex items-start gap-3">
-                  <img
-                    src={
-                      item.imgUrl ||
-                      "https://dummyimage.com/40x40/cccccc/000000&text=No+Image"
-                    }
-                    alt="logo"
-                    className="w-10 h-10 object-contain rounded-full border border-gray-100 shrink-0"
-                  />
-                  {/*Add pr-2 change pr-28 to sm:pr-28 for ID alignment in tablet - 10-08-2026 */}
-                  <div className="min-w-0 pr-2 sm:pr-28">
-                    <h3 className="text-base font-semibold text-gray-800 truncate">
-                      {item.jobTitle}
-                    </h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
-                      {item.companyName}
-                      <span className="text-gray-300">·</span>
-                      <span>{formatPostedDate(item.createdAt)}</span>
-                    </p>
-                    {/*Remove "whitespace-nowrap"  for tab alignment - 10-08-2026*/}
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      ID: {item._id}
-                    </p>
+                  {/* Top Right Actions: Save & Type badge */}
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-1">
+                    <button
+                      onClick={() => toggleSaveJob(item)}
+                      className={`transition text-[20px] sm:text-[22px] flex items-center justify-center ${isJobSaved(item._id) ? "text-pink-500" : "text-gray-200 hover:text-pink-400"}`}
+                      aria-label={
+                        isJobSaved(item._id) ? "Unsave job" : "Save job"
+                      }
+                    >
+                      <FaHeart />
+                    </button>
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                        item.internshipType === "STIPEND"
+                          ? "bg-blue-100 text-blue-700"
+                          : item.internshipType === "PAID"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {item.internshipType || "FREE"}
+                    </span>
                   </div>
                 </div>
 

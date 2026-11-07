@@ -68,8 +68,19 @@ def extract_text_from_pdf(pdf_file):
 
 # Extract text from DOCX
 def extract_text_from_docx(docx_file):
-    doc = docx.Document(docx_file.file)
-    return "\n".join([para.text for para in doc.paragraphs])
+    try:
+        docx_file.file.seek(0)
+        doc = docx.Document(docx_file.file)
+        text_parts = [para.text for para in doc.paragraphs if para.text]
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if cell.text and cell.text.strip():
+                        text_parts.append(cell.text.strip())
+        return "\n".join(text_parts)
+    except Exception as e:
+        logger.error(f"DOCX Extract Error: {e}")
+        return ""
 
 # Expanded predefined technical skills to improve extraction
 TECH_SKILLS = {

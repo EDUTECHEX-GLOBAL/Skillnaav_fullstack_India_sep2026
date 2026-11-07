@@ -105,7 +105,7 @@ const saveUserAgeGateConsent = async (req, res) => {
             const photoUrl =
                 req.file?.location ||
                 (req.file?.key
-                    ? `https://${process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_RESUME_BUCKET}.s3.${process.env.AWS_REGION || "us-east-2"}.amazonaws.com/${req.file.key}`
+                    ? `https://${process.env.AWS_PROFILE_PIC_BUCKET || process.env.AWS_S3_BUCKET || process.env.AWS_RESUME_BUCKET || "skillnaavres"}.s3.${process.env.AWS_REGION || "us-west-1"}.amazonaws.com/${req.file.key}`
                     : "");
 
             if (!req.file || !photoUrl) {

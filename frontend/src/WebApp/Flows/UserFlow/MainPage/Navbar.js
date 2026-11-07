@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
 import { useFeedback } from "../../../../context/FeedbackContext";
 import { userFlowQuestions } from "../../../../components/FeedbackModal/questionSets";
-import { isB2BContext, redirectToLoginAfterLogout } from "../../../../utils/domain";
+import { redirectToLoginAfterLogout } from "../../../../utils/domain";
 
 const Navbar = ({ onToggleSidebar, isSidebarOpen, onCloseSidebar }) => {
   const { handleSelectTab, selectedTab } = useTabContext();

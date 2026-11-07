@@ -15,12 +15,34 @@ const axios = require("axios");
 const { URL } = require("url");
 
 // Allowed S3 buckets (whitelist to prevent open-redirect abuse)
-const ALLOWED_HOSTS = [
-  "edutechex-documents-prod.s3.us-east-2.amazonaws.com",
-  "edutechex-documents-prod.s3.amazonaws.com",
-  `${process.env.AWS_IMAGE_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`,
-  `${process.env.AWS_RESUME_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`,
-].filter(Boolean);
+const getDynamicAllowedHosts = () => {
+  const region = process.env.AWS_REGION || "us-west-1";
+  const buckets = [
+    process.env.AWS_S3_BUCKET,
+    process.env.AWS_IMAGE_BUCKET,
+    process.env.AWS_RESUME_BUCKET,
+    process.env.AWS_PROFILE_PIC_BUCKET,
+    process.env.AWS_CSV_BUCKET,
+    "skillnaavres",
+    "edutechexres",
+    "edutechex-documents-prod",
+  ].filter(Boolean);
+
+  const hosts = new Set([
+    "edutechex-documents-prod.s3.us-east-2.amazonaws.com",
+    "edutechex-documents-prod.s3.amazonaws.com",
+    "skillnaavres.s3.us-west-1.amazonaws.com",
+    "skillnaavres.s3.amazonaws.com",
+  ]);
+
+  buckets.forEach((b) => {
+    hosts.add(`${b}.s3.${region}.amazonaws.com`);
+    hosts.add(`${b}.s3.us-west-1.amazonaws.com`);
+    hosts.add(`${b}.s3.amazonaws.com`);
+  });
+
+  return hosts;
+};
 
 router.get("/", async (req, res) => {
   const { url } = req.query;
@@ -37,9 +59,8 @@ router.get("/", async (req, res) => {
   }
 
   // Security: only proxy from known S3 buckets
-  const isAllowed = ALLOWED_HOSTS.some(
-    (host) => host && parsedUrl.hostname === host
-  );
+  const allowedHosts = getDynamicAllowedHosts();
+  const isAllowed = allowedHosts.has(parsedUrl.hostname);
   if (!isAllowed) {
     return res.status(403).json({ error: "URL host not allowed" });
   }

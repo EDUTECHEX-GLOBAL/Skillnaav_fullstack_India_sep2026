@@ -1,11 +1,152 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../../../../api/axiosInstance";
+
+const SCHOOL_TYPE_OPTIONS = [
+  { value: "", label: "Select School Type" },
+  { value: "Private", label: "Private" },
+  { value: "Public", label: "Public / Government" },
+  { value: "Charter", label: "Charter / Autonomous" },
+  { value: "Catholic", label: "Missionary / Minority" },
+];
+
+const COUNTRY_OPTIONS = [
+  { value: "", label: "Select Country" },
+  { value: "India", label: "India" },
+];
+
+const LANGUAGE_OPTIONS = [
+  { value: "", label: "Select Language" },
+  { value: "English", label: "English" },
+  { value: "Hindi", label: "Hindi" },
+  { value: "Bilingual", label: "Bilingual / Regional" },
+];
+
+const SchoolAdminDropdown = ({
+  name,
+  value,
+  onChange,
+  options = [],
+  placeholder = "Select...",
+  required = false,
+  className = "",
+  id,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const normalizedOptions = options.map((opt) =>
+    typeof opt === "object" && opt !== null
+      ? opt
+      : { value: opt, label: opt }
+  );
+
+  const selectedOpt = normalizedOptions.find(
+    (opt) => String(opt.value) === String(value ?? "")
+  );
+  const displayLabel = selectedOpt && selectedOpt.label ? selectedOpt.label : placeholder;
+
+  const handleSelect = (val) => {
+    if (typeof onChange === "function") {
+      onChange({
+        target: {
+          name,
+          value: val,
+        },
+      });
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative w-full min-w-0" ref={dropdownRef}>
+      <input
+        type="hidden"
+        name={name}
+        id={id}
+        value={value ?? ""}
+        required={required}
+      />
+      <button
+        type="button"
+        id={id ? `${id}-btn` : undefined}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full min-w-0 max-w-full p-3 text-left bg-white border border-gray-300 rounded-md shadow-sm flex items-center justify-between gap-2 transition-all cursor-pointer box-border ${
+          isOpen ? "border-blue-500 ring-2 ring-blue-100" : "hover:border-gray-400"
+        } ${className}`}
+      >
+        <span
+          className={`truncate text-sm block min-w-0 flex-1 ${
+            !selectedOpt || !selectedOpt.value ? "text-gray-400" : "text-gray-800"
+          }`}
+          title={displayLabel}
+        >
+          {displayLabel}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1 w-full max-w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-56 overflow-y-auto overflow-x-hidden py-1 box-border">
+          {normalizedOptions.map((opt, idx) => {
+            const isSelected = String(opt.value) === String(value ?? "");
+            return (
+              <button
+                key={opt.value ?? idx}
+                type="button"
+                title={opt.label}
+                onClick={() => handleSelect(opt.value)}
+                className={`w-full min-w-0 max-w-full text-left px-3 py-2 text-sm transition-colors cursor-pointer truncate block box-border ${
+                  isSelected
+                    ? "bg-blue-50 text-blue-700 font-medium"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SchoolAdminProfileForm = () => {
   const location = useLocation();
   const initialRegisterData = location.state || {};
   const navigate = useNavigate();
+
+  const [statusModal, setStatusModal] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     schoolName: initialRegisterData.schoolName || "",
@@ -51,6 +192,7 @@ const SchoolAdminProfileForm = () => {
     });
 
     try {
+      setSubmitting(true);
       if (initialRegisterData.isGoogleUser) {
         const token = localStorage.getItem("schoolAdminToken");
         const { data } = await axios.put("/api/school-admin/update-profile", formPayload, {
@@ -61,14 +203,28 @@ const SchoolAdminProfileForm = () => {
         });
         
         if (!data.admin.isApproved) {
-          alert("Profile completed successfully! Your account is pending administrator approval.");
-          localStorage.removeItem("schoolAdminToken");
-          localStorage.removeItem("schoolAdminInfo");
-          localStorage.removeItem("userInfo");
-          navigate("/schooladmin/login");
+          setStatusModal({
+            isOpen: true,
+            type: "success",
+            title: "Profile Completed!",
+            message: "Profile completed successfully! Your account is pending administrator approval.",
+            onAction: () => {
+              localStorage.removeItem("schoolAdminToken");
+              localStorage.removeItem("schoolAdminInfo");
+              localStorage.removeItem("userInfo");
+              navigate("/schooladmin/login");
+            },
+          });
         } else {
-          alert("Profile completed successfully!");
-          navigate("/schooladmin/dashboard");
+          setStatusModal({
+            isOpen: true,
+            type: "success",
+            title: "Profile Completed!",
+            message: "Profile completed successfully!",
+            onAction: () => {
+              navigate("/schooladmin/dashboard");
+            },
+          });
         }
       } else {
         await axios.post("/api/school-admin/register", formPayload, {
@@ -76,13 +232,28 @@ const SchoolAdminProfileForm = () => {
             "Content-Type": "multipart/form-data",
           },
         });
-        alert("Registration submitted successfully!");
-        navigate("/schooladmin/login");
+        setStatusModal({
+          isOpen: true,
+          type: "success",
+          title: "Registration Successful!",
+          message: "Registration submitted successfully!",
+          onAction: () => {
+            navigate("/schooladmin/login");
+          },
+        });
       }
     } catch (error) {
-      const message = error.response?.data?.message || "Registration failed.";
+      const message = error.response?.data?.message || "Registration failed. Please check your information and try again.";
       console.error("Error submitting profile:", error);
-      alert(message);
+      setStatusModal({
+        isOpen: true,
+        type: "error",
+        title: "Registration Failed",
+        message: message,
+        onAction: () => {},
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -114,20 +285,15 @@ const SchoolAdminProfileForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-5">School Type</label>
-              <select
+              <label className="block text-sm font-medium text-gray-700 mb-1">School Type</label>
+              <SchoolAdminDropdown
                 name="schoolType"
                 value={formData.schoolType}
                 onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                options={SCHOOL_TYPE_OPTIONS}
+                placeholder="Select School Type"
                 required
-              >
-                <option value="">Select School Type</option>
-                <option value="Private">Private</option>
-                <option value="Public">Public / Government</option>
-                <option value="Charter">Charter / Autonomous</option>
-                <option value="Catholic">Missionary / Minority</option>
-              </select>
+              />
             </div>
 
             <div>
@@ -196,18 +362,15 @@ const SchoolAdminProfileForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-5">Country</label>
-              <select
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <SchoolAdminDropdown
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                options={COUNTRY_OPTIONS}
+                placeholder="Select Country"
                 required
-              >
-                <option value="">Select Country</option>
-                <option value="India">India</option>
-                
-              </select>
+              />
             </div>
 
             <div className="md:col-span-2">
@@ -242,18 +405,14 @@ const SchoolAdminProfileForm = () => {
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">Language of Instruction</h3>
           <div className="w-full md:w-1/2">
-            <select
+            <SchoolAdminDropdown
               name="languageOfInstruction"
               value={formData.languageOfInstruction}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md"
+              options={LANGUAGE_OPTIONS}
+              placeholder="Select Language"
               required
-            >
-              <option value="">Select Language</option>
-              <option value="English">English</option>
-              <option value="Hindi">Hindi</option>
-              <option value="Bilingual">Bilingual / Regional</option>
-            </select>
+            />
           </div>
         </div>
 
@@ -324,11 +483,68 @@ const SchoolAdminProfileForm = () => {
         {/* Submit */}
         <button
           type="submit"
-          className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg rounded-md font-semibold transition"
+          disabled={submitting}
+          className="mt-8 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 text-lg rounded-md font-semibold transition cursor-pointer flex items-center justify-center gap-2"
         >
-          Submit Profile
+          {submitting ? "Submitting Profile..." : "Submit Profile"}
         </button>
       </form>
+
+      {/* Centered Stylish Status Modal */}
+      {statusModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 font-poppins">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform transition-all border border-gray-100 relative">
+            {statusModal.type === "success" ? (
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center shadow-inner">
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-100 text-red-600 rounded-full flex items-center justify-center shadow-inner">
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+            )}
+
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              {statusModal.title}
+            </h3>
+            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+              {statusModal.message}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                const action = statusModal.onAction;
+                setStatusModal(null);
+                if (action) action();
+              }}
+              className={`w-full py-3 px-6 text-white font-semibold rounded-xl shadow-md transition cursor-pointer ${
+                statusModal.type === "success"
+                  ? "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+                  : "bg-red-600 hover:bg-red-700 shadow-red-200"
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

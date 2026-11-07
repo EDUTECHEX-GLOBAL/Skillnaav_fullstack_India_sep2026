@@ -257,10 +257,11 @@ const Sidebar = ({ isOpen, onClose, isDesktopOpen = true }) => {
         `}
       >
         <div className="w-full flex flex-col h-full min-h-0">
+          {/* Scrollable menu area - ONLY THIS AREA SCROLLS */}
           <div
             style={{ WebkitOverflowScrolling: "touch" }}
-            className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y hide-scrollbar pt-4 ${
-              isDesktopOpen ? "px-3 pb-28 md:pb-6" : "px-1.5 pb-6"
+            className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y hide-scrollbar pt-4 pb-3 ${
+              isDesktopOpen ? "px-3" : "px-1.5"
             }`}
           >
             <ul className="space-y-2">
@@ -276,24 +277,30 @@ const Sidebar = ({ isOpen, onClose, isDesktopOpen = true }) => {
                 </li>
               ))}
             </ul>
+          </div>
 
-            {isDesktopOpen && (
-              <div className="mt-5 p-4 bg-teal-100 rounded-lg border-none shadow-none">
+          {/* Pinned bottom: Upgrade to Premium card (never scrolls, never overlaps) */}
+          {(isDesktopOpen || isOpen) && (
+            <div className="p-3 shrink-0 border-t border-teal-100 bg-white">
+              <div className="p-3.5 bg-teal-50 rounded-xl border border-teal-200 shadow-sm">
                 <h3 className="text-teal-700 text-xs font-bold uppercase tracking-wider">
                   UPGRADE TO PREMIUM
                 </h3>
-                <p className="text-xs font-semibold text-teal-600 mt-1.5 leading-snug">
+                <p className="text-xs font-semibold text-teal-700 mt-1 leading-snug">
                   Your team has used 80% of your available space. Need more?
                 </p>
                 <button
-                  onClick={() => handleTabClick("upgrade")}
-                  className="mt-3.5 w-full bg-teal-700 hover:bg-teal-800 active:scale-[0.98] text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition shadow-sm cursor-pointer"
+                  onClick={() => {
+                    handleTabClick("upgrade");
+                    if (onClose) onClose();
+                  }}
+                  className="mt-3 w-full bg-teal-700 hover:bg-teal-800 active:scale-[0.98] text-white py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm cursor-pointer text-center"
                 >
                   Upgrade Plan
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </>

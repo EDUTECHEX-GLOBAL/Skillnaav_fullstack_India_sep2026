@@ -118,7 +118,7 @@ const ProfileDropdown = ({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute left-0 right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto py-1">
+        <div className="absolute left-0 right-0 top-full mt-1 w-full max-w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto overflow-x-hidden py-1 box-border">
           {normalizedOptions.map((opt, idx) => {
             const isSelected = String(opt.value) === String(value ?? "");
             return (
@@ -132,7 +132,7 @@ const ProfileDropdown = ({
                   }
                   setIsOpen(false);
                 }}
-                className={`w-full min-w-0 text-left px-3 py-2 text-sm transition-colors cursor-pointer truncate ${
+                className={`w-full min-w-0 max-w-full text-left px-3 py-2 text-sm transition-colors cursor-pointer truncate block box-border ${
                   isSelected
                     ? "bg-sky-100 text-sky-900 font-medium"
                     : "text-gray-700 hover:bg-gray-50"
@@ -939,7 +939,7 @@ const ProfileForm = () => {
                       />
                       {tempUser.educationLevel !== "highschool" &&
                         filteredInstitutionSuggestions.length > 0 && (
-                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                          <ul className="absolute z-10 left-0 right-0 w-full max-w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto overflow-x-hidden box-border">
                             {filteredInstitutionSuggestions.map((u, index) => (
                               <li
                                 key={index}
@@ -950,7 +950,8 @@ const ProfileForm = () => {
                                   }));
                                   setFilteredInstitutionSuggestions([]);
                                 }}
-                                className="cursor-pointer px-4 py-2 hover:bg-blue-50"
+                                className="cursor-pointer px-4 py-2 hover:bg-blue-50 truncate block text-sm"
+                                title={u.name}
                               >
                                 {u.name}
                                 {u.state && (
@@ -1271,12 +1272,13 @@ const ProfileForm = () => {
                           </p>
                         )}
                         {citySuggestions.length > 0 && (
-                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                          <ul className="absolute z-10 left-0 right-0 w-full max-w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto overflow-x-hidden box-border">
                             {citySuggestions.map((c) => (
                               <li
                                 key={`${c.city}-${c.state}`}
                                 onClick={() => handleCitySelect(c)}
-                                className="cursor-pointer px-4 py-2 hover:bg-blue-50"
+                                className="cursor-pointer px-4 py-2 hover:bg-blue-50 truncate block text-sm"
+                                title={`${c.city}, ${c.state}`}
                               >
                                 {c.city}, {c.state}
                               </li>

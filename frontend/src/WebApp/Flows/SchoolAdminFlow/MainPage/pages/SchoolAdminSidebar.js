@@ -206,10 +206,11 @@ const SchoolAdminSidebar = ({
         `}
       >
         <div className="w-full h-full flex flex-col min-h-0">
+          {/* Scrollable menu area - ONLY THIS AREA SCROLLS */}
           <div
             style={{ WebkitOverflowScrolling: "touch" }}
             className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y ${
-              isDesktopOpen ? "px-3 pt-4 pb-28 md:pb-6" : "px-1.5 pt-10 pb-6"
+              isDesktopOpen ? "px-3 pt-4 pb-3" : "px-1.5 pt-6 pb-3"
             } hide-scrollbar`}
           >
             <ul className="space-y-1">
@@ -232,22 +233,28 @@ const SchoolAdminSidebar = ({
                 </button>
               </li>
             </ul>
+          </div>
 
-            {isDesktopOpen && (
-              <div className="mt-5 p-4 bg-teal-50 rounded-lg">
-                <h3 className="text-teal-700 text-sm font-semibold">UPGRADE PLAN</h3>
-                <p className="text-xs text-teal-600 mt-1">
+          {/* Pinned bottom: Upgrade Plan card (never scrolls, never overlaps) */}
+          {(isDesktopOpen || isOpen) && (
+            <div className="p-3 shrink-0 border-t border-teal-100 bg-white">
+              <div className="p-3.5 bg-teal-50 rounded-xl border border-teal-200 shadow-sm">
+                <h3 className="text-teal-700 text-xs font-bold uppercase tracking-wider">UPGRADE PLAN</h3>
+                <p className="text-xs text-teal-600 mt-1 leading-snug">
                   Unlock more student seats and premium features.
                 </p>
                 <button
-                  onClick={() => handleTabClick("subscriptions")}
-                  className="mt-3 w-full bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition text-sm cursor-pointer"
+                  onClick={() => {
+                    handleTabClick("subscriptions");
+                    if (onClose) onClose();
+                  }}
+                  className="mt-3 w-full bg-teal-600 text-white py-2 px-3 rounded-lg hover:bg-teal-700 transition text-xs sm:text-sm font-semibold cursor-pointer text-center"
                 >
                   Upgrade Now
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

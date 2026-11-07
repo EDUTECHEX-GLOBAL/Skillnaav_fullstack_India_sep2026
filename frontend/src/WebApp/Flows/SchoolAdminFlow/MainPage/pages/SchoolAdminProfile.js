@@ -73,7 +73,7 @@ const SchoolAdminProfile = () => {
   };
 
   return (
-    <div className="p-6 font-poppins">
+    <div className="p-4 sm:p-6 font-poppins">
       <motion.div
         className="max-w-4xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
@@ -81,27 +81,28 @@ const SchoolAdminProfile = () => {
         transition={{ duration: 0.5, type: "spring" }}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-400 to-blue-600 p-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div>
-              <h2 className="text-white text-2xl font-semibold">{formData.schoolName}</h2>
-              <p className="text-white text-sm">School Admin</p>
-            </div>
+        <div className="bg-gradient-to-r from-green-400 to-blue-600 p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-white text-xl sm:text-2xl font-semibold break-words leading-snug">
+              {formData.schoolName}
+            </h2>
+            <p className="text-white/90 text-sm mt-1 font-medium">School Admin</p>
           </div>
           {!isEditing ? (
             <motion.button
               onClick={handleEditToggle}
-              className="bg-white text-blue-600 font-medium px-4 py-2 rounded-md shadow hover:bg-gray-100 flex items-center"
+              className="bg-white text-blue-600 font-medium px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 text-sm sm:text-base self-start sm:self-auto cursor-pointer"
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.03 }}
             >
-              <FaEdit className="mr-2" /> Edit Profile
+              <FaEdit className="text-sm shrink-0" />
+              <span>Edit Profile</span>
             </motion.button>
           ) : (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
               <motion.button
                 onClick={handleCancel}
-                className="bg-white text-red-500 font-medium px-4 py-2 rounded-md shadow hover:bg-gray-100"
+                className="bg-white text-red-500 font-medium px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 text-sm sm:text-base whitespace-nowrap cursor-pointer"
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.03 }}
               >
@@ -109,7 +110,7 @@ const SchoolAdminProfile = () => {
               </motion.button>
               <motion.button
                 onClick={handleUpdate}
-                className="bg-white text-green-600 font-medium px-4 py-2 rounded-md shadow hover:bg-gray-100"
+                className="bg-white text-green-600 font-medium px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 text-sm sm:text-base whitespace-nowrap cursor-pointer"
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.03 }}
               >
@@ -120,7 +121,7 @@ const SchoolAdminProfile = () => {
         </div>
 
         {/* Info */}
-        <motion.div className="p-6 space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+        <motion.div className="p-4 sm:p-6 space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
           <InfoSection title="Personal Information">
             <IconInput icon={<FaSchool />} label="School Name" name="schoolName" value={formData.schoolName} editable={isEditing} onChange={handleChange} />
             <IconInput icon={<FaFlag />} label="Affiliation" name="affiliation" value={formData.affiliation} editable={isEditing} onChange={handleChange} />

@@ -396,7 +396,7 @@ const SearchBar = () => {
                     </button>
 
                     {isOpen && (
-                      <div className="absolute left-0 right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden py-1">
+                      <div className="absolute left-0 right-0 top-full mt-1 w-full max-w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden py-1 box-border">
                         <button
                           type="button"
                           onClick={() => {
