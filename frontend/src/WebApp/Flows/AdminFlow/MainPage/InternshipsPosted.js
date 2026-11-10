@@ -9,9 +9,11 @@ import {
   FaRupeeSign,
   FaCommentDots,
   FaSpinner,
+  FaDownload,
 } from "react-icons/fa";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
 
 import Edutechexlogo from "../../../../assets/Edutech-logo.png";
 import AdminChatModal from "./AdminChatModal";
@@ -24,165 +26,439 @@ const Spinner = ({ size = "w-4 h-4" }) => (
 );
 
 // ─── Internship detail overlay ────────────────────────────────────────────────
-const InternshipDetails = ({ internship, onClose }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-[1000] overflow-y-auto"
-  >
+const InternshipDetails = ({ internship, onClose }) => {
+  const [scheduleData, setScheduleData] = useState(null);
+  const [, setScheduleLoading] = useState(true);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSchedule = async () => {
+      if (!internship?._id) {
+        setScheduleLoading(false);
+        return;
+      }
+      try {
+        setScheduleLoading(true);
+        const res = await axios.get(
+          `/api/schedule/get-schedule?internshipId=${internship._id}`
+        );
+        if (isMounted) {
+          if (
+            res.data &&
+            ((Array.isArray(res.data.timetable) && res.data.timetable.length > 0) ||
+              (Array.isArray(res.data.batches) && res.data.batches.length > 0))
+          ) {
+            setScheduleData(res.data);
+          } else {
+            setScheduleData(null);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setScheduleData(null);
+        }
+      } finally {
+        if (isMounted) {
+          setScheduleLoading(false);
+        }
+      }
+    };
+
+    fetchSchedule();
+    return () => {
+      isMounted = false;
+    };
+  }, [internship?._id]);
+
+  const timetableList = useMemo(() => {
+    if (!scheduleData) return [];
+    if (Array.isArray(scheduleData.timetable) && scheduleData.timetable.length > 0) {
+      return scheduleData.timetable;
+    }
+    if (Array.isArray(scheduleData.batches) && scheduleData.batches.length > 0) {
+      return scheduleData.batches[0]?.timetable || [];
+    }
+    return [];
+  }, [scheduleData]);
+
+  const hasSchedule = timetableList.length > 0;
+
+  const handleDownloadSummaryPDF = () => {
+    if (!hasSchedule) {
+      alert("No schedule found for this internship.");
+      return;
+    }
+
+    setDownloadingPdf(true);
+    try {
+      const sanitizePdfText = (text) => {
+        if (!text) return "";
+        return String(text)
+          .replace(/[\u2018\u2019]/g, "'")
+          .replace(/[\u201C\u201D]/g, '"')
+          .replace(/[\u2013\u2014]/g, "-")
+          .replace(/[^\u0020-\u007E\t\n\r]/g, "");
+      };
+
+      const title = sanitizePdfText(
+        internship.jobTitle || internship.internshipName || "Internship Schedule"
+      );
+      const company = sanitizePdfText(
+        internship.companyName || "Edutechex Partner"
+      );
+
+      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 14;
+      const contentWidth = pageWidth - margin * 2;
+      let y = margin;
+
+      const checkPageBreak = (neededHeight) => {
+        if (y + neededHeight > pageHeight - margin - 10) {
+          doc.addPage();
+          y = margin;
+          return true;
+        }
+        return false;
+      };
+
+      // Header Banner
+      doc.setFillColor(79, 70, 229);
+      doc.rect(margin, y, contentWidth, 22, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("INTERNSHIP SECTION SUMMARIES", margin + 6, y + 9);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`${company} | ${title}`, margin + 6, y + 16);
+      y += 28;
+
+      // Metadata details
+      doc.setTextColor(55, 65, 81);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`Total Scheduled Days: ${timetableList.length}`, margin, y);
+      doc.text(
+        `Generated: ${new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}`,
+        pageWidth - margin - 50,
+        y
+      );
+      y += 6;
+
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
+
+      // Loop through each day
+      timetableList.forEach((d, index) => {
+        const dayNum = index + 1;
+        const dateStr = d.date
+          ? typeof d.date === "string"
+            ? d.date.split("T")[0]
+            : new Date(d.date).toLocaleDateString()
+          : "N/A";
+        const dayName = d.day || "";
+        const mode = (
+          d.type ||
+          scheduleData.defaultType ||
+          internship.internshipMode ||
+          "online"
+        ).toUpperCase();
+        const timing =
+          d.startTime && d.endTime
+            ? `${d.startTime} - ${d.endTime}`
+            : scheduleData.workHours || "Standard Timing";
+        const instructor = sanitizePdfText(d.instructor || "N/A");
+        const summary = sanitizePdfText(
+          d.sectionSummary ||
+            (Array.isArray(d.events) && d.events.length > 0
+              ? d.events
+                  .map((e) =>
+                    typeof e === "object" ? e.description || "" : String(e)
+                  )
+                  .filter(Boolean)
+                  .join("; ")
+              : "No section summary recorded.")
+        );
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        const splitSummary = doc.splitTextToSize(summary, contentWidth - 8);
+        const summaryHeight = splitSummary.length * 4.5;
+        const cardHeight = 22 + summaryHeight + 6;
+
+        checkPageBreak(cardHeight + 4);
+
+        // Card Container
+        doc.setFillColor(249, 250, 251);
+        doc.setDrawColor(209, 213, 219);
+        doc.roundedRect(margin, y, contentWidth, cardHeight, 2, 2, "FD");
+
+        // Card Header
+        doc.setFillColor(238, 242, 255);
+        doc.rect(margin, y, contentWidth, 7, "F");
+        doc.setTextColor(67, 56, 202);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(
+          `Day ${dayNum}  |  ${dateStr}${dayName ? ` (${dayName})` : ""}  |  ${mode}  |  ${timing}`,
+          margin + 4,
+          y + 5
+        );
+
+        // Instructor row
+        doc.setTextColor(75, 85, 99);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text(`Instructor: ${instructor}`, margin + 4, y + 12);
+
+        // Summary label & content
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(31, 41, 55);
+        doc.text("Section Summary:", margin + 4, y + 17);
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(55, 65, 81);
+        doc.text(splitSummary, margin + 4, y + 22);
+
+        y += cardHeight + 4;
+      });
+
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text(
+          `Page ${p} of ${totalPages} - ${company}`,
+          margin,
+          pageHeight - 8
+        );
+        doc.text("Powered by Edutechex", pageWidth - margin - 35, pageHeight - 8);
+      }
+
+      const safeTitle = (
+        internship.jobTitle ||
+        internship.internshipName ||
+        "Schedule"
+      ).replace(/[^a-zA-Z0-9-_]/g, "_");
+      doc.save(`${safeTitle}_All_Summaries.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to generate PDF summary. Please try again.");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  return (
     <motion.div
-      initial={{ scale: 0.9, y: 30 }}
-      animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.9, y: 30 }}
-      className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col border border-white/30"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-[1000] overflow-y-auto"
     >
-      {/* Header */}
-      <div className="p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50/80 to-indigo-50/80 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-white/50 rounded-2xl backdrop-blur-sm shadow-md transition-all"
-            aria-label="Back to list"
-          >
-            ← Back to list
-          </button>
-          <span
-            className={`px-3 py-1 text-xs font-bold rounded-full ${
-              internship.adminStatus === "approved" || internship.adminApproved
-                ? "bg-emerald-100 text-emerald-800"
-                : internship.adminStatus === "rejected"
-                  ? "bg-red-100 text-red-800"
-                  : internship.adminStatus === "in_review" ||
-                      internship.adminReviewed
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-orange-100 text-orange-800"
-            }`}
-          >
-            {internship.adminStatus === "approved" || internship.adminApproved
-              ? "Approved"
-              : internship.adminStatus === "rejected"
-                ? "Rejected"
-                : internship.adminStatus === "in_review" ||
-                    internship.adminReviewed
-                  ? "In Review"
-                  : "Pending"}
-          </span>
-        </div>
-        <div className="mt-6 flex items-start gap-6">
-          <img
-            src={internship.imgUrl || Edutechexlogo}
-            alt={internship.companyName}
-            className="w-20 h-20 rounded-2xl object-cover shadow-2xl ring-4 ring-white/50"
-          />
-          <div>
-            <h1 className="text-3xl font-black text-gray-900 mb-2">
-              {internship.jobTitle}
-            </h1>
-            <p className="text-2xl text-gray-700">{internship.companyName}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="p-8 overflow-y-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
-              <FaMapMarkerAlt className="w-6 h-6 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Location</p>
-                <p className="text-xl font-bold text-gray-900">
-                  {internship.location}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl">
-              <FaClock className="w-6 h-6 text-emerald-600" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Duration</p>
-                <p className="text-xl font-bold text-gray-900">
-                  {format(new Date(internship.startDate), "dd MMM yyyy")} –{" "}
-                  {format(
-                    new Date(internship.endDateOrDuration),
-                    "dd MMM yyyy",
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="p-5 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FaRupeeSign className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-xl p-2" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Compensation
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {internship.compensationDetails?.amount}{" "}
-                      {internship.compensationDetails?.currency}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold px-3 py-1 bg-white/80 rounded-full">
-                  {internship.internshipType}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Skills Required
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {internship.qualifications?.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="p-5 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold ${
-                    internship.internshipMode === "ONLINE"
-                      ? "bg-blue-500 text-white"
-                      : "bg-emerald-500 text-white"
-                  }`}
+      <motion.div
+        initial={{ scale: 0.9, y: 30 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 30 }}
+        className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col border border-white/30"
+      >
+        {/* Header */}
+        <div className="p-6 sm:p-8 border-b border-gray-200 bg-gradient-to-r from-purple-50/80 to-indigo-50/80 sticky top-0 z-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              onClick={onClose}
+              className="p-2 px-3 text-sm font-semibold text-gray-600 hover:text-gray-900 hover:bg-white/70 rounded-xl backdrop-blur-sm shadow-sm transition-all flex items-center gap-1.5"
+              aria-label="Back to list"
+            >
+              ← Back to list
+            </button>
+            <div className="flex items-center gap-2.5">
+              {hasSchedule && (
+                <button
+                  onClick={handleDownloadSummaryPDF}
+                  disabled={downloadingPdf}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-50"
+                  title="Download Summary (PDF)"
                 >
-                  {internship.internshipMode === "ONLINE" ? "PC" : "🏢"}
+                  <FaDownload className="w-3 h-3" />
+                  {downloadingPdf ? "Generating..." : "Download Summary (PDF)"}
+                </button>
+              )}
+              <span
+                className={`px-3 py-1 text-xs font-bold rounded-full ${
+                  internship.adminStatus === "approved" ||
+                  internship.adminApproved
+                    ? "bg-emerald-100 text-emerald-800"
+                    : internship.adminStatus === "rejected"
+                      ? "bg-red-100 text-red-800"
+                      : internship.adminStatus === "in_review" ||
+                          internship.adminReviewed
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-orange-100 text-orange-800"
+                }`}
+              >
+                {internship.adminStatus === "approved" ||
+                internship.adminApproved
+                  ? "Approved"
+                  : internship.adminStatus === "rejected"
+                    ? "Rejected"
+                    : internship.adminStatus === "in_review" ||
+                        internship.adminReviewed
+                      ? "In Review"
+                      : "Pending"}
+              </span>
+            </div>
+          </div>
+          <div className="mt-5 flex items-start gap-4">
+            <img
+              src={internship.imgUrl || Edutechexlogo}
+              alt={internship.companyName}
+              className="w-14 h-14 rounded-xl object-cover shadow-md ring-2 ring-white/50"
+            />
+            <div>
+              <h1 className="text-2xl font-black text-gray-900 mb-1">
+                {internship.jobTitle}
+              </h1>
+              <p className="text-base text-gray-700 font-medium">
+                {internship.companyName}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 sm:p-8 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+            <div className="space-y-3.5">
+              {/* Location */}
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100/60">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <FaMapMarkerAlt className="w-4 h-4 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Mode</p>
-                  <p className="text-2xl font-bold text-gray-900 capitalize">
-                    {internship.internshipMode?.toLowerCase()}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Location
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 truncate">
+                    {internship.location}
                   </p>
                 </div>
               </div>
+
+              {/* Duration */}
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100/60">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <FaClock className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Duration
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 truncate">
+                    {format(new Date(internship.startDate), "dd MMM yyyy")} –{" "}
+                    {format(
+                      new Date(internship.endDateOrDuration),
+                      "dd MMM yyyy",
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Compensation */}
+              <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <FaRupeeSign className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Compensation
+                      </p>
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {internship.compensationDetails?.amount}{" "}
+                        {internship.compensationDetails?.currency}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 bg-white/90 text-gray-800 rounded-full shadow-xs border border-yellow-200/60 uppercase tracking-wider">
+                    {internship.internshipType}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3.5">
+              {/* Skills Required */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Skills Required
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {internship.qualifications?.map((skill, i) => (
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mode */}
+              <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100/60">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+                      internship.internshipMode === "ONLINE"
+                        ? "bg-blue-500 text-white"
+                        : "bg-emerald-500 text-white"
+                    }`}
+                  >
+                    {internship.internshipMode === "ONLINE" ? "PC" : "🏢"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Mode
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 capitalize truncate">
+                      {internship.internshipMode?.toLowerCase()}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {internship.jobDescription && (
-          <div className="mt-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              About the Internship
-            </h3>
-            <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {internship.jobDescription}
-            </p>
-          </div>
-        )}
-      </div>
+          {internship.jobDescription && (
+            <div className="mt-6 border-t border-gray-100 pt-5">
+              <h3 className="text-base font-bold text-gray-900 mb-3">
+                About the Internship
+              </h3>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                {internship.jobDescription}
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </motion.div>
-  </motion.div>
-);
+  );
+};
 
 // ─── Main component ───────────────────────────────────────────────────────────
 const PartnerManagement = () => {

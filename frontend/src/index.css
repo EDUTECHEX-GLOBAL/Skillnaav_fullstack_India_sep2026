@@ -253,6 +253,7 @@ textarea {
 
 .react-datepicker-popper {
   z-index: 9999 !important;
+  min-width: 280px !important;
 }
 
 .react-datepicker {
@@ -261,8 +262,9 @@ textarea {
   border: 1px solid #e5e7eb !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
   background-color: #ffffff !important;
-  width: 100% !important;
-  max-width: 100% !important;
+  min-width: 280px !important;
+  width: auto !important;
+  max-width: 320px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
 }
@@ -288,12 +290,20 @@ textarea {
   top: 0.55rem !important;
 }
 
-.react-datepicker__navigation--next {
-  right: 0.45rem !important;
+.react-datepicker__navigation--previous {
+  left: 0.5rem !important;
 }
 
-.react-datepicker__navigation--previous {
-  left: 0.45rem !important;
+.react-datepicker__navigation--next {
+  right: 0.5rem !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #64748b !important;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #0f766e !important;
 }
 
 .react-datepicker__current-month {
@@ -301,10 +311,11 @@ textarea {
   font-weight: 600 !important;
   font-size: 0.85rem !important;
   text-align: center !important;
-  padding: 0 1.4rem !important;
+  padding: 0 2.5rem !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
 }
 
 .react-datepicker__month {

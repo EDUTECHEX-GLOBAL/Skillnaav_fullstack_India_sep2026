@@ -1162,42 +1162,6 @@ const ScheduleForm = ({
     setError(null);
   };
 
-  const downloadAllSummariesXLSX = () => {
-    const scheduledDays = timetable.filter(d => d.selected);
-    if (scheduledDays.length === 0) {
-      alert('No scheduled days to download.');
-      return;
-    }
-
-    const rows = scheduledDays.map((d, index) => ({
-      "Day #": index + 1,
-      "Date": d.date,
-      "Topic / Event": d.eventName || 'N/A',
-      "Mode": d.type || form.defaultType || 'N/A',
-      "Timing": (d.workHoursStart && d.workHoursEnd) ? `${d.workHoursStart} - ${d.workHoursEnd}` : 'N/A',
-      "Instructor": d.instructor || 'N/A',
-      "Section Summary": d.sectionSummary || '',
-      "Meeting Link": d.eventLink || ''
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [
-      { wch: 8 },
-      { wch: 14 },
-      { wch: 28 },
-      { wch: 12 },
-      { wch: 18 },
-      { wch: 22 },
-      { wch: 60 },
-      { wch: 35 }
-    ];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Section Summaries");
-    const safeTitle = (internshipData?.internshipName || internshipData?.jobTitle || 'Schedule').replace(/[^a-zA-Z0-9-_]/g, '_');
-    XLSX.writeFile(wb, `${safeTitle}_Schedule_Summaries.xlsx`);
-  };
-
-  
   const sanitizePdfText = (text) => {
     if (!text) return '';
     return String(text)
@@ -1879,15 +1843,6 @@ const ScheduleForm = ({
                 <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                   <h3 className="text-lg font-semibold text-gray-800">Schedule Preview</h3>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={downloadAllSummariesXLSX}
-                      className="inline-flex items-center text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer active:scale-95"
-                      title="Download schedule dates and section summaries as Excel"
-                    >
-                      <FiDownload className="mr-1.5 text-emerald-600" />
-                      Download Summaries (Excel)
-                    </button>
                     <button
                       type="button"
                       onClick={downloadAllSummariesPDF}
