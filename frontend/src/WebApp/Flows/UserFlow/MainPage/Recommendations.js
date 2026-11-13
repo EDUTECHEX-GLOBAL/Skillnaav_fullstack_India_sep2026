@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import axios from "../../../../api/axiosInstance";
 import { useLocation } from "react-router-dom";
 import JobCard from "./Card";
@@ -104,48 +104,61 @@ const Recommendations = () => {
   const query     = useMemo(() => new URLSearchParams(location.search), [location]);
   const openRecId = query.get("openRec");
 
+  const fetchRecommendations = useCallback(async (attempt = 0) => {
+    setLoading(true);
+    setError(null);
+
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      setError("Please log in to view recommendations.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data } = await axios.get("/api/applications/recommendations", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const raw = data?.recommendations ?? (Array.isArray(data) ? data : []);
+      const uniqueJobs = dedupeById(raw);
+
+      if (uniqueJobs.length === 0 && attempt < 2) {
+        setTimeout(() => {
+          fetchRecommendations(attempt + 1);
+        }, 2500);
+        return;
+      }
+
+      setJobs(uniqueJobs);
+
+      if (openRecId) {
+        const match = uniqueJobs.find(j => String(j._id) === String(openRecId));
+        if (match) setSelectedJob(match);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("Recommendation fetch failed", err);
+      if (attempt < 2) {
+        setTimeout(() => {
+          fetchRecommendations(attempt + 1);
+        }, 2500);
+        return;
+      }
+      setError("Failed to fetch recommendations");
+      setJobs([]);
+      setLoading(false);
+    }
+  }, [openRecId]);
+
   /* -----------------------------------
-     FETCH ONLY ONCE
+     FETCH ON MOUNT
   ----------------------------------- */
   useEffect(() => {
     if (fetchedOnce.current) return;
     fetchedOnce.current = true;
-
-    const fetchRecommendations = async () => {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("userToken");
-      if (!token) {
-        setError("Please log in to view recommendations.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data } = await axios.get("/api/applications/recommendations", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const raw = data?.recommendations ?? (Array.isArray(data) ? data : []);
-        const uniqueJobs = dedupeById(raw);
-        setJobs(uniqueJobs);
-
-        if (openRecId) {
-          const match = uniqueJobs.find(j => String(j._id) === String(openRecId));
-          if (match) setSelectedJob(match);
-        }
-      } catch (err) {
-        console.error("Recommendation fetch failed", err);
-        setError("Failed to fetch recommendations");
-        setJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchRecommendations();
-  }, [openRecId]);
+  }, [fetchRecommendations]);
 
   /* -----------------------------------
      LOADER — skeleton cards

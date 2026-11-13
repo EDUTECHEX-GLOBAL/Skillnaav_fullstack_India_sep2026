@@ -47,6 +47,26 @@ const Home = () => {
 
   // Saved scroll position of <main id="main-scroll-container"> before entering detail view
   const savedScrollRef = useRef(0);
+  const [assistantLayout, setAssistantLayout] = useState(() => ({
+    visible: Boolean(window.__edutechexAssistantPreviewVisible),
+    collapsed: true,
+    expanded: false,
+    fullscreen: false,
+  }));
+
+  useEffect(() => {
+    const handleAssistantPreview = (e) => {
+      const detail = e.detail || {};
+      setAssistantLayout({
+        visible: Boolean(detail.visible),
+        collapsed: Boolean(detail.collapsed),
+        expanded: Boolean(detail.expanded),
+        fullscreen: Boolean(detail.fullscreen),
+      });
+    };
+    window.addEventListener("edutechex-assistant-preview", handleAssistantPreview);
+    return () => window.removeEventListener("edutechex-assistant-preview", handleAssistantPreview);
+  }, []);
 
   const navigate = useNavigate();
   const loadingRef = useRef(false);
@@ -304,15 +324,27 @@ const Home = () => {
       )}
 
       {/* Edutechex analysis FAB */}
-      <div className="fixed bottom-28 right-6 z-50">
+      <div
+        className={`fixed right-6 z-40 transition-all duration-300 ${
+          assistantLayout.expanded || assistantLayout.fullscreen
+            ? "bottom-24 opacity-0 pointer-events-none scale-90"
+            : assistantLayout.visible && assistantLayout.collapsed
+            ? "bottom-[284px] opacity-100 pointer-events-auto scale-100"
+            : "bottom-[92px] opacity-100 pointer-events-auto scale-100"
+        }`}
+      >
         <button
           onClick={() => navigate("/edutechex-analysis")}
-          className="bg-white text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
+          className="flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-[0_6px_20px_rgba(15,23,42,0.16)] border border-gray-100 hover:shadow-xl hover:scale-105 active:scale-95 transition-all p-2.5 group relative"
+          title="Edutechex Analysis"
         >
+          <div className="absolute right-full mr-3 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-medium shadow-md">
+            Edutechex Analysis
+          </div>
           <img
             src={Edutechexlogo}
             alt="Edutechex Analysis"
-            className="w-12 h-12"
+            className="w-8 h-8 object-contain"
           />
         </button>
       </div>

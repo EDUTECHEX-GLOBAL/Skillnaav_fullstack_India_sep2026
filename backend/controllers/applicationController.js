@@ -471,7 +471,20 @@ const getRecommendationsForStudent = async (req, res) => {
     const studentId = req.query.studentId || req.user._id;
     const limit = Number(req.query.limit) || 10;
 
-    const recs = await getPersonalizedRecommendations(studentId, limit);
+    let recs = await getPersonalizedRecommendations(studentId, limit);
+    if (!recs || recs.length === 0) {
+      const appliedIds = await Application.distinct("internshipId", { studentId });
+      recs = await InternshipPosting.find({
+        adminApproved: true,
+        adminReviewed: true,
+        deleted: false,
+        applicationOpen: true,
+        _id: { $nin: appliedIds },
+      })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+    }
     res.status(200).json({ success: true, recommendations: recs });
   } catch (e) {
     console.error(e);

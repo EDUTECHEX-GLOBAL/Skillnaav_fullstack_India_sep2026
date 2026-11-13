@@ -14,6 +14,7 @@ import {
   faStar,
   faCheckCircle,
   faLayerGroup,
+  faLaptopCode,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import { useNavigate } from "react-router-dom";
@@ -52,6 +53,7 @@ const Sidebar = ({ isMobile, isOpen, onClose, isDesktopOpen = true }) => {
     //change faFileAlt to faFileSignature of offer letter - 04-08-2026
     { id: "offer-letter", icon: faFileSignature, label: "Offer Letter" },
     { id: "attendance", icon: faCheckCircle, label: "Attendance" },
+    { id: "cad-lab", icon: faLaptopCode, label: "Work Space" },
     { id: "saved-jobs", icon: faHeart, label: "Saved Jobs" },
     { id: "profile", icon: faUser, label: "Profile" },
   ];

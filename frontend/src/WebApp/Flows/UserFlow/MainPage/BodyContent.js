@@ -25,6 +25,7 @@ import ArchitectureBuiltEnvironment from "./Sectors/ArchitectureBuiltEnvironment
 import Recommendations from "./Recommendations";
 import StudentAssessment from "./StudentAssessment";
 import UserAttendance from "./UserAttendance";
+import StudentWorkSpace from "../../../../components/WorkSpace/StudentWorkSpace";
 
 
 const BodyContent = () => {
@@ -66,6 +67,9 @@ const BodyContent = () => {
       break;
     case "attendance":
       content = <UserAttendance />;
+      break;
+    case "cad-lab":
+      content = <StudentWorkSpace />;
       break;
     case "profile":
       content = <ProfilePage />;

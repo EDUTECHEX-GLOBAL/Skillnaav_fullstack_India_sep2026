@@ -341,108 +341,106 @@ const InternshipDetails = ({ internship, onClose }) => {
 
         {/* Body */}
         <div className="p-6 sm:p-8 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-            <div className="space-y-3.5">
-              {/* Location */}
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100/60">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                  <FaMapMarkerAlt className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Location
-                  </p>
-                  <p className="text-sm font-bold text-gray-900 truncate">
-                    {internship.location}
-                  </p>
-                </div>
+          {/* Metadata Cards in a Balanced 2x2 Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+            {/* Location */}
+            <div className="flex items-center gap-3 p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100/60 shadow-xs">
+              <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                <FaMapMarkerAlt className="w-4 h-4 text-blue-600" />
               </div>
-
-              {/* Duration */}
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100/60">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                  <FaClock className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Duration
-                  </p>
-                  <p className="text-sm font-bold text-gray-900 truncate">
-                    {format(new Date(internship.startDate), "dd MMM yyyy")} –{" "}
-                    {format(
-                      new Date(internship.endDateOrDuration),
-                      "dd MMM yyyy",
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Compensation */}
-              <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                      <FaRupeeSign className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Compensation
-                      </p>
-                      <p className="text-sm font-bold text-gray-900 truncate">
-                        {internship.compensationDetails?.amount}{" "}
-                        {internship.compensationDetails?.currency}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 bg-white/90 text-gray-800 rounded-full shadow-xs border border-yellow-200/60 uppercase tracking-wider">
-                    {internship.internshipType}
-                  </span>
-                </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Location
+                </p>
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {internship.location || "Not specified"}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-3.5">
-              {/* Skills Required */}
-              <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Skills Required
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {internship.qualifications?.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+            {/* Mode */}
+            <div className="flex items-center gap-3 p-3.5 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100/60 shadow-xs">
+              <div
+                className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+                  internship.internshipMode === "ONLINE"
+                    ? "bg-blue-500 text-white"
+                    : "bg-emerald-500 text-white"
+                }`}
+              >
+                {internship.internshipMode === "ONLINE" ? "PC" : "🏢"}
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Mode
+                </p>
+                <p className="text-sm font-bold text-gray-900 capitalize truncate">
+                  {internship.internshipMode?.toLowerCase() || "Not specified"}
+                </p>
+              </div>
+            </div>
 
-              {/* Mode */}
-              <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100/60">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-                      internship.internshipMode === "ONLINE"
-                        ? "bg-blue-500 text-white"
-                        : "bg-emerald-500 text-white"
-                    }`}
-                  >
-                    {internship.internshipMode === "ONLINE" ? "PC" : "🏢"}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Mode
-                    </p>
-                    <p className="text-sm font-bold text-gray-900 capitalize truncate">
-                      {internship.internshipMode?.toLowerCase()}
-                    </p>
-                  </div>
+            {/* Duration */}
+            <div className="flex items-center gap-3 p-3.5 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-100/60 shadow-xs">
+              <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                <FaClock className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Duration
+                </p>
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {internship.startDate && internship.endDateOrDuration
+                    ? `${format(new Date(internship.startDate), "dd MMM yyyy")} – ${format(
+                        new Date(internship.endDateOrDuration),
+                        "dd MMM yyyy",
+                      )}`
+                    : "Flexible"}
+                </p>
+              </div>
+            </div>
+
+            {/* Compensation */}
+            <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50 shadow-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <FaRupeeSign className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    Compensation
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 truncate">
+                    {internship.compensationDetails?.amount}{" "}
+                    {internship.compensationDetails?.currency}
+                  </p>
                 </div>
               </div>
+              {internship.internshipType && (
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-white text-gray-800 rounded-full shadow-xs border border-yellow-200/80 uppercase tracking-wider shrink-0">
+                  {internship.internshipType}
+                </span>
+              )}
             </div>
           </div>
+
+          {/* Skills Required */}
+          {internship.qualifications && internship.qualifications.length > 0 && (
+            <div className="mb-6 p-4 rounded-xl bg-purple-50/40 border border-purple-100/60">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
+                Skills Required
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {internship.qualifications.map((skill, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 bg-purple-100/80 text-purple-800 rounded-full text-xs font-semibold"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {internship.jobDescription && (
             <div className="mt-6 border-t border-gray-100 pt-5">

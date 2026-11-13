@@ -17,6 +17,7 @@ const partnerFeatureIndex = [
   { key: "partner-accounts", label: "Partner Accounts", description: "Create and manage partner organizations." },
   { key: "internship-posts", label: "Internship Posts", description: "Create, edit, publish, or close internship postings." },
   { key: "applications", label: "Applications", description: "Review and manage applicants: View Applications, Shortlist, Shortlisted Resumes." },
+  { key: "cad-assignments", label: "Work Space", description: "Send Work Space CAD, C++, Python, and free open-source tool tasks to users and grade submissions." },
   { key: "offer-templates", label: "Offer Templates", description: "Create and manage Offer Letter templates; upload a background image and reuse when sending offers." },
   { key: "stipend-details", label: "Stipend Details", description: "See stipend information like 'Student Pays' amounts and currency across internships." },
   { key: "profile", label: "Profile", description: "Update organization & personal details, change password, and profile photo." },

@@ -16,6 +16,7 @@ import InstructureManagement from "./InstructureManagement";
 import InternshipPayments from "./InternshipPayments";
 import MockInterviewResults from "./MockInterviewResults";
 import Bin from "./Bin";
+import PartnerWorkspaceManager from "../../../../components/WorkSpace/PartnerWorkspaceManager";
 
 const BodyContent = () => {
   const { selectedTab } = useTabContext();
@@ -28,6 +29,9 @@ const BodyContent = () => {
       break;
     case "instructors":
       content = <InstructureManagement />;
+      break;
+    case "cad-assignments":
+      content = <PartnerWorkspaceManager role="partner" />;
       break;
     case "post-a-job":
       content = <PostAJob />;

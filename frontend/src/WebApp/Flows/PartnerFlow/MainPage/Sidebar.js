@@ -17,6 +17,7 @@ import {
   faHeadset,
   faFileContract,
   faComments,
+  faLaptopCode,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
@@ -148,6 +149,7 @@ const Sidebar = ({ isOpen, onClose, isDesktopOpen = true }) => {
     { id: "messages", label: "Messages", icon: faEnvelope },
     { id: "applications", label: "Applications", icon: faFileAlt },
     { id: "instructors", label: "Instructor Management", icon: faUsers },
+    { id: "cad-assignments", label: "Work Space", icon: faLaptopCode },
     // change the faFileAlt to faFileContract icon - 04-08-2026
     { id: "offer-templates", label: "Offer Templates", icon: faFileContract },
     {

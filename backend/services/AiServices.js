@@ -16,7 +16,7 @@ const PYTHON_AI_URL = process.env.PYTHON_AI_URL || 'http://localhost:8000';
 // ── 1. Recommendations (recommendation.py) ───────────────────────────────────
 async function getPersonalizedRecommendations(studentId, limit = 6) {
   try {
-    const res = await axios.get(`${PYTHON_AI_URL}/recommendations/${studentId}?limit=${limit}`, { timeout: 4000 });
+    const res = await axios.get(`${PYTHON_AI_URL}/recommendations/${studentId}?limit=${limit}`, { timeout: 60000 });
     return res.data.recommendations || [];
   } catch (err) {
     console.warn('[aiService] getPersonalizedRecommendations failed:', err.message);

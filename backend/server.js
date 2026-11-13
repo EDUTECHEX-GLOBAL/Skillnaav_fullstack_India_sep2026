@@ -13,7 +13,7 @@ const { startPartnerCron } = require("./utils/checkPartnerPremiumExpiration");
 const { setIO } = require("./utils/socket");
 const { maintenanceGuard } = require("./middlewares/platformSettingsMiddleware");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 
@@ -99,6 +99,7 @@ const issuedCertificateRoutes = require("./routes/webapp-routes/issuedCertificat
 const imageProxyRoutes = require("./routes/webapp-routes/imageProxyRoutes");
 const attendanceRoutes = require("./routes/webapp-routes/attendanceRoutes");
 const mockInterviewRoutes = require("./routes/webapp-routes/mockInterviewRoutes");
+const workspaceRoutes = require("./routes/webapp-routes/workspaceRoutes");
 
 // Support routes. Specific paths must be mounted before the generic student route.
 const supportRoutes = require("./routes/webapp-routes/studentSupportRoutes");
@@ -164,6 +165,9 @@ app.use("/api/certificates", issuedCertificateRoutes);
 app.use("/api/image-proxy", imageProxyRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/mock-interviews", mockInterviewRoutes);
+app.use("/api/workspace", workspaceRoutes);
+app.use("/api/cad", workspaceRoutes);
+app.use("/api/daily-work", workspaceRoutes);
 
 app.use("/api/support/school-admin", schoolAdminSupportRoutes);
 app.use("/api/support/school-students", schoolStudentSupportRoutes);
