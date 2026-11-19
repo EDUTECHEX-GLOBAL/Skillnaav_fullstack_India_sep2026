@@ -22,7 +22,7 @@ export const WORK_SPACE_SECTORS = [
   {
     id: "materials-science",
     name: "Materials Science",
-    tagline: "Molecular Structure, 3D CAD Modeling & Property Data",
+    tagline: "Molecular Structure, 3D Modeling & Property Data",
   },
   {
     id: "space-exploration",
@@ -42,7 +42,7 @@ export const WORK_SPACE_SECTORS = [
   {
     id: "advanced-robotics",
     name: "Advanced Robotics",
-    tagline: "Wokwi Arduino/ESP32, CircuitJS1, 3D CAD & C++",
+    tagline: "Wokwi Arduino/ESP32, CircuitJS1, Robotics & C++",
   },
   {
     id: "renewable-energy",
@@ -52,7 +52,7 @@ export const WORK_SPACE_SECTORS = [
   {
     id: "architecture-built-environment",
     name: "Architecture & Built Env",
-    tagline: "3D CAD, OpenSCAD, FreeCAD, Draw.io & Sketchboards",
+    tagline: "3D Modeling, OpenSCAD, FreeCAD, Draw.io & Sketchboards",
   },
 ];
 

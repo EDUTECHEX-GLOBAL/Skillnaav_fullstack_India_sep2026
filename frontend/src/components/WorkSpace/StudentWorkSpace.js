@@ -1,5 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  Sparkles,
+  Search,
+  X,
+  ChevronRight,
+  Check,
+  Layers,
+} from "lucide-react";
 import axios from "../../api/axiosInstance";
 import ThreeDModelWorkspace from "./ThreeDModelWorkspace";
 import CodeCompilerWorkspace from "./CodeCompilerWorkspace";
@@ -34,25 +42,17 @@ const StudentWorkSpace = () => {
   const [previewFile, setPreviewFile] = useState(null);
   const [apiError, setApiError] = useState("");
   const [selectedSectorId, setSelectedSectorId] = useState("");
-  const [sectorMenuOpen, setSectorMenuOpen] = useState(false);
-  const sectorDropdownRef = useRef(null);
+  const [isSectorModalOpen, setIsSectorModalOpen] = useState(false);
+  const [sectorSearchQuery, setSectorSearchQuery] = useState("");
 
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (
-        sectorDropdownRef.current &&
-        !sectorDropdownRef.current.contains(event.target)
-      ) {
-        setSectorMenuOpen(false);
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setIsSectorModalOpen(false);
       }
     };
-    const handleEscape = (event) => {
-      if (event.key === "Escape") setSectorMenuOpen(false);
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
@@ -103,6 +103,19 @@ const StudentWorkSpace = () => {
   const selectedSector =
     WORK_SPACE_SECTORS.find((sector) => sector.id === selectedSectorId) || null;
   const sectorTools = selectedSectorId ? getToolsForSector(selectedSectorId) : [];
+
+  const filteredSectors = useMemo(() => {
+    if (!sectorSearchQuery.trim()) return WORK_SPACE_SECTORS;
+    const q = sectorSearchQuery.toLowerCase();
+    return WORK_SPACE_SECTORS.filter((s) => {
+      const matchName = s.name.toLowerCase().includes(q);
+      const matchTag = s.tagline.toLowerCase().includes(q);
+      const matchTools = getToolsForSector(s.id).some(
+        (t) => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+      );
+      return matchName || matchTag || matchTools;
+    });
+  }, [sectorSearchQuery]);
 
   const openToolForTesting = (tool) => {
     setActiveSubmission(null);
@@ -197,16 +210,13 @@ const StudentWorkSpace = () => {
           </span>
           <h1 className="text-2xl font-bold tracking-tight">Work Space</h1>
           <p className="mt-1 text-xs sm:text-sm text-indigo-100/90 max-w-2xl">
-            Complete Partner-assigned tasks or select a sector below to launch open-source compilers, 3D CAD, and interactive simulators.
+            Complete Partner-assigned tasks or select a sector below to launch open-source compilers and interactive simulators.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-xl bg-white/10 border border-white/15 px-3 py-1.5 font-semibold text-white">
             Partner Tasks: {assignments.length}
-          </span>
-          <span className="rounded-xl bg-purple-400/20 border border-purple-300/25 px-3 py-1.5 font-semibold text-purple-100">
-            11 Sectors
           </span>
         </div>
       </div>
@@ -257,56 +267,81 @@ const StudentWorkSpace = () => {
             const toolMeta = getToolMeta(a.toolType || a.workspaceMode);
             const badgeColor =
               status === "graded"
-                ? "bg-emerald-100 text-emerald-800"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                 : status === "submitted"
-                  ? "bg-blue-100 text-blue-800"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
                   : status === "in-progress"
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-slate-100 text-slate-700";
+                    ? "bg-amber-50 text-amber-800 border border-amber-200"
+                    : "bg-slate-50 text-slate-700 border border-slate-200";
+
+            const cardBgStyle =
+              "bg-gradient-to-br from-indigo-50/40 via-white to-slate-50/60 border-slate-200/90 hover:border-indigo-300";
 
             return (
               <div
                 key={a._id}
-                className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                className={`flex flex-col justify-between rounded-2xl border p-3.5 sm:p-4 shadow-xs transition hover:shadow-md ${cardBgStyle}`}
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-200">
-                          Tool: {toolMeta.shortLabel}
-                        </span>
-                        {a.internshipTitle && (
-                          <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
-                            Internship: {a.internshipTitle}
-                          </span>
-                        )}
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                          {a.category} · {a.difficulty}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900">{a.title}</h3>
+                <div className="space-y-2">
+                  {/* Card Top Header: Title & Status */}
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                        {a.title}
+                      </h3>
+                      {a.internshipTitle && (
+                        <p className="mt-0.5 text-[11px] font-semibold text-emerald-700 truncate">
+                          {a.internshipTitle}
+                        </p>
+                      )}
                     </div>
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${badgeColor}`}>
+                    <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeColor}`}>
                       {status.replace("-", " ")}
                     </span>
                   </div>
 
-                  <p className="text-sm text-slate-600 line-clamp-3">{a.description}</p>
-
-                  <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                    <span>Sent by: {a.createdBy?.name || "Partner"}</span>
-                    <span>· Max Score: {a.maxScore}</span>
-                    {a.dueDate && (
-                      <span>· Due: {new Date(a.dueDate).toLocaleDateString()}</span>
-                    )}
+                  {/* Tool & Category Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    <span className="rounded-md bg-indigo-50 border border-indigo-200/70 px-2 py-0.5 font-semibold text-indigo-700">
+                      {toolMeta.shortLabel}
+                    </span>
+                    <span className="rounded-md bg-slate-100 border border-slate-200 px-2 py-0.5 font-medium text-slate-600">
+                      {a.category}
+                    </span>
                     {(a.targetSpecs?.enabled || a.expectedOutput) && (
-                      <span className="text-emerald-700 font-medium">· Auto-Check</span>
+                      <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-semibold text-emerald-700">
+                        Auto-Check
+                      </span>
                     )}
                   </div>
 
+                  {/* Description */}
+                  {a.description && (
+                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      {a.description}
+                    </p>
+                  )}
+
+                  {/* Structured 3-Column Metadata Grid */}
+                  <div className="grid grid-cols-3 gap-1.5 rounded-lg bg-white/85 border border-slate-200/80 p-1.5 text-center text-xs shadow-xs">
+                    <div className="min-w-0">
+                      <span className="block text-[9px] uppercase font-semibold text-slate-400">Instructor</span>
+                      <span className="font-bold text-slate-800 truncate block mt-0.5 text-xs">{a.createdBy?.name || "Partner"}</span>
+                    </div>
+                    <div className="border-x border-slate-200/70 min-w-0">
+                      <span className="block text-[9px] uppercase font-semibold text-slate-400">Difficulty</span>
+                      <span className="font-bold text-indigo-600 block mt-0.5 text-xs">{a.difficulty || "Beginner"}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-[9px] uppercase font-semibold text-slate-400">Due Date</span>
+                      <span className="font-medium text-slate-700 truncate block mt-0.5 text-xs">
+                        {a.dueDate ? new Date(a.dueDate).toLocaleDateString() : "No deadline"}
+                      </span>
+                    </div>
+                  </div>
+
                   {a.starterFiles?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
                       {a.starterFiles.map((sf) => {
                         const is3d = ["stl", "step", "stp", "iges", "igs"].includes(sf.fileFormat);
                         return is3d ? (
@@ -319,7 +354,7 @@ const StudentWorkSpace = () => {
                                 fileUrl: resolveFileUrl(sf.fileUrl),
                               })
                             }
-                            className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-50 shadow-xs"
                           >
                             👁 Preview {sf.fileName}
                           </button>
@@ -329,25 +364,22 @@ const StudentWorkSpace = () => {
                   )}
 
                   {sub?.grade?.score !== null && sub?.grade?.score !== undefined && (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50/90 p-2 text-xs text-emerald-900">
                       <div className="font-bold">
                         Grade: {sub.grade.score} / {sub.grade.maxScore || a.maxScore}
                       </div>
-                      {sub.grade.feedback && <p className="mt-1">{sub.grade.feedback}</p>}
+                      {sub.grade.feedback && <p className="mt-0.5 text-[11px]">{sub.grade.feedback}</p>}
                     </div>
                   )}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                  <span className="text-[11px] text-slate-400">
-                    License: {toolMeta.license}
-                  </span>
+                <div className="mt-2.5 flex items-center justify-end border-t border-slate-100 pt-2">
                   <button
                     type="button"
                     onClick={() => handleOpenWorkspace(a)}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                    className="shrink-0 whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:scale-95 transition"
                   >
-                    {status === "not-started" ? `Launch ${toolMeta.shortLabel}` : "Resume Work"}
+                    Open Task &rarr;
                   </button>
                 </div>
               </div>
@@ -356,200 +388,96 @@ const StudentWorkSpace = () => {
         </div>
       )}
 
-      {/* 11 Sectors Dropdown — Tools Show Only After Selecting a Particular Sector */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 rounded-t-2xl border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-xs font-bold text-white shadow-sm">
-              11
+      {/* 11 Sectors Section — Tools Show After Selecting a Sector via the Modal */}
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="flex flex-col gap-3.5 border-b border-slate-100 bg-slate-50/80 px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20">
+              <Layers className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
                 Sector Tools &amp; Online Compilers
               </h2>
-              <p className="text-xs text-slate-500">
-                Select a sector from the dropdown to reveal its open-source compilers, labs, and simulators.
+              <p className="text-xs text-slate-500 mt-0.5 truncate sm:overflow-visible sm:whitespace-normal">
+                Explore in-browser labs, cloud compilers, and 3D simulators curated for each sector.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div ref={sectorDropdownRef} className="relative w-full sm:w-80">
-              <button
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={sectorMenuOpen}
-                onClick={() => setSectorMenuOpen((prev) => !prev)}
-                className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm font-medium text-slate-800 shadow-sm transition hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              >
-                <span className="truncate">
-                  {selectedSector
-                    ? `${selectedSector.name} (${sectorTools.length} Tools)`
-                    : "-- Select a Sector (11 Sectors) --"}
-                </span>
-                <svg
-                  className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${
-                    sectorMenuOpen ? "rotate-180" : ""
-                  }`}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-
-              {sectorMenuOpen && (
-                <div
-                  role="listbox"
-                  aria-label="Select Sector"
-                  className="absolute left-0 right-0 top-full z-30 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
-                >
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={!selectedSectorId}
-                    onClick={() => {
-                      setSelectedSectorId("");
-                      setSectorMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center justify-between px-3.5 py-2 text-left text-xs transition ${
-                      !selectedSectorId
-                        ? "bg-indigo-50 font-semibold text-indigo-700"
-                        : "text-slate-500 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span className="truncate">-- Select a Sector (11 Sectors) --</span>
-                  </button>
-                  {WORK_SPACE_SECTORS.map((sector, idx) => {
-                    const isSelected = selectedSectorId === sector.id;
-                    const count = getToolsForSector(sector.id).length;
-                    return (
-                      <button
-                        key={sector.id}
-                        type="button"
-                        role="option"
-                        aria-selected={isSelected}
-                        onClick={() => {
-                          setSelectedSectorId(sector.id);
-                          setSectorMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-xs transition ${
-                          isSelected
-                            ? "bg-indigo-600 font-semibold text-white"
-                            : "text-slate-700 hover:bg-indigo-50/70"
-                        }`}
-                      >
-                        <span className="truncate">
-                          {String(idx + 1).padStart(2, "0")}. {sector.name}
-                        </span>
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            isSelected
-                              ? "bg-white/20 text-white"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {count} Tools
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {selectedSector && (
+          {/* Trigger Button or Active Sector Toolbar */}
+          <div className="flex items-center gap-2 shrink-0">
+            {!selectedSector ? (
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedSectorId("");
-                  setSectorMenuOpen(false);
+                  setSectorSearchQuery("");
+                  setIsSectorModalOpen(true);
                 }}
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-md active:scale-95"
               >
-                Clear
+                <Sparkles className="h-4 w-4 text-purple-200 transition-transform group-hover:rotate-12" />
+                <span>Select a Sector</span>
               </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSectorSearchQuery("");
+                    setIsSectorModalOpen(true);
+                  }}
+                  title="Click to change sector"
+                  className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/90 px-3.5 py-1.5 text-xs font-semibold text-indigo-900 shadow-xs hover:bg-indigo-100/80 transition cursor-pointer"
+                >
+                  <span className="font-bold">{selectedSector.name}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedSectorId("")}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition active:scale-95 shadow-xs"
+                  title="Clear sector"
+                  aria-label="Clear selected sector"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="p-5">
-          {!selectedSector ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3.5">
-                  <div className="text-xs font-bold text-indigo-900">
-                    In-Browser Labs
-                  </div>
-                  <p className="mt-1 text-[11px] text-slate-600">
-                    HTML5/CSS3/JS Split Studio, SQLite WASM, Regex/JSON &amp; Data Analytics run 100% locally.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-3.5">
-                  <div className="text-xs font-bold text-purple-900">
-                    Online Cloud Compilers
-                  </div>
-                  <p className="mt-1 text-[11px] text-slate-600">
-                    C/C++, Python 3, Java, TypeScript, PHP, Go/Rust, Ruby, C# &amp; Bash with live stdin/stdout.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3.5">
-                  <div className="text-xs font-bold text-emerald-900">
-                    Sector Simulators &amp; CAD
-                  </div>
-                  <p className="mt-1 text-[11px] text-slate-600">
-                    Quirk Quantum, 3Dmol Biotech, PhET Physics, Wokwi IoT, CircuitJS1 &amp; 3D CAD Studios.
-                  </p>
-                </div>
-              </div>
-              <p className="text-center text-xs font-medium text-slate-500">
-                Choose a sector from the dropdown above to unlock its curated toolset.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    {selectedSector.name} ({sectorTools.length} Tools)
-                  </h3>
-                  <p className="text-xs text-slate-500">{selectedSector.tagline}</p>
-                </div>
-                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  100% Free &amp; Open Source
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {sectorTools.map((tool) => {
+        {!selectedSector ? (
+          <div className="py-3 px-4 text-center bg-slate-50/50">
+            <p className="text-xs font-medium text-slate-500">
+              Click <span className="font-semibold text-indigo-600">&quot;Select a Sector&quot;</span> above to unlock its curated toolset and compilers.
+            </p>
+          </div>
+        ) : (
+          <div className="p-5 sm:p-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sectorTools.map((tool) => {
                   const runtimeBadge =
                     tool.mode === "code"
                       ? "Cloud GCC / Runtime"
                       : tool.mode === "iframe"
                         ? "Interactive Lab"
                         : "In-Browser";
-                  const badgeStyle =
-                    tool.mode === "code"
-                      ? "bg-purple-50 border-purple-200 text-purple-700"
-                      : tool.mode === "iframe"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                        : "bg-indigo-50 border-indigo-200 text-indigo-700";
+
+                  const badgeStyle = "bg-indigo-50 border-indigo-200 text-indigo-700";
+                  const cardBg = "bg-gradient-to-br from-indigo-50/40 via-white to-slate-50/60 border-slate-200/90 hover:border-indigo-300";
+
                   return (
                     <div
                       key={tool.id}
-                      className="group flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
+                      className={`group flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${cardBg}`}
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-semibold uppercase tracking-wide text-indigo-700">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-indigo-700 truncate min-w-0">
                             {tool.category}
                           </span>
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
+                          <span className={`shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
                             {runtimeBadge}
                           </span>
                         </div>
@@ -560,26 +488,173 @@ const StudentWorkSpace = () => {
                           {tool.description}
                         </p>
                       </div>
-                      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                        <span className="text-[11px] text-slate-400 truncate max-w-[155px]">
-                          {tool.license}
-                        </span>
+                      <div className="mt-4 flex items-center justify-end border-t border-slate-100 pt-3">
                         <button
                           type="button"
                           onClick={() => openToolForTesting(tool)}
-                          className="rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                          className="shrink-0 whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 active:scale-95"
                         >
-                          Open &amp; Test →
+                          Open &amp; Test &rarr;
                         </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* 11 Sectors Modal Popup */}
+      {isSectorModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 sm:p-6 backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSectorModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-100 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Top Header */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-[#0f172a] via-[#1e1b4b] to-[#312e81] p-5 sm:p-6 text-white border-b border-slate-800">
+              <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
+              <div className="relative z-10 flex items-start justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-3 py-0.5 text-[11px] font-semibold text-purple-200 mb-2">
+                    <Sparkles className="h-3 w-3 text-purple-300" />
+                    EduTechEx Industry Labs · Engineering Sectors
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                    Select an Industry Sector
+                  </h2>
+                  <p className="mt-1 text-xs sm:text-sm text-indigo-200/90 max-w-xl">
+                    Choose a sector to reveal its specialized open-source compilers and interactive simulators.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSectorModalOpen(false)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition active:scale-95"
+                  aria-label="Close sector modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Live Search inside Modal */}
+              <div className="relative mt-4">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={sectorSearchQuery}
+                  onChange={(e) => setSectorSearchQuery(e.target.value)}
+                  placeholder="Search sectors or tools (e.g., AI, Robotics, Quantum, Python)..."
+                  className="w-full rounded-xl border border-white/15 bg-white/10 py-2.5 pl-10 pr-16 text-xs sm:text-sm text-white placeholder-slate-400 backdrop-blur-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30"
+                />
+                {sectorSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSectorSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Body: 11 Sector Cards Grid */}
+            <div className="p-5 sm:p-6 overflow-y-auto max-h-[60vh]">
+              {filteredSectors.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-sm font-semibold text-slate-700">No sectors match "{sectorSearchQuery}"</p>
+                  <button
+                    type="button"
+                    onClick={() => setSectorSearchQuery("")}
+                    className="mt-2 text-xs font-semibold text-indigo-600 hover:underline"
+                  >
+                    Reset Search
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {filteredSectors.map((sector) => {
+                    const isSelected = selectedSectorId === sector.id;
+                    const tools = getToolsForSector(sector.id);
+
+                    return (
+                      <button
+                        key={sector.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSectorId(sector.id);
+                          setIsSectorModalOpen(false);
+                        }}
+                        className={`group relative flex flex-col justify-between rounded-2xl border p-4 sm:p-5 text-left transition-all duration-200 cursor-pointer ${
+                          isSelected
+                            ? "border-indigo-600 bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/40 ring-2 ring-indigo-500/25 shadow-md"
+                            : "border-slate-200 bg-white hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2.5">
+                            <span className="shrink-0 whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 border border-slate-200">
+                              {tools.length} Tools
+                            </span>
+                            {isSelected ? (
+                              <span className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                                <Check className="h-3 w-3 stroke-[3]" />
+                                Active
+                              </span>
+                            ) : (
+                              <span className="text-[11px] font-semibold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                Select &rarr;
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className={`text-base font-bold transition-colors ${
+                            isSelected ? "text-indigo-950 font-extrabold" : "text-slate-900 group-hover:text-indigo-700"
+                          }`}>
+                            {sector.name}
+                          </h4>
+                          <p className="mt-1.5 text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                            {sector.tagline}
+                          </p>
+                        </div>
+
+                        <div className={`mt-4 flex items-center justify-between border-t pt-3 text-xs font-semibold ${
+                          isSelected
+                            ? "border-indigo-200/80 text-indigo-700"
+                            : "border-slate-100 text-indigo-600 group-hover:text-indigo-800"
+                        }`}>
+                          <span>{isSelected ? "Currently Viewing" : "Explore Tools"}</span>
+                          <ChevronRight className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${
+                            isSelected ? "text-indigo-600" : "text-slate-400 group-hover:text-indigo-600"
+                          }`} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/80 px-6 py-3.5 text-xs text-slate-500">
+              <span>All sectors include 100% free open-source compilers and simulators.</span>
+              <button
+                type="button"
+                onClick={() => setIsSectorModalOpen(false)}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition active:scale-95"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Starter 3D File Preview Modal */}
       {previewFile && (

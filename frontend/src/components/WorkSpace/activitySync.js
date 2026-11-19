@@ -1,7 +1,11 @@
 import axios from "../../api/axiosInstance";
 
 export const getStudentToken = () =>
-  localStorage.getItem("userToken") || sessionStorage.getItem("userToken") || "";
+  localStorage.getItem("userToken") ||
+  localStorage.getItem("token") ||
+  sessionStorage.getItem("userToken") ||
+  sessionStorage.getItem("token") ||
+  "";
 
 /**
  * Push a live activity / draft sync packet to the backend so Partners

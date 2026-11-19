@@ -160,12 +160,9 @@ const RegexAndJsonWorkspace = ({ assignment, initialSubmission, onBack, onUpdate
       const endpoint = isFinal
         ? `/api/daily-work/submissions/${assignment._id}/submit`
         : `/api/daily-work/submissions/${assignment._id}/save`;
-      const res = await axios.post(endpoint, buildPayload(isFinal), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await axios.post(endpoint, buildPayload(isFinal), token ? {
+        headers: { Authorization: `Bearer ${token}` },
+      } : {});
       setSubmissionState(res.data.submission);
       setVersionNote("");
       toast.success(isFinal ? "Regex & JSON work submitted!" : "Snapshot saved!");

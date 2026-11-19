@@ -1,11 +1,27 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  Trash2,
+  Pencil,
+  Sparkles,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Check,
+  X,
+  Briefcase,
+  Award,
+} from "lucide-react";
 import axios from "../../api/axiosInstance";
 import StudentWorkInspector from "./StudentWorkInspector";
 import { formatDurationSeconds } from "./activitySync";
 import {
   FREE_TOOL_CATALOG,
   WORK_SPACE_SECTORS,
+  SECTOR_TOOL_MAP,
   getToolMeta,
   getToolsForSector,
 } from "./toolCatalog";
@@ -112,6 +128,30 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
   const [gradeFeedback, setGradeFeedback] = useState("");
   const [rubricPoints, setRubricPoints] = useState([]);
   const [grading, setGrading] = useState(false);
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [editingAssignmentId, setEditingAssignmentId] = useState(null);
+  const [isRubricAccordionOpen, setIsRubricAccordionOpen] = useState(false);
+
+  // Student Dropdown & Roster Navigation State (for 100+ students)
+  const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState("");
+  const [studentStatusFilter, setStudentStatusFilter] = useState("all");
+  const studentDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const onOutsideDropdown = (e) => {
+      if (studentDropdownRef.current && !studentDropdownRef.current.contains(e.target)) {
+        setStudentDropdownOpen(false);
+      }
+    };
+    if (studentDropdownOpen) {
+      document.addEventListener("mousedown", onOutsideDropdown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", onOutsideDropdown);
+    };
+  }, [studentDropdownOpen]);
 
   // Direct Instructor Custom Tool State
   const [customTools, setCustomTools] = useState(() => loadSavedCustomTools());
@@ -296,6 +336,7 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
 
   const handleShareToolWithStudents = (tool) => {
     const isCustom = Boolean(tool.isCustom);
+    setEditingAssignmentId(null);
     setForm({
       ...createInitialForm(),
       title: tool.name,
@@ -307,6 +348,53 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
       starterCode: tool.defaultCode || "",
       externalToolUrl: tool.embedUrl || "",
     });
+    setShowCreateModal(true);
+  };
+
+  const handleEditAssignment = (assignment) => {
+    if (!assignment?._id) return;
+    setEditingAssignmentId(assignment._id);
+    const toolMeta = getToolMeta(assignment.toolType || assignment.workspaceMode);
+
+    // Identify sector for this tool
+    const matchedSector =
+      Object.entries(SECTOR_TOOL_MAP).find(([, toolIds]) =>
+        toolIds.includes(assignment.toolType || assignment.workspaceMode)
+      )?.[0] || WORK_SPACE_SECTORS[0].id;
+    setModalSectorId(matchedSector);
+
+    setForm({
+      title: assignment.title || "",
+      description: assignment.description || "",
+      instructions: assignment.instructions || "",
+      category: assignment.category || toolMeta.category || "Mechanical CAD",
+      toolType: assignment.toolType || "builtin-cad",
+      workDate: assignment.workDate ? assignment.workDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      starterCode: assignment.starterCode || "",
+      codeLanguage: assignment.codeLanguage || toolMeta.language || "cpp",
+      expectedOutput: assignment.expectedOutput || "",
+      difficulty: assignment.difficulty || "Beginner",
+      workspaceMode: assignment.workspaceMode || toolMeta.mode || "builtin-cad",
+      externalToolUrl: assignment.externalToolUrl || toolMeta.embedUrl || "",
+      dueDate: assignment.dueDate ? assignment.dueDate.slice(0, 10) : "",
+      maxScore: assignment.maxScore || 100,
+      allowLateSubmission: assignment.allowLateSubmission !== false,
+      isGlobal: Boolean(assignment.isGlobal),
+      targetScope: assignment.targetScope || (assignment.internshipId ? "internship" : "all"),
+      internshipId: assignment.internshipId || "",
+      internshipTitle: assignment.internshipTitle || "",
+      targetAudience: assignment.targetAudience || "all-applicants",
+      targetStudentIds: assignment.targetStudentIds || [],
+      targetSpecs: assignment.targetSpecs || {
+        enabled: false,
+        expectedVolumeMm3: "",
+        volumeTolerancePct: 5,
+        expectedBoundsMm: { x: "", y: "", z: "" },
+        boundsToleranceMm: 2,
+        requireWatertight: true,
+      },
+    });
+
     setShowCreateModal(true);
   };
 
@@ -344,65 +432,214 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
         },
       };
 
-      const res = await axios.post("/api/daily-work/assignments", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const created = res.data.assignment;
-
-      if (starterFile && created?._id) {
-        const fd = new FormData();
-        fd.append("file", starterFile);
-        await axios.post(`/api/daily-work/assignments/${created._id}/upload-starter`, fd, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+      if (editingAssignmentId) {
+        await axios.put(`/api/daily-work/assignments/${editingAssignmentId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (starterFile) {
+          const fd = new FormData();
+          fd.append("file", starterFile);
+          await axios.post(`/api/daily-work/assignments/${editingAssignmentId}/upload-starter`, fd, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          });
+        }
+
+        toast.success("Daily work task updated successfully!");
+      } else {
+        const res = await axios.post("/api/daily-work/assignments", payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const created = res.data.assignment;
+
+        if (starterFile && created?._id) {
+          const fd = new FormData();
+          fd.append("file", starterFile);
+          await axios.post(`/api/daily-work/assignments/${created._id}/upload-starter`, fd, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          });
+        }
+
+        toast.success("Daily work & free open-source tool sent to targeted students!");
       }
 
-      toast.success("Daily work & free open-source tool sent to targeted students!");
       setShowCreateModal(false);
+      setEditingAssignmentId(null);
       setForm(createInitialForm());
       setStarterFile(null);
       fetchAssignments();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to send daily work");
+      toast.error(
+        err?.response?.data?.message ||
+          (editingAssignmentId ? "Failed to update task" : "Failed to send daily work")
+      );
     } finally {
       setSavingAssignment(false);
     }
   };
 
-  const handleDeleteAssignment = async (id) => {
-    if (!window.confirm("Delete this daily work task?")) return;
+  const handleDeleteAssignment = (assignment) => {
+    setDeleteConfirmTarget(assignment);
+  };
+
+  const confirmDeleteAssignment = async () => {
+    if (!deleteConfirmTarget?._id) return;
     try {
+      setIsDeleting(true);
       const token = getAuthToken(role);
-      await axios.delete(`/api/daily-work/assignments/${id}`, {
+      await axios.delete(`/api/daily-work/assignments/${deleteConfirmTarget._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Deleted");
+      toast.success("Daily work task deleted successfully");
+      setDeleteConfirmTarget(null);
       fetchAssignments();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Delete failed");
+    } finally {
+      setIsDeleting(false);
     }
   };
+
+const getToolRubric = (toolMeta, existingRubric) => {
+  const isCadTool =
+    toolMeta.mode === "cad" ||
+    toolMeta.category === "Mechanical CAD" ||
+    toolMeta.category === "3D CAD" ||
+    toolMeta.toolType === "edutechex-cad";
+  const isCodeTool =
+    ["code", "web", "sql", "regex"].includes(toolMeta.mode) ||
+    toolMeta.category === "Compilers & DSA" ||
+    toolMeta.category === "Web Development" ||
+    toolMeta.category === "Backend & Systems" ||
+    toolMeta.category === "Database & SQL";
+  const isSimTool =
+    ["sim", "quantum", "physics", "circuit"].includes(toolMeta.mode) ||
+    toolMeta.category === "Circuit & Embedded";
+
+  // Check if existing rubric has CAD-only criteria while this is NOT a CAD tool
+  const hasGenericCadDefault =
+    Array.isArray(existingRubric) &&
+    existingRubric.length > 0 &&
+    existingRubric.some(
+      (r) =>
+        r.criterion?.includes("Parametric Feature Tree") ||
+        r.criterion?.includes("Dimensional Accuracy") ||
+        r.criterion?.includes("Geometry & Dimensional")
+    );
+
+  if (Array.isArray(existingRubric) && existingRubric.length > 0 && !(hasGenericCadDefault && !isCadTool)) {
+    return existingRubric.map((r) => ({
+      criterion: r.criterion,
+      maxPoints: r.maxPoints ?? 30,
+      points: r.points ?? r.maxPoints ?? 30,
+      description: r.description || "",
+    }));
+  }
+
+  if (isCodeTool) {
+    return [
+      {
+        criterion: "Code Correctness & Logic",
+        maxPoints: 40,
+        points: 40,
+        description: "Program compiles and produces expected stdout/outputs without runtime crashes.",
+      },
+      {
+        criterion: "Code Structure & Best Practices",
+        maxPoints: 30,
+        points: 30,
+        description: "Clean syntax, proper variable naming, and modular function structure.",
+      },
+      {
+        criterion: "Problem Requirements & Edge Cases",
+        maxPoints: 30,
+        points: 30,
+        description: "Handles edge cases, validation, and expected task requirements.",
+      },
+    ];
+  }
+
+  if (isSimTool) {
+    return [
+      {
+        criterion: "Simulation Setup & Methodology",
+        maxPoints: 40,
+        points: 40,
+        description: "Accurate parameter configuration and experiment execution.",
+      },
+      {
+        criterion: "Data Analysis & Results",
+        maxPoints: 30,
+        points: 30,
+        description: "Valid simulation outputs, observations, and data interpretation.",
+      },
+      {
+        criterion: "Conclusions & Documentation",
+        maxPoints: 30,
+        points: 30,
+        description: "Clear documentation of scientific findings and conclusions.",
+      },
+    ];
+  }
+
+  if (isCadTool) {
+    return [
+      {
+        criterion: "Geometry & Dimensional Accuracy",
+        maxPoints: 40,
+        points: 40,
+        description: "Matches required part dimensions, hole sizes, and volume constraints.",
+      },
+      {
+        criterion: "Parametric Feature Tree & Workflow",
+        maxPoints: 30,
+        points: 30,
+        description: "Clean sketch profiles, proper booleans, and logical feature order.",
+      },
+      {
+        criterion: "Design Completeness & Export Quality",
+        maxPoints: 30,
+        points: 30,
+        description: "Watertight solid mesh or B-Rep ready for STEP/STL fabrication.",
+      },
+    ];
+  }
+
+  return [
+    {
+      criterion: "Technical Accuracy & Completeness",
+      maxPoints: 40,
+      points: 40,
+      description: "Meets all core assignment objectives and deliverables.",
+    },
+    {
+      criterion: "Clarity & Methodology",
+      maxPoints: 30,
+      points: 30,
+      description: "Logical execution, clean formatting, and structured workflow.",
+    },
+    {
+      criterion: "Deliverable Quality",
+      maxPoints: 30,
+      points: 30,
+      description: "High-quality final submission, diagrams, or documentation.",
+    },
+  ];
+};
 
   const selectSubmissionForReview = useCallback((sub, assignmentObj = reviewAssignment) => {
     setSelectedSubmission(sub);
     setInspectVersionIdx(null);
     setGradeFeedback(sub.grade?.feedback || "");
+    const toolMeta = getToolMeta(assignmentObj?.toolType || assignmentObj?.workspaceMode);
     const existingRubric = sub.grade?.rubricScores;
-    if (Array.isArray(existingRubric) && existingRubric.length > 0) {
-      setRubricPoints(existingRubric);
-    } else {
-      setRubricPoints(
-        (assignmentObj?.rubric || []).map((r) => ({
-          criterion: r.criterion,
-          maxPoints: r.maxPoints,
-          points: r.maxPoints,
-          comment: "",
-        }))
-      );
-    }
+    setRubricPoints(getToolRubric(toolMeta, existingRubric || assignmentObj?.rubric));
   }, [reviewAssignment]);
 
   const openSubmissionsReview = useCallback(async (assignment, { silent = false } = {}) => {
@@ -417,7 +654,11 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
       setSelectedSubmission((prevSelected) => {
         if (prevSelected) {
           const updatedMatch = subs.find(
-            (s) => String(s.studentId) === String(prevSelected.studentId)
+            (s) =>
+              (prevSelected._id && String(s._id) === String(prevSelected._id)) ||
+              String(s.studentId) === String(prevSelected.studentId) ||
+              (Boolean(s.studentEmail && prevSelected.studentEmail) &&
+                s.studentEmail.toLowerCase() === prevSelected.studentEmail.toLowerCase())
           );
           if (updatedMatch) return updatedMatch;
         }
@@ -485,6 +726,10 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
     "markdown",
     "regex",
   ].includes(selectedToolMeta.mode);
+  const isSelectedCadTool =
+    selectedToolMeta.mode === "cad" ||
+    selectedToolMeta.category === "Mechanical CAD" ||
+    selectedToolMeta.toolType === "edutechex-cad";
 
   // Submissions Review View
   if (reviewAssignment) {
@@ -505,178 +750,461 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
     const inspectCode = activeVersion?.submittedCode ?? selectedSubmission?.submittedCode ?? "";
     const inspectOutput = activeVersion?.codeOutput ?? selectedSubmission?.codeOutput ?? "";
 
+    // 100+ Students Dropdown Navigation & Filtering Calculations
+    const currentIndex = submissions.findIndex(
+      (s) =>
+        (selectedSubmission?._id && String(s._id) === String(selectedSubmission._id)) ||
+        String(s.studentId) === String(selectedSubmission?.studentId) ||
+        (Boolean(s.studentEmail && selectedSubmission?.studentEmail) &&
+          s.studentEmail.toLowerCase() === selectedSubmission.studentEmail.toLowerCase())
+    );
+
+    const handlePrevStudent = () => {
+      if (submissions.length <= 1) return;
+      const prevIdx = currentIndex > 0 ? currentIndex - 1 : submissions.length - 1;
+      selectSubmissionForReview(submissions[prevIdx]);
+    };
+
+    const handleNextStudent = () => {
+      if (submissions.length <= 1) return;
+      const nextIdx = currentIndex < submissions.length - 1 ? currentIndex + 1 : 0;
+      selectSubmissionForReview(submissions[nextIdx]);
+    };
+
+    const statusCounts = {
+      all: submissions.length,
+      live: submissions.filter((s) => s.isOnlineNow).length,
+      submitted: submissions.filter((s) => s.status === "submitted").length,
+      draft: submissions.filter((s) => !s.isNotStarted && s.status !== "submitted" && s.status !== "graded").length,
+      graded: submissions.filter((s) => s.status === "graded").length,
+      notStarted: submissions.filter((s) => s.isNotStarted).length,
+    };
+
+    const filteredSubmissions = submissions.filter((sub) => {
+      const q = studentSearchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        (sub.studentName && sub.studentName.toLowerCase().includes(q)) ||
+        (sub.studentEmail && sub.studentEmail.toLowerCase().includes(q)) ||
+        (sub.lastAction && sub.lastAction.toLowerCase().includes(q));
+
+      if (!matchesSearch) return false;
+
+      if (studentStatusFilter === "live") return Boolean(sub.isOnlineNow);
+      if (studentStatusFilter === "submitted") return sub.status === "submitted";
+      if (studentStatusFilter === "draft") return !sub.isNotStarted && sub.status !== "submitted" && sub.status !== "graded";
+      if (studentStatusFilter === "graded") return sub.status === "graded";
+      if (studentStatusFilter === "not-started") return Boolean(sub.isNotStarted);
+      return true;
+    });
+
     return (
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
-          <div>
+        {/* Sleek EduTechEx Studio Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e1b4b] to-[#312e81] p-5 text-white shadow-md">
+          <div className="space-y-1">
             <button
               type="button"
               onClick={() => {
                 setReviewAssignment(null);
                 setSelectedSubmission(null);
               }}
-              className="text-xs font-semibold text-blue-600 hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-200 hover:text-white transition"
             >
-              ← Back to Daily Work
+              <span>←</span>
+              <span>Back to Work Space Tasks</span>
             </button>
-            <h2 className="text-lg font-bold text-slate-900">
-              Live Monitor &amp; Grade: {reviewAssignment.title}
-            </h2>
-            <span className="text-xs text-slate-500">
-              Assigned Tool: {reviewToolMeta.name} ({reviewToolMeta.license})
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-200 border border-white/15">
+                Live Studio
+              </span>
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                {reviewAssignment.title}
+              </h2>
+            </div>
+            <p className="text-xs text-indigo-100/80">
+              Assigned Tool: <span className="font-semibold text-white">{reviewToolMeta.name}</span> ({reviewToolMeta.license})
               {reviewAssignment.internshipTitle ? ` · Internship: ${reviewAssignment.internshipTitle}` : ""}
-            </span>
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={() => setLivePolling((v) => !v)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold border ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold border transition ${
                 livePolling
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                  : "border-slate-200 bg-slate-100 text-slate-600"
+                  ? "border-emerald-400 bg-emerald-500/20 text-emerald-200 shadow-xs"
+                  : "border-white/20 bg-white/10 text-slate-300"
               }`}
             >
-              {livePolling ? "● Live Auto-Refresh (10s)" : "Auto-Refresh Paused"}
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  livePolling ? "bg-emerald-400 animate-ping" : "bg-slate-400"
+                }`}
+              />
+              <span>{livePolling ? "Auto-Refresh (10s)" : "Paused"}</span>
             </button>
             <button
               type="button"
               onClick={() => openSubmissionsReview(reviewAssignment)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-xl border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-white/20 transition active:scale-95"
             >
-              ↻ Refresh Now
+              ↻ Refresh
             </button>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-              {submissions.length} Student(s)
+            <span className="rounded-xl bg-white/15 px-3 py-1.5 text-xs font-semibold text-indigo-100 border border-white/15">
+              {submissions.length} Students
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* Student Live Activity Roster */}
-          <div className="lg:col-span-3 space-y-2 rounded-xl border border-slate-200 bg-white p-3">
-            <h3 className="text-xs font-bold uppercase text-slate-500">Students ({submissions.length})</h3>
-            {submissions.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4">No targeted students or activity yet.</p>
-            ) : (
-              submissions.map((sub) => {
-                const isSelected = String(selectedSubmission?.studentId) === String(sub.studentId);
-                return (
-                  <button
-                    key={sub._id || sub.studentId}
-                    type="button"
-                    onClick={() => selectSubmissionForReview(sub)}
-                    className={`w-full rounded-lg border p-2.5 text-left text-xs transition ${
-                      isSelected
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 hover:bg-slate-50"
+        {/* Top Student Switcher Bar - Dropdown, Navigation & Filters for 100+ Students */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Interactive Dropdown Trigger for 100 Students */}
+            <div className="relative flex-1 min-w-[280px] max-w-2xl" ref={studentDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setStudentDropdownOpen((v) => !v)}
+                className="w-full flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 text-left transition shadow-2xs hover:border-indigo-300 hover:bg-white"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-2xs ${
+                      selectedSubmission?.isOnlineNow
+                        ? "bg-emerald-600 ring-2 ring-emerald-300"
+                        : selectedSubmission
+                        ? "bg-indigo-600"
+                        : "bg-slate-400"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-1 font-semibold text-slate-900">
-                      <span className="truncate">{sub.studentName}</span>
-                      {sub.isOnlineNow ? (
-                        <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                    {selectedSubmission?.studentName
+                      ? selectedSubmission.studentName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .substring(0, 2)
+                          .toUpperCase()
+                      : "?"}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 text-xs sm:text-sm truncate">
+                        {selectedSubmission?.studentName || "Select a student to inspect"}
+                      </span>
+                      {selectedSubmission?.isOnlineNow ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           LIVE
                         </span>
-                      ) : sub.plagiarismFlags?.duplicateHashMatch ? (
-                        <span className="shrink-0 rounded bg-rose-100 px-1.5 py-0.5 text-[10px] text-rose-700">
-                          Hash Match!
+                      ) : selectedSubmission?.status === "graded" ? (
+                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">
+                          GRADED
                         </span>
-                      ) : null}
+                      ) : selectedSubmission?.status === "submitted" ? (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                          SUBMITTED
+                        </span>
+                      ) : selectedSubmission?.isNotStarted ? (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                          NOT STARTED
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                          DRAFT
+                        </span>
+                      )}
                     </div>
-                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
-                      <span className="uppercase">{sub.status}</span>
-                      <span>
-                        {sub.timeSpentSeconds > 0
-                          ? formatDurationSeconds(sub.timeSpentSeconds)
-                          : sub.applicationStatus || "Pending"}
-                      </span>
-                    </div>
-                    {sub.lastAction && (
-                      <div className="mt-1 truncate text-[10px] text-slate-500">
-                        {sub.lastAction}
-                      </div>
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          {/* Live Work Inspector + Grading */}
-          {selectedSubmission ? (
-            <div className="lg:col-span-9 grid grid-cols-1 gap-4 xl:grid-cols-12">
-              <div className="xl:col-span-7 space-y-3">
-                <StudentWorkInspector
-                  assignment={reviewAssignment}
-                  submission={selectedSubmission}
-                  activeVersion={activeVersion}
-                  inspectUrl={inspectUrl}
-                  inspectName={inspectName}
-                  inspectCode={inspectCode}
-                  inspectOutput={inspectOutput}
-                />
-
-                {selectedSubmission.versions?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-3">
-                    <div className="text-xs font-bold text-slate-700 mb-2">
-                      Version History ({selectedSubmission.versions.length} snapshots)
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setInspectVersionIdx(null)}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium border ${
-                          inspectVersionIdx === null
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-slate-50 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        Live / Latest
-                      </button>
-                      {selectedSubmission.versions.map((v, idx) => (
-                        <button
-                          key={v._id || idx}
-                          type="button"
-                          onClick={() => setInspectVersionIdx(idx)}
-                          className={`rounded-md px-2.5 py-1 text-xs font-medium border ${
-                            inspectVersionIdx === idx
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-slate-50 text-slate-700 border-slate-200"
-                          }`}
-                        >
-                          v{v.versionNumber}
-                        </button>
-                      ))}
+                    <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                      <span>{selectedSubmission?.studentEmail || `Browse all ${submissions.length} students`}</span>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Right: Auto-checks, Plagiarism Flag & Rubric */}
-              <div className="xl:col-span-5 space-y-3">
+                <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                  <span className="text-xs font-semibold text-indigo-600 hidden sm:inline">
+                    Switch Student ({submissions.length})
+                  </span>
+                  {studentDropdownOpen ? (
+                    <ChevronUp className="h-4 w-4 text-indigo-600" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                  )}
+                </div>
+              </button>
+
+              {/* Dropdown Menu Popup with Instant Search & Status Filters */}
+              {studentDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 w-full sm:w-[500px] z-50 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                  {/* Search Box */}
+                  <div className="relative mb-2.5">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder={`Search across all ${submissions.length} students...`}
+                      value={studentSearchQuery}
+                      onChange={(e) => setStudentSearchQuery(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 pl-9 pr-8 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      autoFocus
+                    />
+                    {studentSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setStudentSearchQuery("")}
+                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap items-center gap-1.5 pb-2.5 border-b border-slate-100 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setStudentStatusFilter("all")}
+                      className={`rounded-lg px-2.5 py-1 font-semibold transition ${
+                        studentStatusFilter === "all"
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      All ({statusCounts.all})
+                    </button>
+                    {statusCounts.live > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setStudentStatusFilter("live")}
+                        className={`rounded-lg px-2.5 py-1 font-semibold transition flex items-center gap-1 ${
+                          studentStatusFilter === "live"
+                            ? "bg-emerald-700 text-white"
+                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Live ({statusCounts.live})
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setStudentStatusFilter("submitted")}
+                      className={`rounded-lg px-2.5 py-1 font-semibold transition ${
+                        studentStatusFilter === "submitted"
+                          ? "bg-blue-700 text-white"
+                          : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                      }`}
+                    >
+                      Submitted ({statusCounts.submitted})
+                    </button>
+                  </div>
+
+                  {/* Student Options List */}
+                  <div className="mt-2 max-h-72 overflow-y-auto space-y-1 pr-1">
+                    {filteredSubmissions.length === 0 ? (
+                      <p className="py-6 text-center text-xs text-slate-400">
+                        No students match your search or filter.
+                      </p>
+                    ) : (
+                      filteredSubmissions.map((sub) => {
+                        const isSelected =
+                          (selectedSubmission?._id && String(selectedSubmission._id) === String(sub._id)) ||
+                          String(selectedSubmission?.studentId) === String(sub.studentId) ||
+                          (Boolean(selectedSubmission?.studentEmail && sub.studentEmail) &&
+                            selectedSubmission.studentEmail.toLowerCase() === sub.studentEmail.toLowerCase());
+                        const initials = (sub.studentName || "S")
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .substring(0, 2)
+                          .toUpperCase();
+
+                        return (
+                          <button
+                            key={sub._id || sub.studentId}
+                            type="button"
+                            onClick={() => {
+                              selectSubmissionForReview(sub);
+                              setStudentDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between gap-2.5 rounded-xl p-2.5 text-left transition ${
+                              isSelected
+                                ? "bg-indigo-50/80 border border-indigo-200 text-indigo-950"
+                                : "hover:bg-slate-50 border border-transparent"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
+                                  sub.isOnlineNow
+                                    ? "bg-emerald-600 ring-2 ring-emerald-300"
+                                    : isSelected
+                                    ? "bg-indigo-600"
+                                    : "bg-slate-400"
+                                }`}
+                              >
+                                {initials}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-xs text-slate-900 truncate">
+                                    {sub.studentName}
+                                  </span>
+                                  {sub.isOnlineNow && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  )}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate">
+                                  {sub.studentEmail ||
+                                    (sub.timeSpentSeconds > 0
+                                      ? formatDurationSeconds(sub.timeSpentSeconds)
+                                      : "Not started")}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                  sub.isOnlineNow
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : sub.status === "graded"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : sub.status === "submitted"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : sub.isNotStarted
+                                    ? "bg-slate-100 text-slate-500"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                {sub.isOnlineNow
+                                  ? "Live"
+                                  : sub.status || (sub.isNotStarted ? "Not Started" : "Draft")}
+                              </span>
+                              {isSelected && <Check className="h-4 w-4 text-indigo-600" />}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Prev / Next Controls & Position Indicator */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/70 p-1">
+                <button
+                  type="button"
+                  onClick={handlePrevStudent}
+                  disabled={submissions.length <= 1}
+                  className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition active:scale-95 disabled:opacity-40"
+                  title="Previous student in list"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Prev</span>
+                </button>
+                <span className="px-2 text-xs font-bold text-slate-700 min-w-[70px] text-center">
+                  {currentIndex >= 0 ? currentIndex + 1 : 1} / {submissions.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleNextStudent}
+                  disabled={submissions.length <= 1}
+                  className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition active:scale-95 disabled:opacity-40"
+                  title="Next student in list"
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Review Workspace Area */}
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 pb-36">
+          {/* Live Work Inspector + Grading */}
+          {selectedSubmission ? (() => {
+            const totalScore = rubricPoints.reduce((s, r) => s + (Number(r.points) || 0), 0);
+            const standardScores = [100, 95, 90, 85, 80, 75, 70, 60, 50, 0];
+            const isCustom = !standardScores.includes(totalScore);
+
+            const handleTotalChange = (newTotal) => {
+              const maxTotal =
+                rubricPoints.reduce((sum, r) => sum + (Number(r.maxPoints) || 0), 0) || 100;
+              const ratio = Math.max(0, Math.min(1, newTotal / maxTotal));
+              let distributed = 0;
+              setRubricPoints((prev) =>
+                prev.map((r, i) => {
+                  if (i === prev.length - 1) {
+                    const remainder = Math.max(0, Math.min(r.maxPoints, newTotal - distributed));
+                    return { ...r, points: remainder };
+                  }
+                  const val = Math.round((Number(r.maxPoints) || 0) * ratio);
+                  distributed += val;
+                  return { ...r, points: val };
+                })
+              );
+            };
+
+            const renderRubricHeaderCell = () => (
+              <button
+                type="button"
+                onClick={() => setIsRubricAccordionOpen((v) => !v)}
+                className="flex items-center justify-between w-full h-full text-left group transition cursor-pointer border-none bg-transparent p-0"
+                title={isRubricAccordionOpen ? "Click to collapse rubric" : "Click to drop down rubric"}
+              >
+                <div className="flex flex-col justify-between h-[44px] min-w-0 pr-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-indigo-600 transition leading-none whitespace-nowrap">
+                    Rubric Evaluation
+                  </span>
+                  <span className="text-xs font-semibold text-slate-700 group-hover:text-indigo-950 transition whitespace-nowrap">
+                    Tool-specific benchmarks
+                  </span>
+                </div>
+
+                {/* Clean indicator with total score & chevron - No bulky select dropdown here */}
+                <div className="shrink-0 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-2xs group-hover:border-indigo-300 transition">
+                  <Award className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                  <span className="text-xs font-bold text-slate-800">
+                    {totalScore} pts
+                  </span>
+                  {isRubricAccordionOpen ? (
+                    <ChevronUp className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 transition" />
+                  )}
+                </div>
+              </button>
+            );
+
+            const renderRubricPanel = () => (
+              <div className="space-y-4">
+                {/* Plagiarism flag if any */}
                 {selectedSubmission.plagiarismFlags?.duplicateHashMatch && (
-                  <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-800">
-                    <strong>Similarity Alert:</strong>{" "}
+                  <div className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 shadow-2xs">
+                    <strong className="font-bold text-rose-900">Similarity Alert:</strong>{" "}
                     {selectedSubmission.plagiarismFlags.note}
                   </div>
                 )}
 
+                {/* Geometry Metrics if any */}
                 {selectedSubmission.geometryMetrics && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-                    <h4 className="text-xs font-bold uppercase text-slate-500">
+                  <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Server Geometry Metrics
                     </h4>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded bg-slate-50 p-2">
-                        <div className="text-slate-400">Volume</div>
-                        <div className="font-bold text-slate-800">
+                      <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                        <div className="text-slate-400 text-[11px]">Volume</div>
+                        <div className="font-bold text-slate-800 text-xs">
                           {selectedSubmission.geometryMetrics.volumeMm3} mm³
                         </div>
                       </div>
-                      <div className="rounded bg-slate-50 p-2">
-                        <div className="text-slate-400">Bounds (mm)</div>
-                        <div className="font-bold text-slate-800">
+                      <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                        <div className="text-slate-400 text-[11px]">Bounds (mm)</div>
+                        <div className="font-bold text-slate-800 text-xs">
                           {selectedSubmission.geometryMetrics.boundingBoxMm?.x} ×{" "}
                           {selectedSubmission.geometryMetrics.boundingBoxMm?.y} ×{" "}
                           {selectedSubmission.geometryMetrics.boundingBoxMm?.z}
@@ -686,73 +1214,193 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
                   </div>
                 )}
 
+                {/* Auto-checks if any */}
                 {selectedSubmission.autoCheckResults?.checks?.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-1">
-                    <h4 className="text-xs font-bold uppercase text-slate-500 mb-1">Auto-Checks</h4>
-                    {selectedSubmission.autoCheckResults.checks.map((c, idx) => (
-                      <div
-                        key={idx}
-                        className={`rounded px-2 py-1 text-[11px] ${
-                          c.passed ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800"
-                        }`}
-                      >
-                        {c.passed ? "✓" : "✕"} {c.name}: {c.actual}
-                      </div>
-                    ))}
+                  <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Auto-Checks</h4>
+                    <div className="space-y-1">
+                      {selectedSubmission.autoCheckResults.checks.map((c, idx) => (
+                        <div
+                          key={idx}
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-medium flex items-center justify-between ${
+                            c.passed
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
+                              : "bg-rose-50 text-rose-800 border border-rose-100"
+                          }`}
+                        >
+                          <span>{c.passed ? "✓" : "✕"} {c.name}</span>
+                          <span className="font-mono text-[11px]">{c.actual}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Rubric Grading Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-                  <h4 className="text-xs font-bold uppercase text-slate-500">Rubric Grading</h4>
-                  {rubricPoints.map((r, idx) => (
-                    <div key={r.criterion} className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-800">{r.criterion}</span>
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min={0}
-                          max={r.maxPoints}
-                          value={r.points}
-                          onChange={(e) => {
-                            const val = Math.min(r.maxPoints, Math.max(0, Number(e.target.value)));
-                            setRubricPoints((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, points: val } : item))
-                            );
-                          }}
-                          className="w-16 rounded border border-slate-300 px-2 py-1 text-right text-xs"
-                        />
-                        <span className="text-slate-400">/ {r.maxPoints}</span>
+                {/* Rubric Evaluation Detailed Breakdown */}
+                <div className="rounded-2xl border border-slate-200/90 bg-white shadow-2xs overflow-hidden transition-all">
+                  <div className="border-b border-slate-100 px-4 py-3 bg-slate-50/50 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Award className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                          Rubric Evaluation
+                        </h4>
                       </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Tool-specific grading benchmarks
+                      </p>
                     </div>
-                  ))}
 
-                  <textarea
-                    rows={3}
-                    placeholder="Feedback for student..."
-                    value={gradeFeedback}
-                    onChange={(e) => setGradeFeedback(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
-                  />
+                    {/* Overall Score Dropdown inside details panel */}
+                    <div className="shrink-0 flex items-center gap-2">
+                      <select
+                        value={totalScore}
+                        onChange={(e) => handleTotalChange(Number(e.target.value))}
+                        className={`rounded-xl border px-3 py-1 text-xs font-extrabold shadow-2xs transition cursor-pointer ${
+                          totalScore >= 90
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:border-emerald-400"
+                            : totalScore >= 70
+                            ? "bg-indigo-50 text-indigo-900 border-indigo-300 hover:border-indigo-400"
+                            : totalScore >= 50
+                            ? "bg-amber-50 text-amber-800 border-amber-300 hover:border-amber-400"
+                            : "bg-rose-50 text-rose-800 border-rose-300 hover:border-rose-400"
+                        }`}
+                        title="Quick select overall grade score"
+                      >
+                        {isCustom && (
+                          <option value={totalScore}>
+                            {totalScore} / 100 pts (Custom)
+                          </option>
+                        )}
+                        <option value={100}>100 / 100 pts (A+)</option>
+                        <option value={95}>95 / 100 pts (A)</option>
+                        <option value={90}>90 / 100 pts (A)</option>
+                        <option value={85}>85 / 100 pts (B+)</option>
+                        <option value={80}>80 / 100 pts (B)</option>
+                        <option value={75}>75 / 100 pts (B)</option>
+                        <option value={70}>70 / 100 pts (C)</option>
+                        <option value={60}>60 / 100 pts (D)</option>
+                        <option value={50}>50 / 100 pts (Pass)</option>
+                        <option value={0}>0 / 100 pts (0%)</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setIsRubricAccordionOpen(false)}
+                        className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 transition"
+                        title="Collapse rubric details"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
 
-                  <button
-                    type="button"
-                    disabled={grading || selectedSubmission.isNotStarted}
-                    onClick={handleSubmitGrade}
-                    className="w-full rounded-lg bg-emerald-600 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    {selectedSubmission.isNotStarted
-                      ? "Waiting for Student Activity"
-                      : grading
-                      ? "Saving Grade..."
-                      : `Save Grade (${rubricPoints.reduce((s, r) => s + (Number(r.points) || 0), 0)} pts)`}
-                  </button>
+                  <div className="p-4 space-y-3.5 bg-white">
+                    {/* Criteria Items */}
+                    <div className="space-y-2.5">
+                      {rubricPoints.map((r, idx) => {
+                        const currentScore = Number(r.points) || 0;
+                        const max = Number(r.maxPoints) || 1;
+                        const scoreOptions = Array.from({ length: max + 1 }, (_, i) => max - i);
+
+                        return (
+                          <div
+                            key={r.criterion}
+                            className="rounded-xl border border-slate-200/80 bg-white p-3 hover:border-slate-300 transition shadow-2xs"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <h5 className="text-xs font-bold text-slate-800 leading-snug">
+                                  {r.criterion}
+                                </h5>
+                                {r.description && (
+                                  <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
+                                    {r.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="shrink-0">
+                                <select
+                                  value={currentScore}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setRubricPoints((prev) =>
+                                      prev.map((item, i) => (i === idx ? { ...item, points: val } : item))
+                                    );
+                                  }}
+                                  className="w-28 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold text-slate-800 shadow-2xs hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition cursor-pointer text-center"
+                                >
+                                  {scoreOptions.map((score) => (
+                                    <option key={score} value={score}>
+                                      {score} / {max} pts
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Instructor Feedback Box */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Instructor Feedback
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="Add personalized feedback, guidance, or next steps for the student..."
+                        value={gradeFeedback}
+                        onChange={(e) => setGradeFeedback(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs"
+                      />
+                    </div>
+
+                    {/* Publish Grade Action Button */}
+                    <button
+                      type="button"
+                      disabled={grading || selectedSubmission.isNotStarted}
+                      onClick={handleSubmitGrade}
+                      className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3 text-xs font-bold text-white shadow-sm hover:from-emerald-700 hover:to-teal-700 transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {selectedSubmission.isNotStarted
+                        ? "Waiting for Student Activity"
+                        : grading
+                        ? "Saving Grade..."
+                        : `Save & Publish Grade (${rubricPoints.reduce(
+                            (s, r) => s + (Number(r.points) || 0),
+                            0
+                          )} pts)`}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="lg:col-span-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white p-12 text-sm text-slate-400">
-              Select a student submission to inspect their work and grade.
+            );
+
+            return (
+              <div className="col-span-12 space-y-4">
+                <StudentWorkInspector
+                  assignment={reviewAssignment}
+                  submission={selectedSubmission}
+                  activeVersion={activeVersion}
+                  inspectUrl={inspectUrl}
+                  inspectName={inspectName}
+                  inspectCode={inspectCode}
+                  inspectOutput={inspectOutput}
+                  rubricHeaderCell={renderRubricHeaderCell()}
+                  isRubricOpen={isRubricAccordionOpen}
+                  rubricPanel={renderRubricPanel()}
+                />
+              </div>
+            );
+          })() : (
+            <div className="lg:col-span-8 xl:col-span-9 2xl:col-span-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-14 text-center">
+              <span className="text-3xl mb-2">👤</span>
+              <p className="text-sm font-semibold text-slate-700">Select a student from the roster</p>
+              <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                Click any student on the left to monitor live code, telemetry, version history, and grade their submission.
+              </p>
             </div>
           )}
         </div>
@@ -761,37 +1409,38 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Modern Partner & Instructor Work Space Hero */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e1b4b] to-[#312e81] px-6 py-5 text-white shadow-md">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#0f172a] via-[#1e1b4b] to-[#312e81] px-5 py-3 text-white shadow-md">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-indigo-100 border border-white/15 mb-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-indigo-100 border border-white/15 mb-1">
             EduTechEx Work Space · Partner &amp; Instructor Studio
           </span>
-          <h1 className="text-2xl font-bold tracking-tight">Work Space</h1>
-          <p className="mt-1 text-xs sm:text-sm text-indigo-100/90 max-w-2xl">
+          <h1 className="text-xl font-bold tracking-tight">Work Space</h1>
+          <p className="mt-0.5 text-xs text-indigo-100/90 max-w-2xl">
             Add custom open-source tools, pick from {FREE_TOOL_CATALOG.length + customTools.length} tools across 11 sectors, share directly to students, and monitor progress live.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setShowAddCustomTool((prev) => !prev)}
-            className="rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+            className="rounded-lg border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
           >
             {showAddCustomTool ? "Close Custom Tool Form" : "+ Add Custom Tool"}
           </button>
           <button
             type="button"
             onClick={() => {
+              setEditingAssignmentId(null);
               setForm(createInitialForm());
               setModalSectorId("");
               setModalSectorMenuOpen(false);
               setShowAllToolsInModal(false);
               setShowCreateModal(true);
             }}
-            className="rounded-xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-400"
+            className="rounded-lg bg-indigo-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-400"
           >
             + Share Tool / Task to Students
           </button>
@@ -958,56 +1607,124 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {assignments.map((a) => {
               const toolMeta = getToolMeta(a.toolType || a.workspaceMode);
+
+              const theme = {
+                cardBorder: "border-slate-200/90 hover:border-indigo-300 hover:shadow-indigo-100/40",
+                toolBadge: "bg-indigo-50 text-indigo-700 border-indigo-200/80",
+              };
+
               return (
                 <div
                   key={a._id}
-                  className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:shadow-md"
+                  className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-white shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${theme.cardBorder}`}
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                          <span className="rounded bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-200">
-                            {toolMeta.shortLabel}
-                          </span>
-                          {a.internshipTitle && (
-                            <span className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
-                              Internship: {a.internshipTitle}
-                            </span>
-                          )}
-                          <span className="text-[11px] font-semibold uppercase text-slate-500">
-                            {a.category} · {a.difficulty}
-                          </span>
-                        </div>
-                        <h3 className="text-base font-bold text-slate-900">{a.title}</h3>
+                  {/* Top Single Plain Color Accent Line */}
+                  <div className="h-1 w-full bg-indigo-600" />
+
+                  <div className="p-3.5 sm:p-4">
+                    {/* Clean Top Meta Row: Tool Pill + Difficulty Pill on Left, Status Pill on Right */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-lg border border-indigo-200/90 bg-indigo-50/80 px-2 py-0.5 text-[11px] font-bold text-indigo-700 shadow-2xs">
+                          <Sparkles className="h-3 w-3 text-indigo-600" />
+                          <span>{toolMeta.shortLabel}</span>
+                        </span>
+                        <span
+                          className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold shadow-2xs ${
+                            a.difficulty === "Advanced"
+                              ? "border-rose-200 bg-rose-50 text-rose-700"
+                              : a.difficulty === "Intermediate"
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : "border-sky-200 bg-sky-50 text-sky-700"
+                          }`}
+                        >
+                          {a.difficulty || "Beginner"}
+                        </span>
                       </div>
-                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase text-emerald-700">
-                        {a.status}
+
+                      <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 shadow-2xs shrink-0">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                        <span>{a.status || "PUBLISHED"}</span>
                       </span>
                     </div>
-                    <p className="mt-2 text-xs text-slate-600 line-clamp-2">{a.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-                      <span>Active/Draft: {a.submissionStats?.working || 0}</span>
-                      <span>Submitted: {a.submissionStats?.submitted || 0}</span>
-                      <span>Graded: {a.submissionStats?.graded || 0}</span>
-                      {a.dueDate && <span>Due: {new Date(a.dueDate).toLocaleDateString()}</span>}
+
+                    {/* Clean Sub-meta Line: Category & Internship Context */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                      <span className="font-bold uppercase tracking-wider text-slate-500">
+                        {a.category}
+                      </span>
+                      {a.internshipTitle && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="inline-flex items-center gap-1 font-medium text-slate-700 truncate max-w-[220px]">
+                            <Briefcase className="h-3 w-3 text-slate-400 shrink-0" />
+                            <span className="truncate">
+                              Internship: <strong className="font-semibold text-slate-900">{a.internshipTitle}</strong>
+                            </span>
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="mt-1 text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-950 transition-colors line-clamp-1">
+                      {a.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="mt-1 text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      {a.description}
+                    </p>
+
+                    {/* Mini-Metric Plain Dashboard (No colors, clean neutral style) */}
+                    <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-2 py-1.5 text-center transition hover:bg-slate-100/80">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Active/Draft</span>
+                        <span className="text-xs font-extrabold text-slate-900">{a.submissionStats?.working || 0}</span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-2 py-1.5 text-center transition hover:bg-slate-100/80">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Submitted</span>
+                        <span className="text-xs font-extrabold text-slate-900">{a.submissionStats?.submitted || 0}</span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-2 py-1.5 text-center transition hover:bg-slate-100/80">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Due Date</span>
+                        <span className="text-[11px] font-bold text-slate-900 truncate block">
+                          {a.dueDate ? new Date(a.dueDate).toLocaleDateString() : "No deadline"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteAssignment(a._id)}
-                      className="text-xs font-medium text-rose-600 hover:underline"
-                    >
-                      Delete
-                    </button>
+                  {/* Footer Action Buttons with Edit */}
+                  <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-3.5 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleEditAssignment(a)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700 transition active:scale-95"
+                        title="Edit task guidelines, dates, or rubrics"
+                      >
+                        <Pencil className="h-3 w-3 text-indigo-600" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAssignment(a)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-rose-600 shadow-2xs hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 transition active:scale-95"
+                        title="Delete this task"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => openSubmissionsReview(a)}
-                      className="rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-slate-900 to-indigo-950 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:from-slate-800 hover:to-indigo-900 hover:shadow transition active:scale-95"
                     >
-                      Monitor Live &amp; Grade
+                      <Eye className="h-3 w-3 text-indigo-300" />
+                      <span>Monitor Live &amp; Grade</span>
                     </button>
                   </div>
                 </div>
@@ -1144,7 +1861,7 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-4">
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                  Share Tool / Task to Students
+                  {editingAssignmentId ? "Edit Daily Work Task & Tool" : "Share Tool / Task to Students"}
                 </h2>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-medium">
                   <span className={`rounded-full px-2 py-0.5 ${modalSectorId ? "bg-indigo-100 text-indigo-700 font-semibold" : "bg-indigo-600 text-white font-semibold"}`}>
@@ -1162,7 +1879,10 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
               </div>
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingAssignmentId(null);
+                }}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700"
               >
                 ✕
@@ -1413,11 +2133,11 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
             </div>
             )}
 
-            {/* Step 2: Daily Task Details */}
+            {/* Step 2: Weekly Task Details */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Daily Task Title *
+                  Weekly Task Title *
                 </label>
                 <input
                   required
@@ -1425,8 +2145,8 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder={
                     isSelectedCodeTool
-                      ? "e.g., Day 4: Implement Binary Search in C++"
-                      : "e.g., Day 4: Design Bearing Flange in 3D CAD"
+                      ? "e.g., Week 1: Implement Binary Search in C++"
+                      : "e.g., Week 1: Design Bearing Flange in 3D CAD"
                   }
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                 />
@@ -1489,26 +2209,26 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
               )}
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Description *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Task Summary *</label>
                 <textarea
                   required
                   rows={2}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Summary of today's practical work..."
+                  placeholder="Brief summary of this weekly task..."
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Detailed Instructions / Specs
+                  Assignment Guidelines &amp; Requirements
                 </label>
                 <textarea
                   rows={3}
                   value={form.instructions}
                   onChange={(e) => setForm({ ...form, instructions: e.target.value })}
-                  placeholder="Step-by-step instructions, sample input/output, or CAD dimensions..."
+                  placeholder="Step-by-step instructions, expected deliverables, and evaluation criteria..."
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                 />
               </div>
@@ -1544,19 +2264,22 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
               ) : (
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Attach Starter CAD / Blueprint File (.step, .stl, .fcstd, .scad, .pdf)
+                    Attach Starter File or Reference Document (Optional)
                   </label>
                   <input
                     type="file"
-                    accept=".step,.stp,.stl,.iges,.igs,.fcstd,.scad,.json,.pdf"
+                    accept=".pdf,.doc,.docx,.zip,.json,.csv,.txt,.step,.stp,.stl,.iges,.igs,.fcstd,.scad"
                     onChange={(e) => setStarterFile(e.target.files?.[0] || null)}
-                    className="w-full text-xs"
+                    className="w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
                   />
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Upload an optional starter file, dataset, problem PDF, or project reference.
+                  </p>
                 </div>
               )}
             </div>
 
-            {!isSelectedCodeTool && (
+            {isSelectedCadTool && (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
                 <label className="flex items-center gap-2 text-xs font-bold text-slate-800">
                   <input
@@ -1700,7 +2423,10 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
             <div className="flex items-center justify-end gap-2.5 border-t border-slate-100 bg-slate-50/80 px-6 py-3.5">
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingAssignmentId(null);
+                }}
                 className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Cancel
@@ -1710,13 +2436,67 @@ const PartnerWorkspaceManager = ({ role = "school-admin" }) => {
                 disabled={savingAssignment || !modalSectorId}
                 className="rounded-lg bg-indigo-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
               >
-                {savingAssignment ? "Sending..." : "Send Tool & Task to Users"}
+                {savingAssignment
+                  ? editingAssignmentId
+                    ? "Updating..."
+                    : "Sending..."
+                  : editingAssignmentId
+                  ? "Update Task"
+                  : "Send Tool & Task to Users"}
               </button>
             </div>
           </form>
         </div>
         );
       })()}
+
+      {/* Centered Modal Popup for Task Deletion */}
+      {deleteConfirmTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div
+            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 transform transition-all"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-start gap-3.5 mb-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900">Delete Daily Work Task</h3>
+                <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-900">
+                "{deleteConfirmTarget.title || "this task"}"
+              </span>
+              ? All student drafts, live activity logs, and submissions for this task will be permanently removed.
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteConfirmTarget(null)}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDeleteAssignment}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 transition shadow-sm"
+              >
+                {isDeleting ? "Deleting..." : "Delete Task"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

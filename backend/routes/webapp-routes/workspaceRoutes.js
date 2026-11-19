@@ -26,10 +26,11 @@ const cadMemoryUpload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max per CAD upload
 });
 
-router.use(authenticate);
-
+// Public open-source compiler runner & CAD config
 router.get("/config", getCadConfig);
 router.post("/run-code", runCode);
+
+router.use(authenticate);
 
 router.get("/partner/internships", getPartnerInternships);
 router.get("/partner/internships/:internshipId/applicants", getInternshipApplicants);

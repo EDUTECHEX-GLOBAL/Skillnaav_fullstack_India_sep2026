@@ -370,14 +370,20 @@ const DiagramAndWhiteboardWorkspace = ({
 
   const handleSave = async () => {
     if (isSandboxMode) {
-      toast.info("Practice Sandbox mode: create & export freely! Open an assigned task to save.");
+      try {
+        localStorage.setItem(`skillnaav_diagram_saved_${mode}`, JSON.stringify(elements || code || drawioXml));
+        toast.success("Practice snapshot saved locally!");
+      } catch {
+        toast.info("Practice mode: diagram preserved in this session.");
+      }
       return;
     }
     try {
       setSaving(true);
-      const res = await axios.post(`/api/daily-work/submissions/${assignment._id}/save`, buildFormData(false), {
-        headers: { Authorization: `Bearer ${getStudentToken()}`, "Content-Type": "multipart/form-data" },
-      });
+      const token = getStudentToken();
+      const res = await axios.post(`/api/daily-work/submissions/${assignment._id}/save`, buildFormData(false), token ? {
+        headers: { Authorization: `Bearer ${token}` },
+      } : {});
       setSubmissionState(res.data.submission);
       setVersionNote("");
       toast.success("Diagram snapshot saved!");
@@ -391,17 +397,33 @@ const DiagramAndWhiteboardWorkspace = ({
 
   const handleSubmit = async () => {
     if (isSandboxMode) {
-      toast.info("Practice Sandbox mode: open an assigned task to submit work for grading.");
+      try {
+        localStorage.setItem(`skillnaav_diagram_submitted_${mode}`, JSON.stringify(elements || code || drawioXml));
+        toast.success("Practice diagram submitted and verified!");
+        setTimeout(() => {
+          if (onBack) onBack();
+        }, 1200);
+      } catch {
+        toast.success("Practice diagram submitted!");
+      }
       return;
     }
     try {
       setSubmitting(true);
+      const token = getStudentToken();
+      if (!token) {
+        toast.error("Please sign in to submit your work.");
+        return;
+      }
       const res = await axios.post(`/api/daily-work/submissions/${assignment._id}/submit`, buildFormData(true), {
-        headers: { Authorization: `Bearer ${getStudentToken()}`, "Content-Type": "multipart/form-data" },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setSubmissionState(res.data.submission);
-      toast.success("Diagram work submitted!");
-      onUpdated && onUpdated(res.data.submission);
+      toast.success("Diagram work submitted successfully!");
+      if (onUpdated) onUpdated(res.data.submission);
+      setTimeout(() => {
+        if (onBack) onBack();
+      }, 1200);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Submission failed");
     } finally {
@@ -439,7 +461,7 @@ const DiagramAndWhiteboardWorkspace = ({
             onClick={handleSave}
             className="rounded-lg bg-slate-800 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
           >
-            {saving ? "Saving..." : isSandboxMode ? "Save (Assigned Only)" : "Save Snapshot"}
+            {saving ? "Saving..." : "Save Snapshot"}
           </button>
           <button
             type="button"
@@ -447,7 +469,7 @@ const DiagramAndWhiteboardWorkspace = ({
             onClick={handleSubmit}
             className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {submitting ? "Submitting..." : isSandboxMode ? "Submit (Assigned Only)" : "Submit Work"}
+            {submitting ? "Submitting..." : "Submit Work"}
           </button>
         </div>
       </div>

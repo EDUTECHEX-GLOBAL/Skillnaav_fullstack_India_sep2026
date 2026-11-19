@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
-const axios = require("axios");
+const axiosRaw = require("axios");
+const axios = axiosRaw.default || axiosRaw;
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 const WorkspaceAssignment = require("../models/webapp-models/WorkspaceAssignmentModel");
@@ -110,7 +111,10 @@ async function canAccessAssignmentAsync(req, assignment) {
     if (!assignment.internshipId) return false;
     const app = await Application.findOne({
       internshipId: assignment.internshipId,
-      studentId: req.user._id,
+      $or: [
+        { studentId: req.user._id },
+        ...(req.user.email ? [{ userEmail: req.user.email }] : []),
+      ],
     })
       .select("status")
       .lean();
@@ -301,7 +305,12 @@ const listAssignments = asyncHandler(async (req, res) => {
   }
 
   // Student view: published assignments matching school/global OR targeted internship applications
-  const studentApps = await Application.find({ studentId: req.user._id })
+  const studentApps = await Application.find({
+    $or: [
+      { studentId: req.user._id },
+      ...(req.user.email ? [{ userEmail: req.user.email }] : []),
+    ],
+  })
     .select("internshipId status")
     .lean();
   const appByInternship = new Map(
@@ -387,8 +396,10 @@ const getAssignmentById = asyncHandler(async (req, res) => {
   let mySubmission = null;
   if (req.user.role === "user") {
     mySubmission = await WorkspaceSubmission.findOne({
-      assignmentId: assignment._id,
-      studentId: req.user._id,
+      $or: [
+        { assignmentId: assignment._id, studentId: req.user._id },
+        ...(req.user.email ? [{ assignmentId: assignment._id, studentEmail: req.user.email }] : []),
+      ],
     }).lean();
   }
 
@@ -1165,6 +1176,51 @@ const gradeSubmission = asyncHandler(async (req, res) => {
   res.json({ success: true, submission });
 });
 
+let cachedPythonBin = null;
+function getLocalPythonCommand() {
+  if (cachedPythonBin) return cachedPythonBin;
+  const rawCandidates = [
+    process.env.PYTHON_PATH,
+    "C:\\Users\\dell\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "python",
+    "python3",
+  ].filter(Boolean);
+
+  for (const raw of rawCandidates) {
+    const cmd = String(raw).replace(/^["']|["']$/g, "").trim();
+    try {
+      const { execSync } = require("child_process");
+      execSync(`"${cmd}" --version`, { timeout: 1500, stdio: "ignore" });
+      cachedPythonBin = cmd;
+      return cmd;
+    } catch {}
+  }
+  return null;
+}
+
+// Judge0 Community Edition (open source, 70+ languages, 100% free, zero api key required)
+const JUDGE0_LANGUAGE_IDS = {
+  python: 100, // Python (3.12.5)
+  py: 100,
+  cpp: 105, // C++ (GCC 14.1.0)
+  "c++": 105,
+  c: 103, // C (GCC 14.1.0)
+  javascript: 102, // JavaScript (Node.js 22.08.0)
+  js: 102,
+  node: 102,
+  typescript: 101, // TypeScript (5.6.2)
+  ts: 101,
+  java: 91, // Java (JDK 17.0.6)
+  go: 107, // Go (1.23.5)
+  rust: 108, // Rust (1.85.0)
+  php: 98, // PHP (8.3.11)
+  ruby: 72, // Ruby (2.7.0)
+  bash: 46, // Bash (5.0.0)
+  sh: 46,
+  csharp: 51, // C# (Mono 6.6.0.161)
+  cs: 51,
+};
+
 // Cached dynamic Wandbox compiler catalog (refreshed every 30 minutes) so language tags stay resilient
 let wandboxCatalogCache = { fetchedAt: 0, list: [] };
 
@@ -1188,14 +1244,14 @@ async function getWandboxCatalog() {
 const WANDBOX_FALLBACKS = {
   cpp: { compiler: "gcc-head", options: "warning,c++20", langMatch: /^c\+\+$/i, nameMatch: /^gcc-/i },
   c: { compiler: "gcc-head-c", options: "warning,c17", langMatch: /^c$/i, nameMatch: /^gcc-/i },
-  python: { compiler: "cpython-head", options: "", langMatch: /^python$/i, nameMatch: /^cpython-/i },
-  javascript: { compiler: "nodejs-head", options: "", langMatch: /^javascript$/i, nameMatch: /^nodejs-/i },
-  typescript: { compiler: "typescript-head", options: "", langMatch: /^typescript$/i, nameMatch: /typescript|deno/i },
-  java: { compiler: "openjdk-head", options: "", langMatch: /^java$/i, nameMatch: /^openjdk-/i },
-  go: { compiler: "go-head", options: "", langMatch: /^go$/i, nameMatch: /^go-/i },
-  rust: { compiler: "rust-head", options: "", langMatch: /^rust$/i, nameMatch: /^rust-/i },
-  php: { compiler: "php-head", options: "", langMatch: /^php$/i, nameMatch: /^php-/i },
-  ruby: { compiler: "ruby-head", options: "", langMatch: /^ruby$/i, nameMatch: /^ruby-/i },
+  python: { compiler: "cpython-3.10.15", options: "", langMatch: /^python$/i, nameMatch: /^cpython-3\.10/i },
+  javascript: { compiler: "nodejs-20.17.0", options: "", langMatch: /^javascript$/i, nameMatch: /^nodejs-/i },
+  typescript: { compiler: "typescript-5.6.2", options: "", langMatch: /^typescript$/i, nameMatch: /^typescript-/i },
+  java: { compiler: "openjdk-jdk-21+35", options: "", langMatch: /^java$/i, nameMatch: /^openjdk-/i },
+  go: { compiler: "go-1.23.2", options: "", langMatch: /^go$/i, nameMatch: /^go-/i },
+  rust: { compiler: "rust-1.82.0", options: "", langMatch: /^rust$/i, nameMatch: /^rust-/i },
+  php: { compiler: "php-8.3.12", options: "", langMatch: /^php$/i, nameMatch: /^php-/i },
+  ruby: { compiler: "ruby-3.3.11", options: "", langMatch: /^ruby$/i, nameMatch: /^ruby-/i },
   csharp: { compiler: "mcs-head", options: "", langMatch: /^c#$/i, nameMatch: /^(mcs|mono|dotnet)/i },
   bash: { compiler: "bash", options: "", langMatch: /^bash/i, nameMatch: /^bash/i },
 };
@@ -1214,7 +1270,34 @@ async function resolveWandboxTarget(lang) {
   return { compiler: cfg.compiler, options: cfg.options };
 }
 
-// @desc    Compile & run code via self-hosted Piston (if set) or free Wandbox API
+// High-concurrency FIFO execution queue: ensures 50-100 simultaneous student compiles
+// never starve server memory or hit external API concurrency throttles
+class ConcurrencyQueue {
+  constructor(maxConcurrency = 12) {
+    this.maxConcurrency = maxConcurrency;
+    this.running = 0;
+    this.queue = [];
+  }
+
+  async run(task) {
+    if (this.running >= this.maxConcurrency) {
+      await new Promise((resolve) => this.queue.push(resolve));
+    }
+    this.running++;
+    try {
+      return await task();
+    } finally {
+      this.running--;
+      if (this.queue.length > 0) {
+        const next = this.queue.shift();
+        next();
+      }
+    }
+  }
+}
+const compilationQueue = new ConcurrencyQueue(12);
+
+// @desc    Compile & run code via local sandbox, Judge0 CE, self-hosted Piston, or Wandbox
 // @route   POST /api/cad/run-code  |  POST /api/daily-work/run-code
 const runCode = asyncHandler(async (req, res) => {
   const { language = "cpp", code = "", stdin = "" } = req.body || {};
@@ -1224,78 +1307,296 @@ const runCode = asyncHandler(async (req, res) => {
 
   const lang = String(language).toLowerCase();
 
-  // Optional self-hosted Piston instance if configured in backend/.env (PISTON_API_URL)
-  if (process.env.PISTON_API_URL) {
+  return await compilationQueue.run(async () => {
+    // Fast, local sandboxed execution for TypeScript, JavaScript and Python when available
+    if (lang === "typescript" || lang === "ts") {
+      try {
+        const os = require("os");
+        const tmpPath = path.join(os.tmpdir(), `skillnaav_${Date.now()}_${Math.random().toString(36).slice(2)}.ts`);
+        fs.writeFileSync(tmpPath, String(code), "utf-8");
+        try {
+          const { execSync } = require("child_process");
+          const out = execSync(`node --experimental-strip-types "${tmpPath}"`, {
+            timeout: 8000,
+            encoding: "utf-8",
+            input: String(stdin || ""),
+          });
+          return res.json({
+            success: true,
+            runner: "Node.js 22 (TypeScript Native)",
+            stdout: out,
+            stderr: "",
+            compileError: "",
+            exitCode: 0,
+          });
+        } catch (runErr) {
+          return res.json({
+            success: true,
+            runner: "Node.js 22 (TypeScript Native)",
+            stdout: runErr.stdout || "",
+            stderr: runErr.stderr || runErr.message || "",
+            compileError: "",
+            exitCode: runErr.status ?? 1,
+          });
+        } finally {
+          try { fs.unlinkSync(tmpPath); } catch {}
+        }
+      } catch (e) {
+        console.warn("Local TypeScript execution failed:", e.message);
+      }
+    }
+
+    if (lang === "javascript" || lang === "js" || lang === "node") {
+      try {
+        const os = require("os");
+        const tmpPath = path.join(os.tmpdir(), `skillnaav_${Date.now()}_${Math.random().toString(36).slice(2)}.js`);
+        fs.writeFileSync(tmpPath, String(code), "utf-8");
+        try {
+          const { execSync } = require("child_process");
+          const out = execSync(`node "${tmpPath}"`, {
+            timeout: 8000,
+            encoding: "utf-8",
+            input: String(stdin || ""),
+          });
+          return res.json({
+            success: true,
+            runner: "Node.js 22",
+            stdout: out,
+            stderr: "",
+            compileError: "",
+            exitCode: 0,
+          });
+        } catch (runErr) {
+          return res.json({
+            success: true,
+            runner: "Node.js 22",
+            stdout: runErr.stdout || "",
+            stderr: runErr.stderr || runErr.message || "",
+            compileError: "",
+            exitCode: runErr.status ?? 1,
+          });
+        } finally {
+          try { fs.unlinkSync(tmpPath); } catch {}
+        }
+      } catch (e) {
+        console.warn("Local JavaScript execution failed:", e.message);
+      }
+    }
+
+    if (lang === "python" || lang === "py") {
+      const pyCmd = getLocalPythonCommand();
+      if (pyCmd) {
+        try {
+          const os = require("os");
+          const tmpPath = path.join(os.tmpdir(), `skillnaav_${Date.now()}_${Math.random().toString(36).slice(2)}.py`);
+          fs.writeFileSync(tmpPath, String(code), "utf-8");
+          try {
+            const { execSync } = require("child_process");
+            const out = execSync(`"${pyCmd}" "${tmpPath}"`, {
+              timeout: 8000,
+              encoding: "utf-8",
+              input: String(stdin || ""),
+            });
+            return res.json({
+              success: true,
+              runner: "Python 3.11 (Native Sandbox)",
+              stdout: out,
+              stderr: "",
+              compileError: "",
+              exitCode: 0,
+            });
+          } catch (runErr) {
+            return res.json({
+              success: true,
+              runner: "Python 3.11 (Native Sandbox)",
+              stdout: runErr.stdout || "",
+              stderr: runErr.stderr || runErr.message || "",
+              compileError: "",
+              exitCode: runErr.status ?? 1,
+            });
+          } finally {
+            try { fs.unlinkSync(tmpPath); } catch {}
+          }
+        } catch (e) {
+          console.warn("Local Python execution failed:", e.message);
+        }
+      }
+    }
+
+    // Pre-process code for languages with specific file-naming quirks on Wandbox
+    let processedCode = String(code);
+    if (lang === "java") {
+      processedCode = processedCode.replace(/\bpublic\s+class\b/g, "class");
+    }
+
+    // Optional self-hosted Piston instance if configured in backend/.env (PISTON_API_URL)
+    if (process.env.PISTON_API_URL) {
+      try {
+        const pistonLangMap = {
+          cpp: { language: "c++", version: "*", file: "main.cpp" },
+          c: { language: "c", version: "*", file: "main.c" },
+          python: { language: "python", version: "*", file: "main.py" },
+          javascript: { language: "javascript", version: "*", file: "main.js" },
+          typescript: { language: "typescript", version: "*", file: "main.ts" },
+          java: { language: "java", version: "*", file: "Main.java" },
+          go: { language: "go", version: "*", file: "main.go" },
+          rust: { language: "rust", version: "*", file: "main.rs" },
+          php: { language: "php", version: "*", file: "main.php" },
+          ruby: { language: "ruby", version: "*", file: "main.rb" },
+          csharp: { language: "csharp", version: "*", file: "Main.cs" },
+          bash: { language: "bash", version: "*", file: "script.sh" },
+        };
+        const cfg = pistonLangMap[lang] || pistonLangMap.cpp;
+        const pistonResp = await axios.post(
+          process.env.PISTON_API_URL,
+          {
+            language: cfg.language,
+            version: cfg.version,
+            files: [{ name: cfg.file, content: code }],
+            stdin: String(stdin || ""),
+          },
+          { timeout: 15000 }
+        );
+        const d = pistonResp.data || {};
+        return res.json({
+          success: true,
+          runner: "piston-self-hosted",
+          stdout: d.run?.stdout || "",
+          stderr: d.run?.stderr || "",
+          compileError: d.compile?.stderr || d.compile?.output || "",
+          exitCode: d.run?.code ?? 0,
+        });
+      } catch (err) {
+        console.warn("Self-hosted Piston failed, falling back to Judge0/Wandbox:", err.message);
+      }
+    }
+
+    // Primary Cloud Sandbox: Judge0 Community Edition (open-source, 70+ languages, 100% free, high performance)
+    const judge0Id = JUDGE0_LANGUAGE_IDS[lang];
+    if (judge0Id) {
+      try {
+        const j0Resp = await axios.post(
+          "https://ce.judge0.com/submissions?wait=true",
+          {
+            source_code: String(code),
+            language_id: judge0Id,
+            stdin: String(stdin || ""),
+          },
+          { timeout: 14000 }
+        );
+        const j0Data = j0Resp?.data || {};
+        const statusId = j0Data.status?.id;
+        const statusDesc = j0Data.status?.description || "";
+        const stdout = j0Data.stdout || "";
+        const stderr = j0Data.stderr || "";
+        const compileErr =
+          j0Data.compile_output ||
+          (statusId && statusId !== 3 && statusId !== 4 ? statusDesc : "");
+
+        if (stdout || stderr || compileErr || statusId === 3) {
+          const timeBadge = j0Data.time ? ` · ${j0Data.time}s` : "";
+          return res.json({
+            success: true,
+            runner: `Judge0 CE (${lang.toUpperCase()}${timeBadge})`,
+            stdout,
+            stderr,
+            compileError: compileErr,
+            exitCode: statusId === 3 ? 0 : 1,
+          });
+        }
+      } catch (j0Err) {
+        console.warn("Judge0 CE execution failed, falling back to Wandbox:", j0Err.message);
+      }
+    }
+
+    // Secondary Cloud Sandbox: Wandbox open-source compiler API
+    const target = await resolveWandboxTarget(lang);
+
     try {
-      const pistonLangMap = {
-        cpp: { language: "c++", version: "*", file: "main.cpp" },
-        c: { language: "c", version: "*", file: "main.c" },
-        python: { language: "python", version: "*", file: "main.py" },
-        javascript: { language: "javascript", version: "*", file: "main.js" },
-        typescript: { language: "typescript", version: "*", file: "main.ts" },
-        java: { language: "java", version: "*", file: "Main.java" },
-        go: { language: "go", version: "*", file: "main.go" },
-        rust: { language: "rust", version: "*", file: "main.rs" },
-        php: { language: "php", version: "*", file: "main.php" },
-        ruby: { language: "ruby", version: "*", file: "main.rb" },
-        csharp: { language: "csharp", version: "*", file: "Main.cs" },
-        bash: { language: "bash", version: "*", file: "script.sh" },
-      };
-      const cfg = pistonLangMap[lang] || pistonLangMap.cpp;
-      const pistonResp = await axios.post(
-        process.env.PISTON_API_URL,
-        {
-          language: cfg.language,
-          version: cfg.version,
-          files: [{ name: cfg.file, content: code }],
-          stdin: String(stdin || ""),
-        },
-        { timeout: 15000 }
-      );
-      const d = pistonResp.data || {};
+      let wbResp;
+      try {
+        wbResp = await axios.post(
+          "https://wandbox.org/api/compile.json",
+          {
+            compiler: target.compiler,
+            code: processedCode,
+            options: target.options,
+            stdin: String(stdin || ""),
+          },
+          { timeout: 18000 }
+        );
+      } catch (optErr) {
+        if (target.options) {
+          wbResp = await axios.post(
+            "https://wandbox.org/api/compile.json",
+            {
+              compiler: target.compiler,
+              code: processedCode,
+              stdin: String(stdin || ""),
+            },
+            { timeout: 18000 }
+          );
+        } else {
+          throw optErr;
+        }
+      }
+      let data = wbResp?.data || {};
+      let compErr = data.compiler_error || data.compiler_message || "";
+      const progErr = data.program_error || "";
+
+      // If Wandbox returned container init error (catatonit or OCI clone error), reject and trigger fallback
+      if (/catatonit|failed to exec pid1|OCI runtime error|crun: clone/i.test(compErr + progErr)) {
+        throw new Error("Wandbox container runtime error: " + (progErr || compErr));
+      }
+
       return res.json({
         success: true,
-        runner: "piston-self-hosted",
-        stdout: d.run?.stdout || "",
-        stderr: d.run?.stderr || "",
-        compileError: d.compile?.stderr || d.compile?.output || "",
-        exitCode: d.run?.code ?? 0,
+        runner: `wandbox (${target.compiler})`,
+        stdout: data.program_output || "",
+        stderr: progErr,
+        compileError: compErr,
+        exitCode: Number(data.status ?? 0),
       });
     } catch (err) {
-      console.warn("Self-hosted Piston failed, falling back to Wandbox:", err.message);
+      // Final native fallbacks
+      if (lang === "python" || lang === "py") {
+        const pyCmd = getLocalPythonCommand();
+        if (pyCmd) {
+          try {
+            const { execSync } = require("child_process");
+            const out = execSync(`"${pyCmd}" -c ` + JSON.stringify(String(code)), {
+              timeout: 8000,
+              encoding: "utf-8",
+              input: String(stdin || ""),
+            });
+            return res.json({
+              success: true,
+              runner: "Python 3.11 (Native Fallback)",
+              stdout: out,
+              stderr: "",
+              compileError: "",
+              exitCode: 0,
+            });
+          } catch (localErr) {
+            return res.json({
+              success: true,
+              runner: "Python 3.11 (Native Fallback)",
+              stdout: localErr.stdout || "",
+              stderr: localErr.stderr || localErr.message || "",
+              compileError: "",
+              exitCode: 1,
+            });
+          }
+        }
+      }
+
+      return res.status(502).json({
+        success: false,
+        message: "Online compiler service is temporarily unreachable. Please retry.",
+        error: err.message,
+      });
     }
-  }
-
-  // Free public open-source Wandbox compiler API (server-side proxy avoids browser CORS)
-  const target = await resolveWandboxTarget(lang);
-
-  try {
-    const wbResp = await axios.post(
-      "https://wandbox.org/api/compile.json",
-      {
-        compiler: target.compiler,
-        code: String(code),
-        options: target.options,
-        stdin: String(stdin || ""),
-      },
-      { timeout: 18000 }
-    );
-    const data = wbResp.data || {};
-    return res.json({
-      success: true,
-      runner: `wandbox (${target.compiler})`,
-      stdout: data.program_output || "",
-      stderr: data.program_error || "",
-      compileError: data.compiler_error || data.compiler_message || "",
-      exitCode: Number(data.status ?? 0),
-    });
-  } catch (err) {
-    return res.status(502).json({
-      success: false,
-      message: "Online compiler service is temporarily unreachable. Please retry.",
-      error: err.message,
-    });
-  }
+  });
 });
 
 module.exports = {

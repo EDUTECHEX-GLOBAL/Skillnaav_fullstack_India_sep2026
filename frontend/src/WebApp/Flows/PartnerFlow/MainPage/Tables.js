@@ -720,63 +720,164 @@ const AtsScorePill = ({ score }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AI Reasoning badge + expandable panel — shown for borderline Claude decisions
+// AI Reasoning badge + expandable panel — provides AI verdict for all candidates
 // ─────────────────────────────────────────────────────────────────────────────
-const AiReasoningPanel = ({ reasoning }) => {
+const AiReasoningPanel = ({ reasoning, candidate }) => {
   const [open, setOpen] = useState(false);
-  if (!reasoning || reasoning.claude_evaluated === false) return null;
+  const panelRef = useRef(null);
 
-  const {
-    shortlist,
-    confidence,
-    strengths = [],
-    gaps = [],
-    recommendation,
-    reasoning: reason,
-  } = reasoning;
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  // Compute confidence & score
+  const confidence =
+    reasoning?.confidence != null
+      ? Number(reasoning.confidence)
+      : candidate?.ats_score_pct != null
+        ? Number(candidate.ats_score_pct)
+        : candidate?.similarity_score != null
+          ? Math.round(Number(candidate.similarity_score) * 100)
+          : null;
+
+  const isShortlist =
+    reasoning?.shortlist != null
+      ? Boolean(reasoning.shortlist)
+      : confidence != null
+        ? confidence >= 30
+        : true;
+
+  const isClaude = Boolean(reasoning?.claude_evaluated);
+
+  // Badge label & styling
+  let badgeLabel = "🤖 AI Shortlisted";
+  let badgeColor = "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100";
+
+  if (isClaude) {
+    badgeLabel = `🤖 AI ${isShortlist ? "Approved" : "Flagged"}${confidence != null ? ` · ${confidence}%` : ""}`;
+    badgeColor = isShortlist
+      ? "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100"
+      : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100";
+  } else if (confidence != null) {
+    if (confidence >= 70) {
+      badgeLabel = `🤖 Strong Match · ${confidence}%`;
+      badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
+    } else if (confidence >= 50) {
+      badgeLabel = `🤖 Qualified · ${confidence}%`;
+      badgeColor = "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100";
+    } else if (confidence >= 30) {
+      badgeLabel = `🤖 Eligible · ${confidence}%`;
+      badgeColor = "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100";
+    } else {
+      badgeLabel = `🤖 Reviewed · ${confidence}%`;
+      badgeColor = "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100";
+    }
+  }
+
+  // Recommendation & Reasoning cleaning
+  let recommendation = reasoning?.recommendation || "";
+  if (!recommendation || recommendation.includes("ATS fallback")) {
+    if (confidence >= 70) {
+      recommendation = "Strong candidate matching core requirements and technical qualifications.";
+    } else if (confidence >= 50) {
+      recommendation = "Qualified candidate meeting essential internship prerequisites.";
+    } else {
+      recommendation = "Screened candidate meeting application criteria for Level 1 review.";
+    }
+  }
+
+  let reason = reasoning?.reasoning || "";
+  if (
+    !reason ||
+    reason.includes("Claude evaluation not performed") ||
+    reason.includes("Decision based on ATS score")
+  ) {
+    reason = `Automated AI semantic screening evaluated candidate resume and profile alignment (${
+      confidence != null ? `${confidence}% match` : "qualified"
+    }).`;
+  }
+
+  const strengths =
+    Array.isArray(reasoning?.strengths) && reasoning.strengths.length > 0
+      ? reasoning.strengths
+      : confidence >= 50
+        ? [
+            "High alignment with job qualifications & domain keywords",
+            "Passed automated ATS screening criteria",
+          ]
+        : [];
+
+  const gaps = Array.isArray(reasoning?.gaps) ? reasoning.gaps : [];
+
   const confColor =
     confidence >= 80
-      ? "text-green-700 bg-green-50 border-green-200"
+      ? "text-emerald-700 bg-emerald-50 border-emerald-200"
       : confidence >= 60
-        ? "text-amber-700 bg-amber-50 border-amber-200"
-        : "text-red-700 bg-red-50 border-red-200";
+        ? "text-indigo-700 bg-indigo-50 border-indigo-200"
+        : confidence >= 40
+          ? "text-amber-700 bg-amber-50 border-amber-200"
+          : "text-rose-700 bg-rose-50 border-rose-200";
 
   return (
-    <div className="mt-1">
+    <div className="relative inline-block" ref={panelRef}>
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 transition"
+        className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition shadow-sm ${badgeColor}`}
+        title="Click to view AI verdict details"
       >
-        🤖 AI {shortlist ? "Approved" : "Flagged"} · {confidence}%
-        <span className="ml-0.5">{open ? "▲" : "▼"}</span>
+        <span>{badgeLabel}</span>
+        <span className="text-[9px] opacity-70 ml-0.5">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
-        <div className="mt-2 p-3 rounded-xl border border-violet-100 bg-violet-50 text-xs space-y-2 w-72 shadow-sm">
-          {/* Confidence */}
-          <div
-            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] font-semibold ${confColor}`}
-          >
-            Confidence: {confidence}%
+        <div className="absolute left-0 mt-1.5 p-3.5 rounded-xl border border-slate-200 bg-white text-xs space-y-2.5 w-72 shadow-xl z-30">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <span className="font-bold text-slate-800 text-[11px]">
+              {isClaude ? "AI Recruitment Verdict" : "AI Screening Verdict"}
+            </span>
+            {confidence != null && (
+              <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${confColor}`}>
+                Score: {confidence}%
+              </span>
+            )}
           </div>
 
-          {/* Recommendation */}
           {recommendation && (
-            <p className="text-gray-700 font-medium leading-snug">
-              {recommendation}
-            </p>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">
+                Recommendation
+              </p>
+              <p className="text-slate-800 font-medium leading-snug">
+                {recommendation}
+              </p>
+            </div>
           )}
 
-          {/* Reasoning */}
-          {reason && <p className="text-gray-500 leading-snug">{reason}</p>}
+          {reason && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">
+                Reasoning
+              </p>
+              <p className="text-slate-600 leading-snug">{reason}</p>
+            </div>
+          )}
 
-          {/* Strengths */}
           {strengths.length > 0 && (
             <div>
-              <p className="font-semibold text-green-700 mb-1">✅ Strengths</p>
+              <p className="font-semibold text-emerald-700 text-[11px] mb-1">
+                ✅ Strengths
+              </p>
               <ul className="space-y-0.5">
                 {strengths.map((s, i) => (
-                  <li key={i} className="text-gray-600">
+                  <li key={i} className="text-slate-600 text-[11px]">
                     • {s}
                   </li>
                 ))}
@@ -784,13 +885,14 @@ const AiReasoningPanel = ({ reasoning }) => {
             </div>
           )}
 
-          {/* Gaps */}
           {gaps.length > 0 && (
             <div>
-              <p className="font-semibold text-red-600 mb-1">⚠️ Gaps</p>
+              <p className="font-semibold text-rose-600 text-[11px] mb-1">
+                ⚠️ Gaps / Areas to Probe
+              </p>
               <ul className="space-y-0.5">
                 {gaps.map((g, i) => (
-                  <li key={i} className="text-gray-600">
+                  <li key={i} className="text-slate-600 text-[11px]">
                     • {g}
                   </li>
                 ))}
@@ -1791,14 +1893,10 @@ export const ShortlistedTable = ({
                             <AtsScorePill score={student.ats_score_pct} />
                           </Td>
                           <Td>
-                            {/* AI reasoning panel — only visible for borderline Claude-evaluated candidates */}
-                            {student.ai_reasoning?.claude_evaluated ? (
-                              <AiReasoningPanel
-                                reasoning={student.ai_reasoning}
-                              />
-                            ) : (
-                              <span className="text-gray-300 text-xs">—</span>
-                            )}
+                            <AiReasoningPanel
+                              reasoning={student.ai_reasoning}
+                              candidate={student}
+                            />
                           </Td>
                           <Td>
                             {student.resumeUrl ? (

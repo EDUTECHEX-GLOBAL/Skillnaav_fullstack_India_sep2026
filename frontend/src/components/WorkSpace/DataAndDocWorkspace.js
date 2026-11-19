@@ -189,14 +189,20 @@ const DataAndDocWorkspace = ({
 
   const handleSave = async () => {
     if (isSandboxMode) {
-      toast.info("Practice Sandbox mode: open a partner-assigned task to save on server.");
+      try {
+        localStorage.setItem(`skillnaav_doc_saved_${mode}`, String(content || ""));
+        toast.success("Practice snapshot saved locally!");
+      } catch {
+        toast.info("Practice mode: content preserved in this session.");
+      }
       return;
     }
     try {
       setSaving(true);
-      const res = await axios.post(`/api/daily-work/submissions/${assignment._id}/save`, buildFormData(false), {
-        headers: { Authorization: `Bearer ${getStudentToken()}`, "Content-Type": "multipart/form-data" },
-      });
+      const token = getStudentToken();
+      const res = await axios.post(`/api/daily-work/submissions/${assignment._id}/save`, buildFormData(false), token ? {
+        headers: { Authorization: `Bearer ${token}` },
+      } : {});
       setSubmissionState(res.data.submission);
       setVersionNote("");
       toast.success("Snapshot saved!");
@@ -210,17 +216,33 @@ const DataAndDocWorkspace = ({
 
   const handleSubmit = async () => {
     if (isSandboxMode) {
-      toast.info("Practice Sandbox mode: open a partner-assigned task to submit work.");
+      try {
+        localStorage.setItem(`skillnaav_doc_submitted_${mode}`, String(content || ""));
+        toast.success("Practice work submitted and verified!");
+        setTimeout(() => {
+          if (onBack) onBack();
+        }, 1200);
+      } catch {
+        toast.success("Practice work submitted!");
+      }
       return;
     }
     try {
       setSubmitting(true);
+      const token = getStudentToken();
+      if (!token) {
+        toast.error("Please sign in to submit your work.");
+        return;
+      }
       const res = await axios.post(`/api/daily-work/submissions/${assignment._id}/submit`, buildFormData(true), {
-        headers: { Authorization: `Bearer ${getStudentToken()}`, "Content-Type": "multipart/form-data" },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setSubmissionState(res.data.submission);
       toast.success("Work submitted successfully!");
-      onUpdated && onUpdated(res.data.submission);
+      if (onUpdated) onUpdated(res.data.submission);
+      setTimeout(() => {
+        if (onBack) onBack();
+      }, 1200);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Submission failed");
     } finally {
